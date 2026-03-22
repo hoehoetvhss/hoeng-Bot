@@ -1,4 +1,4 @@
-FROM ubuntu:25.04 AS node_build
+FROM ubuntu:25.10 AS node_build
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
@@ -23,7 +23,7 @@ COPY . .
 RUN npm run build
 
 
-FROM ubuntu:25.04
+FROM ubuntu:25.10
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
