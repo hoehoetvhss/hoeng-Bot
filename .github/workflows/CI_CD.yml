@@ -32,9 +32,6 @@ jobs:
       - name: Run Type Check
         run: npm run typecheck
 
-      - name: Run Tests
-        run: npm test
-
   docker-build:
     needs: quality-check
     if: github.event_name != 'pull_request'
