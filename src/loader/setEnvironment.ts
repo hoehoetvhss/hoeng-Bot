@@ -1,12 +1,16 @@
+import path from 'path';
+import { pathToFileURL } from 'url';
 import { ActivityType } from 'discord.js';
 import { hashGenerator } from '../lib/hashGenerator.js';
-import { config } from '../../config.js';
 import { DJModeEnum } from './../@types/index.js';
 
 import type { Config } from './../@types/index.js';
 
 
-const setEnvironment = (defaultConfig: Config) => {
+const setEnvironment = async (defaultConfig: Config) => {
+    const configPath = path.resolve(process.cwd(), 'config.js');
+    const { config } = await import(pathToFileURL(configPath).href);
+
     defaultConfig.bot = {
         textCommand: config.bot.textCommand ?? defaultConfig.bot.textCommand,
         slashCommand: config.bot.slashCommand ?? defaultConfig.bot.slashCommand,

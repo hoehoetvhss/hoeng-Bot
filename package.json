@@ -5,7 +5,7 @@
     "main": "./src/index.ts",
     "type": "module",
     "scripts": {
-        "start": "tsx ./src/index.ts",
+        "start": "npm run build && node ./dist/src/index.js",
         "build": "tsc",
         "typecheck": "tsc --noEmit",
         "dev": "tsx ./src/index.ts",

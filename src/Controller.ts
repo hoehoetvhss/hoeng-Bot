@@ -17,7 +17,7 @@ export class Controller {
         this.#bot = {
             shardId: -1,
             blacklist: cst.config.blacklist,
-            config: cst.config,
+            config: JSON.parse(JSON.stringify(cst.config)), // Deep copy default config
             logger: new Logger(cst.logger.format, cst.logger.logDir),
             sysInfo: {} as SystemInfo,
             stats: {
@@ -28,9 +28,6 @@ export class Controller {
             i18n: null,
             lang: null
         } as unknown as Bot;
-
-        setEnvironment(this.#bot.config);
-        this.#bot.logger.emit('shard', 'Set environment variables.');
 
         this.#shardManager = new ShardingController();
 
@@ -44,6 +41,9 @@ export class Controller {
 
     public async init() {
         this.#bot.sysInfo = await getSysInfo();
+
+        await setEnvironment(this.#bot.config);
+        this.#bot.logger.emit('shard', 'Set environment variables.');
 
         return Promise.resolve()
             .then(() => loadControllerI18Next(this.#bot))
