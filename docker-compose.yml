@@ -11,3 +11,5 @@ services:
       - ./config.js:/bot/config.js
       - ./views/dashboard.html:/bot/views/dashboard.html
       - ./logs:/bot/logs
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
