@@ -24,16 +24,16 @@ export const options = [
         required: true,
         choices: [
             {
-                name: 'Off',
-                value: 'off'
+                name: '끄기',
+                value: '끄기'
             },
             {
-                name: 'One',
-                value: 'one'
+                name: '한 곡 반복',
+                value: '한 곡 반복'
             },
             {
-                name: 'All',
-                value: 'all'
+                name: '전체 반복',
+                value: '전체 반복'
             }
         ]
     }
@@ -48,24 +48,22 @@ export const execute = async (bot: Bot, client: Client, message: Message, args: 
     }
 
     let mode = null;
-    const methods = ['OFF', 'SINGLE', 'ALL'];
+    const methods = ['끄기', '한 곡 반복', '전체 반복'];
 
     if (!args[0]) return message.reply({ embeds: [embeds.textErrorMsg(bot, client.i18n.t('commands:ERROR_LOOP_COMMAND', { command: `${bot.config.bot.prefix}${usage}` }))], allowedMentions: { repliedUser: false } });
 
     switch (args[0].toLowerCase()) {
-        case 'off': {
+        case '끄기': {
             mode = 0;
             player.setRepeatMode(RepeatMode.OFF);
             break;
         }
-        case 'one':
-        case 'single': {
+        case '한 곡 반복': {
             mode = 1;
             player.setRepeatMode(RepeatMode.TRACK);
             break;
         }
-        case 'all':
-        case 'queue': {
+        case '전체 반복': {
             mode = 2;
             player.setRepeatMode(RepeatMode.QUEUE);
             break;
@@ -88,20 +86,20 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
     }
 
     let mode = null;
-    const methods = ['OFF', 'SINGLE', 'ALL'];
+    const methods = ['끄기', '한 곡 반복', '전체 반복'];
 
     switch (interaction.options.getString('mode')) {
-        case 'off': {
+        case '끄기': {
             mode = 0;
             player.setRepeatMode(RepeatMode.OFF);
             break;
         }
-        case 'one': {
+        case '한 곡 반복': {
             mode = 1;
             player.setRepeatMode(RepeatMode.TRACK);
             break;
         }
-        case 'all': {
+        case '전체 반복': {
             mode = 2;
             player.setRepeatMode(RepeatMode.QUEUE);
             break;

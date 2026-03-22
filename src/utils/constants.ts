@@ -155,8 +155,8 @@ export const cst = {
         shuffle     : '<:w_shuffle:1106270712542531624>',
         prev        : '<:w_prev:1153665768093921280>',
         next        : '<:w_next:1153665809990815874>',
-        delete      : 'Delete Message',
-        clear       : 'Clear Queue'
+        delete      : '메세지 삭제',
+        clear       : '재생목록 초기화'
     },
     // Logger
     logger: {

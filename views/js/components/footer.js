@@ -1,6 +1,6 @@
 const githubLink = document.createElement("a");
-githubLink.href = "https://github.com/hmes98318/Music-Disc";
-githubLink.innerHTML = `Copyright &copy; 2022-${new Date().getFullYear()} Music-Disc`;
+githubLink.href = "https://discord.gg/HMFyw4xeeV";
+githubLink.innerHTML = `Copyright &copy; 2023-${new Date().getFullYear()} hoeeg Bot`;
 githubLink.style.textDecoration = "none";
 githubLink.style.color = "inherit";
 githubLink.target = "_blank";

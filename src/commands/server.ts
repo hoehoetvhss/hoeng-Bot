@@ -20,7 +20,7 @@ export const options = [];
 
 export const execute = async (bot: Bot, client: Client, message: Message) => {
     const serverlist = client.guilds.cache
-        .map(g => `Guild ID: ${g.id}\n Guild: ${g.name}\n Members: ${g.memberCount}`)
+        .map(g => `서버 ID: ${g.id}\n 서버 이름: ${g.name}\n 멤버 수: ${g.memberCount}`)
         .join('\n\n');
 
     return message.reply({
@@ -31,7 +31,7 @@ export const execute = async (bot: Bot, client: Client, message: Message) => {
 
 export const slashExecute = async (bot: Bot, client: Client, interaction: ChatInputCommandInteraction) => {
     const serverlist = client.guilds.cache
-        .map(g => `Guild ID: ${g.id}\n Guild: ${g.name}\n Members: ${g.memberCount}`)
+        .map(g => `서버 ID: ${g.id}\n 서버 이름: ${g.name}\n 멤버 수: ${g.memberCount}`)
         .join('\n\n');
 
     return interaction.editReply({

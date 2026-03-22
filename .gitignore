@@ -1,11 +1,5 @@
-node_modules/
-dist/
-logs/
+dist
+node_modules
+logs
 
 .env
-
-server/logs/
-server/plugins/
-server/*.jar
-
-.DS_Store

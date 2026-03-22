@@ -14,7 +14,7 @@ const botStatus = (bot: Bot, systemStatus: SystemStatus) => {
     const embed_ = new EmbedBuilder()
         .setColor(bot.config.bot.embedsColors.message as HexColorString | number)
         .setTitle(`${bot.config.bot.name} ${bot.sysInfo.bot_version}`)
-        .setURL('https://github.com/hmes98318/Music-Disc')
+        .setURL('https://discord.gg/HMFyw4xeeV')
         .setDescription(bot.i18n.t('embeds:STATUS_DESCRIPTION', { serverCount: systemStatus.serverCount, playingCount: systemStatus.playing }))
         .addFields(
             { name: bot.i18n.t('embeds:STATUS_SYSTEM_TITLE'), value: bot.i18n.t('embeds:STATUS_SYSTEM_VALUE', { os_version: bot.sysInfo.os_version, node_version: bot.sysInfo.node_version, dc_version: bot.sysInfo.dc_version, shark_version: bot.sysInfo.shark_version, cpu: bot.sysInfo.cpu, uptime: systemStatus.uptime }), inline: false },
@@ -69,7 +69,7 @@ const nodeDisconnected = (bot: Bot, nodeName: string) => {
     const embed_ = new EmbedBuilder()
         .setColor(bot.config.bot.embedsColors.error as HexColorString | number)
         .setTitle(bot.i18n.t('embeds:NODE_STATUS_TITLE_2', { nodeName: nodeName }))
-        .setDescription(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n❌ | **DISCONNECTED**`)
+        .setDescription(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n❌ㅣ**연결 끊김**`)
         .setTimestamp();
 
     return embed_;

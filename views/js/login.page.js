@@ -39,11 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.location.href = "/dashboard";
                 }
                 else if (data === "FAILED") {
-                    loginFailureMessage.textContent = "Username or password is incorrect";
+                    loginFailureMessage.textContent = "사용자 아이디 또는 비밀번호가 올바르지 않습니다.";
                     loginFailureMessage.style.visibility = "visible";
                 }
                 else if (data === "BLOCKED_5") {
-                    loginFailureMessage.textContent = "Too many login attempts, locked for 5 minutes.";
+                    loginFailureMessage.textContent = "로그인 시도가 너무 많아 5분 동안 잠겼습니다.";
                     loginFailureMessage.style.visibility = "visible";
                 }
             })
@@ -52,6 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     forgotPassword.addEventListener("click", function () {
-        alert("The password is set in the SITE_PASSWORD value of the .env file.");
+        alert("비밀번호는 .env 파일의 SITE_PASSWORD 값을 확인하세요.");
     });
 });

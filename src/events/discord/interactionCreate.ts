@@ -165,7 +165,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
 
 
                     let mode = 0;
-                    const methods = ['Off', 'Single', 'All'];
+                    const methods = ['끄기', '한 곡 반복', '전체 반복'];
 
                     const select = new StringSelectMenuBuilder()
                         .setCustomId('Dashboard-Loop-Select')
@@ -189,19 +189,19 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     collector.on('collect', async (i: StringSelectMenuInteraction) => {
                         if (i.customId !== 'Dashboard-Loop-Select') return;
 
-                        bot.logger.emit('discord', bot.shardId, 'loop mode:' + i.values[0]);
+                        bot.logger.emit('discord', bot.shardId, '반복 모드:' + i.values[0]);
                         switch (i.values[0]) {
-                            case 'Off': {
+                            case '끄기': {
                                 mode = 0;
                                 player.setRepeatMode(RepeatMode.OFF);
                                 break;
                             }
-                            case 'Single': {
+                            case '한 곡 반복': {
                                 mode = 1;
                                 player.setRepeatMode(RepeatMode.TRACK);
                                 break;
                             }
-                            case 'All': {
+                            case '전체 반복': {
                                 mode = 2;
                                 player.setRepeatMode(RepeatMode.QUEUE);
                                 break;
@@ -331,7 +331,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                         tracksQueue += client.i18n.t('events:MESSAGE_QUEUE_PAGE', { curPage: page, maxPage: player.setting.queuePage.maxPage });
                     }
 
-                    const methods = ['Off', 'Single', 'All'];
+                    const methods = ['끄기', '한 곡 반복', '전체 반복'];
                     const repeatMode = player.repeatMode;
 
                     const prevButton = new ButtonBuilder().setCustomId('queuelist-prev').setEmoji(cst.button.prev).setStyle(ButtonStyle.Secondary);
@@ -382,7 +382,7 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                         tracksQueue += client.i18n.t('events:MESSAGE_QUEUE_PAGE', { curPage: page, maxPage: player.setting.queuePage.maxPage });
                     }
 
-                    const methods = ['Off', 'Single', 'All'];
+                    const methods = ['끄기', '한 곡 반복', '전체 반복'];
                     const repeatMode = player.repeatMode;
 
                     const prevButton = new ButtonBuilder().setCustomId('queuelist-prev').setEmoji(cst.button.prev).setStyle(ButtonStyle.Secondary);
@@ -439,10 +439,10 @@ export default async (bot: Bot, client: Client, interaction: Interaction) => {
                     }
                     else {
                         tracksQueue = tracks.join('\n');
-                        tracksQueue += `\n\n----- Page ${page}/${player.setting.queuePage.maxPage} -----`;
+                        tracksQueue += `\n\n----- 페이지 ${page}/${player.setting.queuePage.maxPage} -----`;
                     }
 
-                    const methods = ['Off', 'Single', 'All'];
+                    const methods = ['끄기', '한 곡 반복', '전체 반복'];
                     const repeatMode = player.repeatMode;
 
                     const delButton = new ButtonBuilder().setCustomId('queuelist-delete').setLabel(cst.button.delete).setStyle(ButtonStyle.Primary);

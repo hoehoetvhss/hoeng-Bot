@@ -29,14 +29,14 @@ const filterButton = document.getElementById('filter-button');
 function filterServers() {
     let onlyActive = false;
 
-    if (filterButton.textContent === 'All') {
+    if (filterButton.textContent === '전체') {
         onlyActive = true;
-        filterButton.textContent = 'Active';
+        filterButton.textContent = '재생중';
         filterButton.classList.add('active');
     }
     else {
         onlyActive = false;
-        filterButton.textContent = 'All';
+        filterButton.textContent = '전체';
         filterButton.classList.remove('active');
     }
 
@@ -80,6 +80,6 @@ function filterServers() {
 
 
     if (document.getElementById("servers").innerHTML === '') {
-        document.getElementById("servers").innerHTML = '<h4 class="no-playing-msg">No servers are playing</h4>';
+        document.getElementById("servers").innerHTML = '<h4 class="no-playing-msg">재생 중인 서버가 없습니다.</h4>';
     }
 }

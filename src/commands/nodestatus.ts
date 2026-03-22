@@ -40,10 +40,10 @@ export const execute = async (bot: Bot, client: Client, message: Message, args: 
 
             if (ping === -1) {
                 unhealthValue++;
-                nodesStatus.push({ name: `❌ ${node.identifier}`, value: '**DISCONNECTED**' });
+                nodesStatus.push({ name: `❌ ${node.identifier}`, value: '**연결끊김**' });
             }
             else {
-                nodesStatus.push({ name: `✅ ${node.identifier}`, value: `ping: **${ping}ms**` });
+                nodesStatus.push({ name: `✅ ${node.identifier}`, value: `**지연시간:** ${ping}ms` });
             }
         }
         bot.logger.emit('log', bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
@@ -107,11 +107,11 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
             const ping = pingList[i];
 
             if (ping === -1) {
-                nodesStatus.push({ name: `❌ ${node.identifier}`, value: 'DISCONNECTED' });
+                nodesStatus.push({ name: `❌ ${node.identifier}`, value: '**연결끊김**' });
                 unhealthValue++;
             }
             else {
-                nodesStatus.push({ name: `✅ ${node.identifier}`, value: `ping: ${ping}ms` });
+                nodesStatus.push({ name: `✅ ${node.identifier}`, value: `**지연시간:** ${ping}ms` });
             }
         }
         bot.logger.emit('log', bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));

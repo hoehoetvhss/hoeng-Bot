@@ -16,16 +16,16 @@ const msToTime = (ms: number) => {
     const days = Math.floor(hours / 24);
 
     if (days > 0) {
-        return `${days} day${days > 1 ? 's' : ''} ${hours % 24} hour${hours % 24 > 1 ? 's' : ''}`;
+        return `${days}일${days > 1 ? '' : ''} ${hours % 24}시간${hours % 24 > 1 ? '' : ''}`;
     }
     else if (hours > 0) {
-        return `${hours} hour${hours > 1 ? 's' : ''} ${minutes % 60} minute${minutes % 60 > 1 ? 's' : ''}`;
+        return `${hours}시간${hours > 1 ? '' : ''} ${minutes % 60}분${minutes % 60 > 1 ? '' : ''}`;
     }
     else if (minutes > 0) {
-        return `${minutes} minute${minutes > 1 ? 's' : ''} ${seconds % 60} second${seconds % 60 > 1 ? 's' : ''}`;
+        return `${minutes}분${minutes > 1 ? '' : ''} ${seconds % 60}초${seconds % 60 > 1 ? '' : ''}`;
     }
     else {
-        return `${seconds % 60} second${seconds % 60 > 1 ? 's' : ''}`;
+        return `${seconds % 60}초${seconds % 60 > 1 ? '' : ''}`;
     }
 };
 
@@ -84,15 +84,15 @@ const timeToSeconds = (time: string) => {
         while ((match = regex.exec(timeString)) !== null) {
             const value = parseInt(match[1]);
 
-            if (match[2] === 'h') {
+            if (match[2] === '시간') {
                 hours = value;
                 valid = true;
             }
-            else if (match[2] === 'm') {
+            else if (match[2] === '분') {
                 minutes = value;
                 valid = true;
             }
-            else if (match[2] === 's') {
+            else if (match[2] === '초') {
                 seconds = value;
                 valid = true;
             }

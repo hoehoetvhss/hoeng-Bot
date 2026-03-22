@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server management</title>
+    <title>서버 관리</title>
     <link rel="icon" type="image/x-icon"
         href="https://raw.githubusercontent.com/hmes98318/Music-Disc/main/public/imgs/html/favicon.ico">
 
@@ -16,9 +16,9 @@
     <div class="container">
         <div class="sidebar-left">
             <div class="back-button-container" onclick="window.location.href='/serverlist'">
-                <button class="back-button">Back to Server List</button>
+                <button class="back-button">서버 목록으로 돌아가기</button>
             </div>
-            <h2>Servers</h2>
+            <h2>서버</h2>
             <ul id="server-list">
             </ul>
         </div>
@@ -27,7 +27,7 @@
             <div id="server-info" class="server-info">
                 <img id="server_image" alt="server images" width="100" height="100">
                 <h2 id="server_name"></h2>
-                <button class="leave-button" onclick="leaveServer()">Leave Server</button>
+                <button class="leave-button" onclick="leaveServer()">서버 나가기</button>
             </div>
 
             <div id="now-playing" class="now-playing">
@@ -46,7 +46,7 @@
                 </div>
             </div>
 
-            <div id="server-refresh-timer">Refreshing in: 10 seconds</div>
+            <div id="server-refresh-timer">새로고침은 10초마다 됩니다.</div>
         </div>
 
         <div class="sidebar-right">

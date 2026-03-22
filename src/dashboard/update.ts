@@ -15,7 +15,7 @@ import type { Bot } from '../@types/index.js';
 
 async function update(bot: Bot, player: Player, track: Track): Promise<void> {
     const playing = !(player.paused);
-    const methods = ['OFF', 'SINGLE', 'ALL'];
+    const methods = ['끄기', '한 곡 반복', '전체 반복'];
     const repeatMode = player.repeatMode;
     const volume = player.volume;
 
@@ -44,7 +44,7 @@ async function update(bot: Bot, player: Player, track: Track): Promise<void> {
 
     try {
         await player.dashboard!.edit({
-            embeds: [embeds.dashboard(bot, 'Dashboard', track!.title, subtitle, track!.uri, track!.thumbnail!)],
+            embeds: [embeds.dashboard(bot, '대시보드', track!.title, subtitle, track!.uri, track!.thumbnail!)],
             components: [row]
         });
     } catch (error) {

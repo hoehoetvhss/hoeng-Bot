@@ -1,14 +1,12 @@
 services:
-  music-disc:
-    image: hmes98318/music-disc:latest
-    container_name: music-disc
+  hoehoetvhs_dev_bot:
+    build: .
+    container_name: hoehoetvhs_dev_bot
     restart: always
+    network_mode: host
     environment:
-      TZ: "Asia/Taipei"
-      BOT_TOKEN: "your_token"
+      - TZ=Asia/Seoul
+      - BOT_TOKEN=${BOT_TOKEN}
     volumes:
-      - ./config.js:/bot/config.js              # Bot config
-      - ./logs:/bot/logs                        # Bot logs
-      - ./server:/bot/server                    # localnode configuration file
-    ports:
-      - 33333:33333
+      - ./config.js:/bot/config.js
+      - ./logs:/bot/logs

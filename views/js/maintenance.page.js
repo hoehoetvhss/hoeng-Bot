@@ -20,7 +20,7 @@ const sendMaintainRequest = async (type) => {
         // Update button status
         if (type === 'SEND_MAINTAIN') {
             button = document.getElementById('maintain-btn');
-            button.innerText = 'Sending Maintenance Notice';
+            button.innerText = '유지보수 공지를 보내는 중';
         }
 
 
@@ -55,7 +55,7 @@ const sendMaintainRequest = async (type) => {
                 });
 
             if (type === 'SEND_MAINTAIN') {
-                button.innerText = 'Send Maintenance Notice';
+                button.innerText = '유지보수 공지 보내기';
             }
 
             setTimeout(() => {

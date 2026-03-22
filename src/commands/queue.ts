@@ -65,11 +65,11 @@ export const execute = async (bot: Bot, client: Client, message: Message) => {
     }
     else {
         tracksQueue = tracks.join('\n');
-        tracksQueue += `\n\n----- Page ${page}/${player.setting.queuePage.maxPage} -----`;
+        tracksQueue += `\n\n----- 페이지 ${page}/${player.setting.queuePage.maxPage} -----`;
     }
 
 
-    const methods = ['OFF', 'SINGLE', 'ALL'];
+    const methods = ['끄기', '한 곡 반복', '전체 반복'];
     const repeatMode = player.repeatMode;
 
     const prevButton = new ButtonBuilder().setCustomId('queuelist-prev').setEmoji(cst.button.prev).setStyle(ButtonStyle.Secondary);
@@ -127,11 +127,11 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
     }
     else {
         tracksQueue = tracks.join('\n');
-        tracksQueue += `\n\n----- Page ${page}/${player.setting.queuePage.maxPage} -----`;
+        tracksQueue += `\n\n----- 페이지 ${page}/${player.setting.queuePage.maxPage} -----`;
     }
 
 
-    const methods = ['OFF', 'SINGLE', 'ALL'];
+    const methods = ['끄기', '한 곡 반복', '전체 반복'];
     const repeatMode = player.repeatMode;
 
     const prevButton = new ButtonBuilder().setCustomId('queuelist-prev').setEmoji(cst.button.prev).setStyle(ButtonStyle.Secondary);

@@ -1,31 +1,50 @@
-FROM node:22.14.0-slim AS node_build
+FROM ubuntu:25.04 AS node_build
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    build-essential \
+    tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && curl -fsSL https://deb.nodesource.com/setup_25.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp
 
+COPY package*.json ./
+RUN npm install
+
 COPY . .
-
-RUN npm ci && \
-    npm run build
+RUN npm run build
 
 
-############################################################
+FROM ubuntu:25.04
 
-FROM node:22.14.0-slim
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && curl -fsSL https://deb.nodesource.com/setup_25.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /bot
 
-RUN apt update -y && \
-    apt install openjdk-17-jre-headless -y && \
-    apt clean && rm -rf /var/lib/apt/lists/*
-
-
-COPY --from=node_build /tmp/dist /bot
+COPY --from=node_build /tmp/dist /bot/dist
 COPY --from=node_build /tmp/node_modules /bot/node_modules
-COPY --from=node_build /tmp/server /bot/server
+COPY --from=node_build /tmp/public /bot/public
 COPY --from=node_build /tmp/views /bot/views
-
 COPY --from=node_build /tmp/package*.json /bot
 COPY --from=node_build /tmp/config.js /bot
 
-
-ENTRYPOINT [ "node", "./src/index.js" ]
+ENTRYPOINT [ "node", "./dist/src/index.js" ]

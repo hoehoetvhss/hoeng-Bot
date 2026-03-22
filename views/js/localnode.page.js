@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!enable) {
         const contentContainer = document.getElementById('content');
-        contentContainer.innerHTML = "<h2>Local Node is not enabled</h2>";
+        contentContainer.innerHTML = "<h2>로컬 노드가 비활성화 상태입니다.</h2>";
         return;
     }
 

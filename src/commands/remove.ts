@@ -98,7 +98,7 @@ export const execute = async (bot: Bot, client: Client, message: Message, args: 
             tracksQueue = tracks.join('\n');
         }
 
-        const methods = ['OFF', 'SINGLE', 'ALL'];
+        const methods = ['끄기', '한 곡 반복', '전체 반복'];
         const repeatMode = player.repeatMode;
         const instruction = client.i18n.t('commands:MESSAGE_REMOVE_INSTRUCTION', { length: tracks.length });
 
@@ -210,7 +210,7 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
             tracksQueue = tracks.join('\n');
         }
 
-        const methods = ['OFF', 'SINGLE', 'ALL'];
+        const methods = ['끄기', '한 곡 반복', '전체 반복'];
         const repeatMode = player.repeatMode;
         const instruction = client.i18n.t('commands:MESSAGE_REMOVE_INSTRUCTION', { length: tracks.length });
 

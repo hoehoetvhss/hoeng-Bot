@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
@@ -16,19 +16,19 @@
 <body>
     <div class="container">
         <div class="sidebar-left">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/localnode">Local Node</a>
-            <a href="/logs">Logs</a>
-            <a href="/maintenance" class="current-page">Maintenance</a>
-            <a href="/nodeslist">Nodes List</a>
-            <a href="/serverlist">Servers List</a>
+            <a href="/dashboard">대시보드</a>
+            <a href="/localnode">로컬 노드</a>
+            <a href="/logs">로그</a>
+            <a href="/maintenance" class="current-page">유지보수</a>
+            <a href="/nodeslist">노드 목록</a>
+            <a href="/serverlist">서버 목록</a>
         </div>
 
         <div class="content">
             <div id="empty-container"></div>
 
             <div id="control-buttons">
-                <button id="maintain-btn" onclick="sendMaintainRequest('SEND_MAINTAIN')">Send Maintenance Notice</button>
+                <button id="maintain-btn" onclick="sendMaintainRequest('SEND_MAINTAIN')">유지보수 공지 보내기</button>
             </div>
 
             <div id="status-message"></div>

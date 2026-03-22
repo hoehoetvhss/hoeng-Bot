@@ -10,13 +10,13 @@ export default async (bot: Bot, _client: Client, player: Player, tracks: Track |
     if (player.playing) {
         if (Array.isArray(tracks)) { // PLAYLIST_LOADED
             const playlist = tracks as unknown as Track[];
-            const subtitle = `Author : **${playlist[0]?.author}**\nDuration **${playlist[0]?.duration.label}**\n`;
+            const subtitle = `**아티스트:** ${playlist[0]?.author}\n**길이:** ${playlist[0]?.duration.label}\n`;
 
             await (player.metadata?.channel as any /* discord.js type error ? (v14.16.2) */).send({ embeds: [embeds.addPlaylist(bot, playlist[0].title, subtitle, playlist[0].uri, playlist[0].thumbnail!)] });
         }
         else {
             const track = tracks as Track;
-            const subtitle = `Author : **${track?.author}**\nDuration **${track?.duration.label}**\n`;
+            const subtitle = `**아티스트:** ${track?.author}\n**길이:** ${track?.duration.label}\n`;
 
             await (player.metadata?.channel as any /* discord.js type error ? (v14.16.2) */).send({ embeds: [embeds.addTrack(bot, track.title, subtitle, track.uri, track.thumbnail!)] });
         }

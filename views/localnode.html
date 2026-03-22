@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Node controller</title>
+    <title>로컬 노드 컨트롤러</title>
     <link rel="icon" type="image/x-icon"
         href="https://raw.githubusercontent.com/hmes98318/Music-Disc/main/public/imgs/html/favicon.ico">
 
@@ -16,26 +16,26 @@
 <body>
     <div class="container">
         <div class="sidebar-left">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/localnode" class="current-page">Local Node</a>
-            <a href="/logs">Logs</a>
-            <a href="/maintenance">Maintenance</a>
-            <a href="/nodeslist">Nodes List</a>
-            <a href="/serverlist">Servers List</a>
+            <a href="/dashboard">대시보드</a>
+            <a href="/localnode" class="current-page">로컬 노드</a>
+            <a href="/logs">로그</a>
+            <a href="/maintenance">유지보수</a>
+            <a href="/nodeslist">노드 목록</a>
+            <a href="/serverlist">서버 목록</a>
         </div>
 
         <div class="content" id="content">
-            <h2>Local Node Controller</h2>
+            <h2>로컬 노드 컨트롤러</h2>
             <div id="localnode-status"></div>
 
-            <h2>Logs</h2>
+            <h2>로그</h2>
             <pre id="logs-container" class="language-java">
                 <div id="logs-container" class="language-java"></div>
             </pre>
 
             <div id="control-buttons">
-                <button id="restart-btn" onclick="sendControlRequest('RESTART')">Restart</button>
-                <button id="stop-btn" onclick="sendControlRequest('STOP')">Stop</button>
+                <button id="restart-btn" onclick="sendControlRequest('RESTART')">재시작</button>
+                <button id="stop-btn" onclick="sendControlRequest('STOP')">중지</button>
             </div>
 
             <div id="status-message"></div>

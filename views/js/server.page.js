@@ -86,7 +86,7 @@ const getServerInfo = async (guildID) => {
  */
 const getServerPlayer = async (guildID) => {
     // intial now-playing
-    document.getElementById("not_playing_text").textContent = 'No song is currently playing.';
+    document.getElementById("not_playing_text").textContent = '현재 재생 중인 음악이 없습니다.';
     document.getElementById("now-playing").style.display = "block";
 
     await getServerNowPlaying(guildID);
@@ -120,7 +120,7 @@ const getServerNowPlaying = async (guildID) => {
             const isPaused = data.isPaused;
             const volume = data.volume;
             const maxVolume = data.maxVolume;
-            const loopMode = ['OFF', 'SINGLE', 'ALL'];
+            const loopMode = ['끄기', '한 곡 반복', '전체 반복'];
             const songLoop = loopMode[Number(data.repeatMode)];
             const endpoint = data.endpoint;
 
@@ -141,14 +141,14 @@ const getServerNowPlaying = async (guildID) => {
             }
 
             // 當前播放的歌曲訊息
-            document.getElementById("playing_h2").textContent = isPaused ? 'Now playing: (paused)' : 'Now playing: ';
+            document.getElementById("playing_h2").textContent = isPaused ? '재생중: (일시중지)' : '재생중: ';
             document.getElementById("playing_title").textContent = songTitle;
             document.getElementById("playing_title").href = songURL;
-            document.getElementById("playing_author").innerHTML = `Autour: <strong>${songAuthor}</strong>`;
-            document.getElementById("playing_duration").innerHTML = `Duration: <strong>${songDuration}</strong>`;
-            document.getElementById("playing_volume").innerHTML = `Volume: <strong>${volume} / ${maxVolume}</strong>`;
-            document.getElementById("playing_loop").innerHTML = `Loop: <strong>${songLoop}</strong>`;
-            document.getElementById("playing_endpoint").innerHTML = `Endpoint: <strong>${endpoint}</strong>`;
+            document.getElementById("playing_author").innerHTML = `아티스트: <strong>${songAuthor}</strong>`;
+            document.getElementById("playing_duration").innerHTML = `길이: <strong>${songDuration}</strong>`;
+            document.getElementById("playing_volume").innerHTML = `음량: <strong>${volume} / ${maxVolume}</strong>`;
+            document.getElementById("playing_loop").innerHTML = `반복: <strong>${songLoop}</strong>`;
+            document.getElementById("playing_endpoint").innerHTML = `엔드포인트: <strong>${endpoint}</strong>`;
 
             notPlayingContent.style.display = 'none';
             playingContent.style.display = 'block';
@@ -156,7 +156,7 @@ const getServerNowPlaying = async (guildID) => {
             // 獲取語音頻道中的成員訊息
             if (data.members.length > 0) {
                 // 清空內容
-                voiceChannelMembers.innerHTML = '<h3>Voice channel</h3>';
+                voiceChannelMembers.innerHTML = '<h3>음성 채널</h3>';
 
                 // 添加成員訊息
                 data.members.forEach((member) => {
@@ -185,7 +185,7 @@ const getServerNowPlaying = async (guildID) => {
  * Handle leave server button
  */
 const leaveServer = async () => {
-    const confirmation = confirm("Are you sure you want to leave this server?");
+    const confirmation = confirm("이 서버를 나가시겠습니까?");
 
     if (confirmation) {
         const guildID = location.pathname.replace('/servers/', '');
@@ -202,15 +202,15 @@ const leaveServer = async () => {
             const data = await response.text();
 
             if (data === 'SUCCESS') {
-                alert("You have left the server successfully.");
+                alert("서버를 성공적으로 나갔습니다.");
                 window.location.href = '/serverlist';
             }
             else {
-                alert("An error occurred while leaving the server. " + data);
+                alert("서버에서 나가는 동안 오류가 발생했습니다. " + data);
             }
         } catch (error) {
             console.error("Error:", error);
-            alert("An error occurred while leaving the server.");
+            alert("서버에서 나가는 동안 오류가 발생했습니다.");
         }
     }
 };
@@ -251,7 +251,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let countdownElement = document.getElementById("server-refresh-timer");
 
     const serverRefreshTimer = async () => {
-        countdownElement.innerHTML = `<span style="color: #ffffff; opacity: 0.3; margin-left: 10px;"> refreshing in ${serverTimeLeft} s </span>`;
+        countdownElement.innerHTML = `<span style="color: #ffffff; opacity: 0.3; margin-left: 10px;"> ${serverTimeLeft}초 뒤 새로고침 </span>`;
 
         if (serverTimeLeft === 0) {
             serverTimeLeft = serverRefreshInterval / 1000;

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>대시보드</title>
     <link rel="icon" type="image/x-icon"
         href="https://raw.githubusercontent.com/hmes98318/Music-Disc/main/public/imgs/html/favicon.ico">
 
@@ -16,40 +16,40 @@
 <body>
     <div class="container">
         <div class="sidebar-left">
-            <a href="/dashboard" class="current-page">Dashboard</a>
-            <a href="/localnode">Local Node</a>
-            <a href="/logs">Logs</a>
-            <a href="/maintenance">Maintenance</a>
-            <a href="/nodeslist">Nodes List</a>
-            <a href="/serverlist">Servers List</a>
+            <a href="/dashboard" class="current-page">대시보드</a>
+            <a href="/localnode">로컬 노드</a>
+            <a href="/logs">로그</a>
+            <a href="/maintenance">유지보수</a>
+            <a href="/nodeslist">노드 목록</a>
+            <a href="/serverlist">서버 목록</a>
         </div>
 
         <div class="content">
             <div class="botdetails">
-                <h2>System Information</h2>
+                <h2>시스템 정보</h2>
                 <ul>
-                    <li>Music Disc: <span id="info_bot_version"></span></li>
+                    <li>hoehoetvhs Bot: <span id="info_bot_version"></span></li>
                     <li>Node.js: <span id="info_node_version"></span></li>
                     <li>Discord.js: <span id="info_dc_version"></span></li>
                     <li>LavaShark: <span id="info_shark_version"></span></li>
-                    <li>OS: <span id="info_os_version"></span></li>
+                    <li>운영체제: <span id="info_os_version"></span></li>
                     <li>CPU: <span id="info_cpu"></span></li>
-                    <li>Startup time: <span id="info_startupTime"></span></li>
+                    <li>최초 가동 시각: <span id="info_startupTime"></span></li>
                 </ul>
 
-                <h2>Statistics</h2>
+                <h2>통계</h2>
                 <ul>
-                    <li>Server: <span id="stat_server"></span></li>
-                    <li>Active Servers: <span id="stat_playing"></span></li>
+                    <li>서비스 중인 서버 <span id="stat_server"></span>개</li>
+                    <li>재생중인 서버: <span id="stat_playing"></span>개</li>
                 </ul>
 
-                <h2>Status</h2>
+                <h2>상태</h2>
                 <ul>
-                    <li>Uptime: <span id="status_uptime"></span></li>
+                    <li>가동시간: <span id="status_uptime"></span></li>
                     <li>CPU: <span id="status_load_percent"></span><span id="status_load_detail"></span></li>
-                    <li>RAM: <span id="status_memory_percent"></span><span id="status_memory_detail"></span></li>
-                    <li>HEAP: <span id="status_heap_percent"></span><span id="status_heap_detail"></span></li>
-                    <li>Ping: <span id="status_ping_api"></span></li>
+                    <li>메모리: <span id="status_memory_percent"></span><span id="status_memory_detail"></span></li>
+                    <li>할당된 메모리: <span id="status_heap_percent"></span><span id="status_heap_detail"></span></li>
+                    <li>지연시간: <span id="status_ping_api"></span></li>
                 </ul>
             </div>
         </div>

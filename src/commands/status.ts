@@ -36,10 +36,10 @@ export const execute = async (bot: Bot, client: Client, message: Message) => {
 
         if (ping === -1) {
             unhealthValue++;
-            nodesStatus.push({ name: `❌ ${node.identifier}`, value: '**DISCONNECTED**' });
+            nodesStatus.push({ name: `❌ ${node.identifier}`, value: '**연결끊김**' });
         }
         else {
-            nodesStatus.push({ name: `✅ ${node.identifier}`, value: `ping: **${ping}ms**` });
+            nodesStatus.push({ name: `✅ ${node.identifier}`, value: `**지연시간:** ${ping}ms` });
         }
     }
 
@@ -114,10 +114,10 @@ export const slashExecute = async (bot: Bot, client: Client, interaction: ChatIn
 
         if (ping === -1) {
             unhealthValue++;
-            nodesStatus.push({ name: `❌ ${node.identifier}`, value: '**DISCONNECTED**' });
+            nodesStatus.push({ name: `❌ ${node.identifier}`, value: '**연결끊김**' });
         }
         else {
-            nodesStatus.push({ name: `✅ ${node.identifier}`, value: `ping: **${ping}ms**` });
+            nodesStatus.push({ name: `✅ ${node.identifier}`, value: `**지연시간:** ${ping}ms` });
         }
     }
 

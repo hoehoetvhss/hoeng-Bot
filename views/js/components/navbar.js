@@ -2,7 +2,7 @@ const navbarHTML = `
     <div class="navbar">
         <img src="https://raw.githubusercontent.com/hmes98318/Music-Disc/main/public/imgs/logo/logo2.svg" alt="Logo">
         <form method="GET" action="/api/logout">
-            <button class="dashboard-button">Sign out</button>
+            <button class="dashboard-button">로그아웃</button>
         </form>
     </div>
 `;
