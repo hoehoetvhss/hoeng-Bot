@@ -1,6 +1,6 @@
 services:
   hoeng-bot:
-    build: .
+    image: ghcr.io/hoehoetvhss/hoeng-bot:latest
     container_name: hoeng-bot
     restart: always
     network_mode: host
