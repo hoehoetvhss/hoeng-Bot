@@ -1,7 +1,7 @@
 services:
-  hoehoetvhs_dev_bot:
+  hoeng-bot:
     build: .
-    container_name: hoehoetvhs_dev_bot
+    container_name: hoeng-bot
     restart: always
     network_mode: host
     environment:
