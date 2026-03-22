@@ -9,7 +9,10 @@ import type { Config } from './../@types/index.js';
 
 const setEnvironment = async (defaultConfig: Config) => {
     const configPath = path.resolve(process.cwd(), 'config.js');
-    const { config } = await import(pathToFileURL(configPath).href);
+    const { config } = await import(pathToFileURL(configPath).href + `?update=${Date.now()}`);
+
+    console.log(`[Config] Loading configuration from: ${configPath}`);
+    // console.log(`[Config] Loaded bot name: ${config.bot.name}`); // 확인용 로그 (필요시 주석 해제)
 
     defaultConfig.bot = {
         textCommand: config.bot.textCommand ?? defaultConfig.bot.textCommand,

@@ -32,7 +32,7 @@ class App {
         this.bot = {
             shardId: this.#client.shard?.ids[0] ?? -1,
             blacklist: cst.config.blacklist,
-            config: cst.config,
+            config: JSON.parse(JSON.stringify(cst.config)), // Deep copy default config
             logger: new Logger(cst.logger.format, cst.logger.logDir),
             sysInfo: {} as SystemInfo,
             stats: {
@@ -42,7 +42,12 @@ class App {
             }
         } as any;
 
-        setEnvironment(this.bot.config);
+        this.#client.commands = new Collection();
+    }
+
+
+    public async init() {
+        await setEnvironment(this.bot.config);
         this.bot.logger.emit('log', this.bot.shardId, 'Set environment variables.');
 
         if (this.bot.config.blacklist.length > 0) {
@@ -52,8 +57,6 @@ class App {
             this.bot.logger.emit('log', this.bot.shardId, 'No blacklist entries found.');
         }
 
-
-        this.#client.commands = new Collection();
 
         if (this.bot.config.spotify.clientId && this.bot.config.spotify.clientSecret) {
             this.#client.lavashark = new LavaShark({
@@ -75,10 +78,7 @@ class App {
 
             this.bot.logger.emit('log', this.bot.shardId, 'Spotify credentials not configured.');
         }
-    }
 
-
-    public async init() {
         return Promise.resolve()
             .then(() => loadI18Next(this.bot, this.#client))
             .then(() => loadDiscordEvents(this.bot, this.#client))
