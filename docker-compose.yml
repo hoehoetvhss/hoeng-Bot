@@ -9,4 +9,5 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
     volumes:
       - ./config.js:/bot/config.js
+      - ./views/dashboard.html:/bot/views/dashboard.html
       - ./logs:/bot/logs
