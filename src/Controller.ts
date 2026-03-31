@@ -10,8 +10,8 @@ import type { Bot, SystemInfo } from './@types/index.js';
 
 export class Controller {
     #bot: Bot;
-    #shardManager!: ShardingController;
-    #localNodeController!: LocalNodeController;
+    #shardManager: ShardingController;
+    #localNodeController: LocalNodeController;
 
     constructor() {
         this.#bot = {
@@ -27,11 +27,8 @@ export class Controller {
             i18n: null,
             lang: null
         } as unknown as Bot;
-    }
 
-
-    public async init() {
-        await setEnvironment(this.#bot.config);
+        setEnvironment(this.#bot.config);
         this.#bot.logger.emit('shard', 'Set environment variables.');
 
         this.#shardManager = new ShardingController();
@@ -41,7 +38,10 @@ export class Controller {
             this.#bot.logger,
             this.#bot.config.localNode.autoRestart
         );
+    }
 
+
+    public async init() {
         this.#bot.sysInfo = await getSysInfo();
 
         return Promise.resolve()

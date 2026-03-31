@@ -1,6 +1,6 @@
 {
     "name": "hoeng-bot",
-    "version": "4.1.4-beta.2",
+    "version": "4.1.4-beta.1",
     "description": "Discord Music Bot",
     "main": "./src/index.ts",
     "type": "module",
@@ -21,27 +21,26 @@
         "better-sqlite3": "^12.8.0",
         "body-parser": "^2.2.2",
         "cookie": "^1.1.1",
-        "discord.js": "~14.25.1",
+        "discord.js": "~14.26.0",
         "dotenv": "^17.3.1",
         "express": "^5.2.1",
         "i18next": "^26.0.3",
-        "i18next-fs-backend": "^2.6.1",
+        "i18next-fs-backend": "^2.6.3",
         "lavashark": "^2.3.2",
-        "tsx": "^4.21.0",
         "undici": "^7.24.6"
     },
     "devDependencies": {
-		"@eslint/js": "^9.39.4",
+        "@eslint/js": "^9.39.4",
         "@types/better-sqlite3": "^7.6.13",
         "@types/express": "^5.0.6",
         "@types/node": "^25.5.0",
         "eslint": "^9.39.4",
         "globals": "^17.4.0",
         "tsx": "^4.21.0",
-        "typescript": "~6.0.2",
+        "typescript": "~5.9.3",
         "typescript-eslint": "^8.58.0"
     },
     "engines": {
-        "node": ">=22.12.0"
+        "node": ">=22.22.2"
     }
 }
