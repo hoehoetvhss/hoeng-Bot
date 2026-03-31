@@ -150,10 +150,16 @@ export const cst = {
         // Command permission settings
         command: {
             disableCommand      : [],                                   // Disabled commands, all enabled by default
-            adminCommand        : ['language','server', 'status'],      // Admin commands, only Admin role user can use
-            djCommand           : ['dj'],                               // DJ commands, only DJ role user can use
-            requesterOnly       : ['skip'],                              // Commands restricted to the song requester
-            requesterDjBypass   : ['skip']                              // Commands DJs can bypass requesterOnly on
+            adminCommand        : ['blacklist', 'language','server', 'status'],      // Admin commands, only Admin role user can use
+            djCommand           : ['dj', 'filter'],                               // DJ commands, only DJ role user can use
+            requesterOnly       : ['skip', 'seek', 'pause'],                              // Commands restricted to the song requester
+            requesterDjBypass   : ['skip', 'seek', 'pause']                              // Commands DJs can bypass requesterOnly on
+        },
+
+        // Queue persistence settings
+        queuePersistence: {
+            enabled             : false,            // Enable/disable persistent queue storage
+            path                : './data/queue.db' // Path to SQLite database file
         }
     },
 
