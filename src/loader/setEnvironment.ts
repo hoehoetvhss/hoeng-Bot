@@ -1,12 +1,26 @@
 import { ActivityType } from 'discord.js';
 import { hashGenerator } from '../lib/hashGenerator.js';
-import { config } from '../../config.js';
 import { DJModeEnum } from './../@types/index.js';
+import path from 'path';
+import { pathToFileURL } from 'url';
 
 import type { Config } from './../@types/index.js';
 
 
-const setEnvironment = (defaultConfig: Config) => {
+const setEnvironment = async (defaultConfig: Config) => {
+    let config: any;
+
+    try {
+        // Load config.js from the project root
+        const configPath = path.resolve(process.cwd(), 'config.js');
+        const configURL = pathToFileURL(configPath).href;
+        const importedConfig = await import(configURL);
+        config = importedConfig.config;
+    } catch (error) {
+        console.error('Failed to load config.js, using default constants.');
+        return;
+    }
+
     defaultConfig.bot = {
         textCommand: config.bot.textCommand ?? defaultConfig.bot.textCommand,
         slashCommand: config.bot.slashCommand ?? defaultConfig.bot.slashCommand,

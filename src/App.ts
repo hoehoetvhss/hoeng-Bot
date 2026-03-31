@@ -43,8 +43,11 @@ class App {
                 lastRefresh: null,
             }
         } as any;
+    }
 
-        setEnvironment(this.bot.config);
+
+    public async init() {
+        await setEnvironment(this.bot.config);
         this.bot.logger.emit('log', this.bot.shardId, 'Set environment variables.');
 
         if (this.bot.config.blacklist.length > 0) {
@@ -91,10 +94,7 @@ class App {
             (this.#client as any).queuePersistence = new QueuePersistence(this.bot);
             (this.#client as any).queuePersistence.initialize();
         }
-    }
 
-
-    public async init() {
         return Promise.resolve()
             .then(() => loadI18Next(this.bot, this.#client))
             .then(() => loadDiscordEvents(this.bot, this.#client))
