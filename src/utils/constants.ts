@@ -180,7 +180,7 @@ export const cst = {
             next        : '<:w_next:1153665809990815874>',
         },
         label: {
-            delete      : '메세지 삭',
+            delete      : '메세지 삭제',
             clear       : '재생목록 초기화'
         }
     },
