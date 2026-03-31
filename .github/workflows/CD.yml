@@ -1,40 +1,15 @@
-name: CI/CD
+name: CD
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main"]
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  quality-check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '25'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run Lint
-        run: npm run lint
-
-      - name: Run Type Check
-        run: npm run typecheck
-
   docker-build:
-    needs: quality-check
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
