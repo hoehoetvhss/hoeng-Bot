@@ -22,7 +22,10 @@ export const cst = {
             djMode                  : DJModeEnum.DYNAMIC,   // DJ mode: 'STATIC' (config.js based) or 'DYNAMIC' (first user to execute command based)
             dj                      : [],                   // DJ users, It must be the user ID (string[])
             djRoleId                : null,                 // DJ role ID, members with this role have DJ permissions
-            djLeaveCooldown         : 5000,                 // Automatically assign a cooldown time (ms) to a new DJ after the DJ leaves in DYNAMIC mode (default: 5000ms)
+            djLeave: {
+                mode: 'PLAY',       // 'PLAY' = next DJ on successful /play; 'COOLDOWN' = auto-assign after cooldown
+                cooldown: 5000,     // Cooldown in ms, only used in COOLDOWN mode (default: 5000ms)
+            },
 
             clientSecret            : '',
     
@@ -69,7 +72,24 @@ export const cst = {
             i18n: {
                 localePath          : '../../locales',
                 defaultLocale       : 'en-US'
-            }
+            },
+
+            // Max queued songs per user settings
+            maxQueuedSongs: {
+                enabled             : true,                                 // Enable/disable this feature
+                global              : 100,                                  // Global maximum queue size
+                default             : 5,                                    // Default limit for users without special roles
+                djs                 : 50,                                   // Limit for DJ role users
+                roles               : {}                                    // Custom limits per role ID
+            },
+
+            fairQueue               : false,
+
+            // Voice channel status emojis
+            voiceStatusEmojis       : ['🎵'],
+
+            // Voice channel status idle text
+            voiceStatusIdleText     : ''
         },
 
         // Lavalink node list
@@ -131,7 +151,9 @@ export const cst = {
         command: {
             disableCommand      : [],                                   // Disabled commands, all enabled by default
             adminCommand        : ['language','server', 'status'],      // Admin commands, only Admin role user can use
-            djCommand           : ['dj']                                // DJ commands, only DJ role user can use
+            djCommand           : ['dj'],                               // DJ commands, only DJ role user can use
+            requesterOnly       : ['skip'],                              // Commands restricted to the song requester
+            requesterDjBypass   : ['skip']                              // Commands DJs can bypass requesterOnly on
         }
     },
 
