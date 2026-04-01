@@ -702,7 +702,7 @@ const registerExpressEvents = (bot: Bot, shardManager: ShardingManager, localNod
 
 
 
-    app.use('(.*)', (req, res) => {
+    app.use('/:path*', (req, res) => {
         return res.redirect('/dashboard');
     });
 };
