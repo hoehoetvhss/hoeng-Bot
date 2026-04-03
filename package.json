@@ -6,10 +6,11 @@
     "type": "module",
     "scripts": {
         "start": "npm run build && node ./dist/src/index.js",
+        "dev": "tsx ./src/index.ts",
         "build": "tsc",
         "typecheck": "tsc --noEmit",
-        "dev": "tsx ./src/index.ts",
-        "lint": "eslint . --color"
+        "lint": "eslint . --color",
+        "lint-fix": "eslint . --fix --color"
     },
     "author": "hoehoetvhs",
     "license": "MIT",
