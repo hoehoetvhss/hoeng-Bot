@@ -1,6 +1,6 @@
 {
     "name": "hoeng-bot",
-    "version": "4.1.4-beta.3",
+    "version": "4.1.4-beta.4",
     "description": "Discord Music Bot",
     "main": "./src/index.ts",
     "type": "module",
