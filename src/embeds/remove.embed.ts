@@ -1,5 +1,6 @@
 import { EmbedBuilder, HexColorString } from 'discord.js';
 import type { Bot } from '../@types/index.js';
+import { stripMarkdown } from '../utils/functions/stripMarkdown.js';
 
 
 const removeList = (bot: Bot, nowPlaying: string, queueList: string, repeatMode: string) => {
@@ -8,7 +9,7 @@ const removeList = (bot: Bot, nowPlaying: string, queueList: string, repeatMode:
         .setTitle(bot.i18n.t('embeds:REMOVE_LIST_TITLE'))
         .addFields({ name: nowPlaying, value: queueList })
         .setTimestamp()
-        .setFooter({ text: bot.i18n.t('embeds:REMOVE_LIST_LOOP_MODE', { repeatMode: repeatMode }) });
+        .setFooter({ text: stripMarkdown(bot.i18n.t('embeds:REMOVE_LIST_LOOP_MODE', { repeatMode: repeatMode })) });
 
     return embed_;
 };

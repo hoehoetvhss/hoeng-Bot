@@ -1,6 +1,6 @@
 {
     "name": "hoeng-bot",
-    "version": "4.1.4-beta.5",
+    "version": "4.1.4-beta.6",
     "description": "Discord Music Bot",
     "main": "./src/index.ts",
     "type": "module",
@@ -19,31 +19,34 @@
     },
     "homepage": "https://discord.gg/HMFyw4xeeV",
     "overrides": {
+        "brace-expansion": "^5.0.6",
+        "qs": "^6.15.2",
+        "ws": "^8.21.0"
   },
     "dependencies": {
-        "better-sqlite3": "^12.9.0",
+        "better-sqlite3": "^12.10.0",
         "body-parser": "^2.2.2",
         "cookie": "^1.1.1",
-        "discord.js": "~14.26.3",
+        "discord.js": "~14.26.4",
         "dotenv": "^17.4.2",
         "express": "^5.2.1",
-        "i18next": "^26.0.8",
-        "i18next-fs-backend": "^2.6.5",
+        "i18next": "^26.2.0",
+        "i18next-fs-backend": "^2.6.6",
         "lavashark": "^2.3.2",
-        "undici": "^8.1.0"
+        "undici": "^8.3.0"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@types/better-sqlite3": "^7.6.13",
         "@types/express": "^5.0.6",
-        "@types/node": "^25.6.0",
-        "eslint": "^10.2.1",
-        "globals": "^17.5.0",
-        "tsx": "^4.21.0",
+        "@types/node": "^25.9.1",
+        "eslint": "^10.4.0",
+        "globals": "^17.6.0",
+        "tsx": "^4.22.3",
         "typescript": "~6.0.3",
-        "typescript-eslint": "^8.59.0"
+        "typescript-eslint": "^8.59.4"
     },
     "engines": {
-        "node": ">=22.22.2"
+        "node": ">=22.22.3"
     }
 }

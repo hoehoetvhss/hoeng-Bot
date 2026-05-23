@@ -4,6 +4,15 @@ services:
     container_name: hoeng-bot
     restart: always
     network_mode: host
+    entrypoint: >
+      /bin/sh -c "
+      until node -e \"const net = require('net'); const client = net.createConnection(2400, 'localhost'); client.on('connect', () => { client.end(); process.exit(0); }); client.on('error', () => { process.exit(1); });\"; do
+        echo 'Waiting for Lavalink to be ready...';
+        sleep 3;
+      done;
+      echo 'Lavalink is ready! Starting the bot...';
+      node ./dist/src/index.js"
+
     environment:
       - TZ=Asia/Seoul
       - BOT_TOKEN=${BOT_TOKEN}

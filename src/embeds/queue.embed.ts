@@ -1,5 +1,6 @@
 import { EmbedBuilder, HexColorString } from 'discord.js';
 import type { Bot } from '../@types/index.js';
+import { stripMarkdown } from '../utils/functions/stripMarkdown.js';
 
 
 const addTrack = (bot: Bot, title: string, subtitle: string, url: string, thumbnail: string) => {
@@ -32,7 +33,7 @@ const queue = (bot: Bot, description: string, repeatMode: string) => {
         .setTitle(bot.i18n.t('embeds:QUEUE_LIST_TITLE'))
         .setDescription(description)
         .setTimestamp()
-        .setFooter({ text: bot.i18n.t('embeds:QUEUE_LIST_LOOP_MODE', { repeatMode: repeatMode }) });
+        .setFooter({ text: stripMarkdown(bot.i18n.t('embeds:QUEUE_LIST_LOOP_MODE', { repeatMode: repeatMode })) });
 
     return embed_;
 };
