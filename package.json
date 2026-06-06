@@ -10,9 +10,10 @@
         "build": "npm run build:dashboard && npm run build:server",
         "build:server": "tsc",
         "build:dashboard": "cd dashboard && npm run generate",
-        "install:dashboard": "cd dashboard && npm install, --color",
+        "install:dashboard": "cd dashboard && npm install",
         "lint": "eslint . --color",
-        "lint:fix": "eslint . --fix --color"
+        "lint:fix": "eslint . --fix --color",
+        "typecheck": "tsc --noEmit"
     },
     "author": "hoehoetvhs",
     "license": "MIT",

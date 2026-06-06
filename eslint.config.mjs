@@ -13,7 +13,11 @@ export default [
             "public/",
             "server/",
             "views/",
-            "*.d.ts"
+            "*.d.ts",
+            "dashboard/.nuxt/",
+            "dashboard/.output/",
+            ".nuxt/",
+            ".output/"
         ]
     },
     {
