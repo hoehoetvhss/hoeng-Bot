@@ -144,7 +144,7 @@ export const cst = {
         localNode: {
             enabled             : false,
             autoRestart         : true,
-            downloadLink        : 'https://github.com/lavalink-devs/Lavalink/releases/download/4.0.8/Lavalink.jar'
+            downloadLink        : 'https://github.com/lavalink-devs/Lavalink/releases/download/4.2.2/Lavalink.jar'
         },
 
         // Command permission settings

@@ -51,7 +51,7 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
         blacklist: string[]
     ): Promise<void> {
         if (display) {
-            bot.logger.emit('discord', bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${oldState.member?.guild.name}) ${oldState.member?.user.username} left channel${cst.color.white}`);
+            bot.logger.discord( bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${oldState.member?.guild.name}) ${oldState.member?.user.username} left channel${cst.color.white}`);
         }
 
         // If the member who left is a bot, ignore
@@ -96,7 +96,7 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
         blacklist: string[]
     ): Promise<void> {
         if (display) {
-            bot.logger.emit('discord', bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} joined channel ${newState.channel?.name}${cst.color.white}`);
+            bot.logger.discord( bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} joined channel ${newState.channel?.name}${cst.color.white}`);
         }
 
         // If the member who joined is a bot, ignore
@@ -134,7 +134,7 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
         blacklist: string[]
     ): Promise<void> {
         if (display) {
-            bot.logger.emit('discord', bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} moved channel ${oldState.channel?.name} to ${newState.channel?.name}${cst.color.white}`);
+            bot.logger.discord( bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} moved channel ${oldState.channel?.name} to ${newState.channel?.name}${cst.color.white}`);
         }
 
         // If the member who moved is a bot, ignore
@@ -220,7 +220,7 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
                 }
             }
             catch (error) {
-                bot.logger.emit('error', bot.shardId, `[VoiceStateUpdate] Auto-leave timeout error for guild ${guildId}: ${error}`);
+                bot.logger.error( bot.shardId, `[VoiceStateUpdate] Auto-leave timeout error for guild ${guildId}: ${error}`);
             }
         }, bot.config.bot.autoLeave.cooldown);
     }

@@ -89,7 +89,7 @@ export class PlayLastCommand extends BaseCommand {
             await newPlayer.connect();
             newPlayer.metadata = metadata;
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, 'Error joining channel: ' + error);
+            bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
             await context.replyError(bot, client.i18n.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
             return;
         }
@@ -120,7 +120,7 @@ export class PlayLastCommand extends BaseCommand {
 
         await newPlayer.play()
             .catch(async (error) => {
-                bot.logger.emit('error', bot.shardId, 'Error playing track: ' + error);
+                bot.logger.error( bot.shardId, 'Error playing track: ' + error);
                 await context.replyError(bot, client.i18n.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
                 return newPlayer.destroy();
             });

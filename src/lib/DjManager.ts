@@ -121,7 +121,7 @@ export class DJManager {
                     });
                 }
             } catch (error) {
-                bot.logger.emit('error', bot.shardId, 'Error fetching guild members for DJ role check: ' + error);
+                bot.logger.error( bot.shardId, 'Error fetching guild members for DJ role check: ' + error);
             }
         }
 
@@ -230,7 +230,7 @@ export class DJManager {
                 // Pick the first eligible member as new DJ
                 const nextDJ = members.first()!;
                 this.addDJ(player, nextDJ.user.id);
-                bot.logger.emit('log', bot.shardId, `[Guild ${player.guildId}] Auto-assigned DJ to <@${nextDJ.user.id}> after cooldown`);
+                bot.logger.log( bot.shardId, `[Guild ${player.guildId}] Auto-assigned DJ to <@${nextDJ.user.id}> after cooldown`);
             }, bot.config.bot.djLeave.cooldown);
         }
     }

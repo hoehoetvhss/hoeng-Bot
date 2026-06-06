@@ -241,7 +241,7 @@ export class RemoveCommand extends BaseCommand {
             });
 
             msg.delete().catch(() =>
-                bot.logger.emit('discord', bot.shardId, 'Failed to delete message.')
+                bot.logger.discord( bot.shardId, 'Failed to delete message.')
             );
 
             collector.stop();
@@ -253,7 +253,7 @@ export class RemoveCommand extends BaseCommand {
                     embeds: [embeds.textErrorMsg(bot, client.i18n.t('commands:ERROR_TIME_EXPIRED'))],
                     allowedMentions: { repliedUser: false }
                 }).catch(() =>
-                    bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.')
+                    bot.logger.discord( bot.shardId, 'Failed to edit deleted message.')
                 );
             }
         });

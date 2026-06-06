@@ -15,6 +15,6 @@ export class NodeResumeEvent extends BaseLavaSharkEvent<'nodeResume'> {
     }
 
     public execute(bot: Bot, _client: Client, node: Node): void {
-        bot.logger.emit('lavashark', bot.shardId, `[nodeResume] Node "${node.identifier}" resumed!`);
+        bot.logger.lavashark( bot.shardId, `[nodeResume] Node "${node.identifier}" resumed!`);
     }
 }

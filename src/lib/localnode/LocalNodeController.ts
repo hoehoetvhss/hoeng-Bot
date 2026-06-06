@@ -11,6 +11,8 @@ import type { Logger } from '../Logger.js';
 
 
 export class LocalNodeController {
+    static readonly MAX_LOG_LINES = 5_000;
+
     /** Local node download link */
     public readonly downloadLink: string;
 
@@ -31,7 +33,10 @@ export class LocalNodeController {
 
     #lavalinkProcessController: ChildProcess | null;
     #lavalinkProcessFileName: string;
+    #isStarting: boolean;
+    #logGeneration: number;
     #manualRestart: boolean;
+    #startupPromise: Promise<void> | null;
 
     constructor(downloadLink: string, logger: Logger, autoRestart: boolean = true) {
         const __filename = fileURLToPath(import.meta.url);
@@ -46,7 +51,10 @@ export class LocalNodeController {
 
         this.#lavalinkProcessController = null;
         this.#lavalinkProcessFileName = (path.extname(__filename) === '.ts') ? 'LavalinkProcess.ts' : 'LavalinkProcess.js';
+        this.#isStarting = false;
+        this.#logGeneration = 0;
         this.#manualRestart = false;
+        this.#startupPromise = null;
     }
 
 
@@ -54,8 +62,8 @@ export class LocalNodeController {
         return new Promise<boolean>((resolve, _reject) => {
             child_process.exec('java -version', (error, stdout, stderr) => {
                 if (output) {
-                    this.logger.emit('localNode', stdout);
-                    this.logger.emit('localNode', stderr);
+                    this.logger.localNode( stdout);
+                    this.logger.localNode( stderr);
                 }
 
                 if (error) {
@@ -69,27 +77,34 @@ export class LocalNodeController {
     }
 
     public async restart() {
-        if (!this.#manualRestart || !this.#lavalinkProcessController) {
-            this.#manualRestart = true;
-            await this.stop();
-            await this.initialize();
-
-            return true;
+        if (this.#manualRestart) {
+            return false;
         }
 
-        // If the node is restarting, return false
-        return false;
+        this.#manualRestart = true;
+
+        if (this.isProcessActive()) {
+            await this.stop();
+        }
+
+        await this.initialize();
+        return true;
     }
 
     public async stop() {
         return new Promise<boolean>((resolve, _reject) => {
             if (this.#lavalinkProcessController) {
-                this.#lavalinkProcessController.once('exit', (_code, _signal) => {
-                    this.logger.emit('localNode', 'Local Lavalink node stopped.');
+                this.#lavalinkProcessController.once('exit', async (_code, _signal) => {
+                    this.logger.localNode( 'Local Lavalink node stopped.');
 
                     this.#lavalinkProcessController = null;
-                    if (this.lavalinkPid) this.#killProcess(this.lavalinkPid);
+                    this.#isStarting = false;
+                    if (this.lavalinkPid) {
+                        await this.#killProcess(this.lavalinkPid);
+                    }
                     this.lavalinkPid = null;
+                    this.port = null;
+                    this.#manualRestart = false;
 
                     return resolve(true);
                 });
@@ -98,77 +113,155 @@ export class LocalNodeController {
                 this.#lavalinkProcessController.kill('SIGINT');
             }
             else {
-                this.logger.emit('localNode', 'Local Lavalink node does not exist.');
+                this.logger.localNode( 'Local Lavalink node does not exist.');
                 return resolve(false);
             }
         });
     }
 
     public async initialize() {
+        if (this.#startupPromise) {
+            return this.#startupPromise;
+        }
+
+        if (this.#lavalinkProcessController !== null || this.lavalinkPid !== null) {
+            return;
+        }
+
+        this.#startupPromise = this.#startProcess();
+
+        try {
+            await this.#startupPromise;
+        }
+        finally {
+            if (this.#lavalinkProcessController === null) {
+                this.#isStarting = false;
+                this.#manualRestart = false;
+            }
+
+            this.#startupPromise = null;
+        }
+    }
+
+    public getLogSourceId(): string {
+        return `localnode-${this.#logGeneration}`;
+    }
+
+    public isProcessActive(): boolean {
+        return this.#isStarting || this.#lavalinkProcessController !== null || this.lavalinkPid !== null;
+    }
+
+    public isStarting(): boolean {
+        return this.#isStarting;
+    }
+
+    async #startProcess(): Promise<void> {
         const filename = 'Lavalink.jar';
         await this.#downloadFile(this.downloadLink, filename);
 
-        return new Promise<void>((resolve, _reject) => {
+        this.#isStarting = true;
+        this.#logGeneration += 1;
+        this.lavalinkLogs = [];
+
+        return new Promise<void>((resolve, reject) => {
             const __filename = fileURLToPath(import.meta.url);
             const __dirname = path.dirname(__filename);
+            let ready = false;
+            let pidReady = false;
+            let settled = false;
+
+            const maybeResolve = () => {
+                if (ready && pidReady) {
+                    settleResolve();
+                }
+            };
+
+            const settleResolve = () => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                this.#isStarting = false;
+                resolve();
+            };
+
+            const settleReject = (error: Error) => {
+                if (settled) {
+                    return;
+                }
+
+                settled = true;
+                this.#isStarting = false;
+                this.#manualRestart = false;
+                reject(error);
+            };
 
             this.#lavalinkProcessController = child_process.fork(path.resolve(__dirname, this.#lavalinkProcessFileName));
+            this.#lavalinkProcessController.once('error', (error) => {
+                this.#lavalinkProcessController = null;
+                settleReject(error instanceof Error ? error : new Error(String(error)));
+            });
 
-            // Send .jar path
             this.#lavalinkProcessController.once('spawn', () => {
                 this.#lavalinkProcessController!.send(`./server/${filename}`);
             });
 
-
             this.#lavalinkProcessController.on('message', (message: string) => {
-                // Lavalink log records
-                this.lavalinkLogs.push(message);
-
-                /**
-                 * Status code handling
-                 * LAVALINK_STARTED
-                 * LAVALINK_READY
-                 * LAVALINK_PORT_${number}
-                 * LAVALINK_PID_${number}
-                 */
                 if (message.includes('LAVALINK_')) {
                     if (message === 'LAVALINK_STARTED') {
-                        this.logger.emit('localNode', 'The local node is starting ...');
+                        this.logger.localNode( 'The local node is starting ...');
                     }
                     else if (message === 'LAVALINK_READY') {
-                        this.logger.emit('localNode', 'The local node started successfully.');
+                        this.logger.localNode( 'The local node started successfully.');
                         this.#manualRestart = false;
-                        return resolve();
+                        ready = true;
+                        maybeResolve();
+                        return;
                     }
                     else if ((/^LAVALINK_PORT_(\d+)$/).test(message)) {
                         const portRegex = /^LAVALINK_PORT_(\d+)$/;
                         const portMatch = message.match(portRegex);
                         this.port = Number(portMatch![1]);
 
-                        this.logger.emit('localNode', `The local node listening on port ${this.port}`);
+                        this.logger.localNode( `The local node listening on port ${this.port}`);
                     }
                     else if (/^LAVALINK_PID_(\d+)$/.test(message)) {
                         const pidRegex = /^LAVALINK_PID_(\d+)$/;
                         const pidMatch = message.match(pidRegex);
 
                         this.lavalinkPid = Number(pidMatch![1]);
+                        pidReady = true;
+                        maybeResolve();
                     }
+
+                    return;
                 }
+
+                this.#appendLog(message);
             });
 
-
             this.#lavalinkProcessController.on('exit', async (code, signal) => {
-                this.logger.emit('localNode', cst.color.yellow + `Local Lavalink node exited with code ${code ?? signal}` + cst.color.white);
+                this.logger.localNode( cst.color.yellow + `Local Lavalink node exited with code ${code ?? signal}` + cst.color.white);
 
                 this.#lavalinkProcessController = null;
 
-                if (this.lavalinkPid) this.#killProcess(this.lavalinkPid);
+                if (this.lavalinkPid) {
+                    await this.#killProcess(this.lavalinkPid);
+                }
                 this.lavalinkPid = null;
+                this.port = null;
 
-                // Try to restart automatically
+                if (!ready) {
+                    settleReject(new Error(`Local Lavalink node exited before ready: ${code ?? signal}`));
+                    return;
+                }
+
                 if (this.autoRestart && !this.#manualRestart) {
-                    this.logger.emit('localNode', 'Try to restart automatically.');
-                    this.initialize();
+                    this.logger.localNode( 'Try to restart automatically.');
+                    void this.initialize().catch((error) => {
+                        this.logger.localNode( `Automatic restart failed: ${error}`);
+                    });
                 }
             });
         });
@@ -178,9 +271,7 @@ export class LocalNodeController {
      * @private
      */
     async #downloadFile(url: string, filename: string) {
-        if (!fs.existsSync('server')) {
-            await fs.promises.mkdir('server');
-        }
+        await fs.promises.mkdir('server', { recursive: true });
 
         const destination = path.resolve('./server', filename);
 
@@ -197,7 +288,7 @@ export class LocalNodeController {
             const existingFileSize = fs.statSync(destination).size;
 
             if (existingFileSize === contentLength) {
-                this.logger.emit('localNode', 'File already exists. Skipping download.');
+                this.logger.localNode( 'File already exists. Skipping download.');
                 return;
             }
             else {
@@ -210,8 +301,8 @@ export class LocalNodeController {
         const reader = response.body!.getReader();
         let downloadedBytes = 0;
 
-        this.logger.emit('localNode', `Download Lavalink from: ${this.downloadLink}`);
-        this.logger.emit('localNode', 'Start downloading file ...');
+        this.logger.localNode( `Download Lavalink from: ${this.downloadLink}`);
+        this.logger.localNode( 'Start downloading file ...');
 
         while (true) {
             const { done, value } = await reader.read();
@@ -221,7 +312,9 @@ export class LocalNodeController {
                 break;
             }
 
-            fileStream.write(value);
+            if (!fileStream.write(value)) {
+                await new Promise<void>((resolve) => fileStream.once('drain', resolve));
+            }
             downloadedBytes += value.length;
 
             // Calculate and log download progress
@@ -233,16 +326,21 @@ export class LocalNodeController {
             }
         }
 
-        fileStream.end();
-
-
-        fileStream.on('close', () => {
-            this.logger.emit('localNode', 'File downloaded successfully.');
+        await new Promise<void>((resolve, reject) => {
+            fileStream.once('finish', resolve);
+            fileStream.once('error', reject);
+            fileStream.end();
         });
 
-        fileStream.on('error', (err) => {
-            console.error('[localNode] Error writing the file:', err);
-        });
+        this.logger.localNode( 'File downloaded successfully.');
+    }
+
+    #appendLog(message: string): void {
+        this.lavalinkLogs.push(message);
+
+        if (this.lavalinkLogs.length > LocalNodeController.MAX_LOG_LINES) {
+            this.lavalinkLogs.splice(0, this.lavalinkLogs.length - LocalNodeController.MAX_LOG_LINES);
+        }
     }
 
     /**
@@ -253,12 +351,12 @@ export class LocalNodeController {
         return new Promise((resolve, _reject) => {
             child_process.exec(`netstat -ano | findstr :${port}`, (error, stdout, stderr) => {
                 if (error) {
-                    this.logger.emit('localNode', `[error] winGetPid error executing command: ${error.message}`);
+                    this.logger.localNode( `[error] winGetPid error executing command: ${error.message}`);
                     return resolve([]);
                 }
 
                 if (stderr) {
-                    this.logger.emit('localNode', `[error] winGetPid stderr: ${stderr}`);
+                    this.logger.localNode( `[error] winGetPid stderr: ${stderr}`);
                     return resolve([]);
                 }
 

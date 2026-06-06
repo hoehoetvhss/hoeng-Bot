@@ -79,8 +79,7 @@ export class MessageCreateEvent extends BaseDiscordEvent<Events.MessageCreate> {
         if (!voiceValidation.valid) return;
 
         // Log command execution
-        bot.logger.emit(
-            'discord',
+        bot.logger.discord(
             bot.shardId,
             `[messageCreate] (${cst.color.grey}${message.guild.name}${cst.color.white}) ${message.author.username} : ${message.content}`
         );

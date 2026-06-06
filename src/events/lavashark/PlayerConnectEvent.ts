@@ -16,7 +16,7 @@ export class PlayerConnectEvent extends BaseLavaSharkEvent<'playerConnect'> {
     }
 
     public async execute(bot: Bot, client: Client, player: Player): Promise<void> {
-        bot.logger.emit('lavashark', bot.shardId, `[playerConnect] Player connected in guild "${player.guildId}"`);
+        bot.logger.lavashark( bot.shardId, `[playerConnect] Player connected in guild "${player.guildId}"`);
 
         // Set idle voice status when bot connects
         if (player.voiceChannelId) {

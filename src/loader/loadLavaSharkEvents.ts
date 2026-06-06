@@ -16,7 +16,7 @@ import type { Bot } from '../@types/index.js';
 const loadLavaSharkEvents = (bot: Bot, client: Client): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
         try {
-            bot.logger.emit('log', bot.shardId, `-> loading LavaShark Events ......`);
+            bot.logger.log( bot.shardId, `-> loading LavaShark Events ......`);
 
             // Create registry and register all events
             const registry = new LavaSharkEventRegistry();
@@ -25,7 +25,7 @@ const loadLavaSharkEvents = (bot: Bot, client: Client): Promise<void> => {
             // Get all events and register listeners
             const events = registry.getAll();
 
-            bot.logger.emit('log', bot.shardId, `+--------------------------------+`);
+            bot.logger.log( bot.shardId, `+--------------------------------+`);
 
             // Register each event with LavaShark
             for (const event of events) {
@@ -34,15 +34,15 @@ const loadLavaSharkEvents = (bot: Bot, client: Client): Promise<void> => {
                 // Bind the event handler to LavaShark
                 client.lavashark.on(eventName, event.execute.bind(event, bot, client));
 
-                bot.logger.emit('log', bot.shardId, `| Loaded event ${eventName.padEnd(17, ' ')} |`);
+                bot.logger.log( bot.shardId, `| Loaded event ${eventName.padEnd(17, ' ')} |`);
             }
 
-            bot.logger.emit('log', bot.shardId, `+--------------------------------+`);
-            bot.logger.emit('log', bot.shardId, `${cst.color.grey}-- loading LavaShark Events finished --${cst.color.white}`);
+            bot.logger.log( bot.shardId, `+--------------------------------+`);
+            bot.logger.log( bot.shardId, `${cst.color.grey}-- loading LavaShark Events finished --${cst.color.white}`);
 
             resolve();
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, `Failed to load LavaShark events: ${error}`);
+            bot.logger.error( bot.shardId, `Failed to load LavaShark events: ${error}`);
             reject(error);
         }
     });

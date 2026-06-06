@@ -32,7 +32,7 @@ export class TrackEndEvent extends BaseLavaSharkEvent<'trackEnd'> {
                 FairQueueManager.reorderQueue(bot, player, voiceChannel);
             }
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, `[TrackEndEvent] Error: ${error}`);
+            bot.logger.error( bot.shardId, `[TrackEndEvent] Error: ${error}`);
         }
     }
 }

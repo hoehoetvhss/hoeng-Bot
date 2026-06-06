@@ -59,7 +59,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
                 flags: MessageFlags.Ephemeral,
                 components: []
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, '[interactionCreate] Error reply: ' + error);
+                bot.logger.error( bot.shardId, '[interactionCreate] Error reply: ' + error);
             });
             return;
         }
@@ -70,7 +70,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
                 flags: MessageFlags.Ephemeral,
                 components: []
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, '[interactionCreate] Error reply: ' + error);
+                bot.logger.error( bot.shardId, '[interactionCreate] Error reply: ' + error);
             });
             return;
         }
@@ -83,7 +83,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
                 embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_NOT_PLAYING'))],
                 allowedMentions: { repliedUser: false }
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, '[interactionCreate] Error reply: ' + error);
+                bot.logger.error( bot.shardId, '[interactionCreate] Error reply: ' + error);
             });
             return;
         }
@@ -143,7 +143,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
             }
         }
         catch (error) {
-            bot.logger.emit('error', bot.shardId, '[interactionCreate] Dashboard error: ' + error);
+            bot.logger.error( bot.shardId, '[interactionCreate] Dashboard error: ' + error);
         }
     }
 
@@ -160,7 +160,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
                 embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_SLASH_NOT_ENABLE'))],
                 allowedMentions: { repliedUser: false }
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, `[interactionCreate] Error reply: (${interaction.user.username} : /${interaction.commandName}) ${error}`);
+                bot.logger.error( bot.shardId, `[interactionCreate] Error reply: (${interaction.user.username} : /${interaction.commandName}) ${error}`);
             });
             return;
         }
@@ -212,8 +212,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
 
         // Log command execution
         const guildMember = interaction.guild!.members.cache.get(interaction.user.id);
-        bot.logger.emit(
-            'discord',
+        bot.logger.discord(
             bot.shardId,
             `[interactionCreate] (${cst.color.grey}${guildMember?.guild.name}${cst.color.white}) ${interaction.user.username} : /${interaction.commandName}`
         );
@@ -232,7 +231,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
         try {
             await interaction.deferReply();
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, '[interactionCreate] Error deferReply: ' + error);
+            bot.logger.error( bot.shardId, '[interactionCreate] Error deferReply: ' + error);
         }
 
         // Execute command

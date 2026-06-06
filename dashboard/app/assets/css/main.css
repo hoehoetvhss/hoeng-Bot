@@ -1,0 +1,121 @@
+@import 'tailwindcss';
+
+/* ============================================================
+ * Design Tokens — Discord Style Reference (DESIGN.md)
+ * Tailwind v4 @theme block registers custom CSS properties as
+ * first-class utility classes (bg-*, text-*, border-*, etc.)
+ * ============================================================ */
+
+@theme {
+    /* Brand */
+    --color-blurple: #5865f2;
+    --color-blurple-dark: #3442d9;
+    --color-blurple-light: #8891f2;
+
+    /* Status */
+    --color-online: #57f287;
+    --color-warning: #fda220;
+    --color-danger: #de2761;
+    --color-info: #00b0f4;
+
+    /* Surfaces */
+    --color-bg: #1e2124;
+    --color-surface: #23272a;
+    --color-panel: #2c2f33;
+    --color-hover: #32353b;
+    --color-input-bg: #1a1d20;
+
+    /* Text */
+    --color-snow: #ffffff;
+    --color-fog: #babcd9;
+    --color-sub: #b9bbbe;
+    --color-muted: #72767d;
+
+    /* Border */
+    --color-line: #40444b;
+
+    /* Typography */
+    --font-display: 'Nunito', 'Poppins', sans-serif;
+    --font-body: 'Inter', 'DM Sans', sans-serif;
+}
+
+/* ============================================================
+ * Base styles
+ * ============================================================ */
+
+html,
+body {
+    height: 100%;
+    background-color: var(--color-bg);
+    color: var(--color-snow);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--color-blurple-light);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+/* ============================================================
+ * Custom scrollbar
+ * ============================================================ */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-line);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted);
+}
+
+/* ============================================================
+ * ANSI color spans — used by LogConsole to render colored logs
+ * ============================================================ */
+
+.ansi-reset {
+    color: inherit;
+}
+.ansi-30 {
+    color: #72767d;
+}
+.ansi-31 {
+    color: #de2761;
+}
+.ansi-32 {
+    color: #57f287;
+}
+.ansi-33 {
+    color: #fda220;
+}
+.ansi-34 {
+    color: #00b0f4;
+}
+.ansi-35 {
+    color: #eb459e;
+}
+.ansi-36 {
+    color: #00b0f4;
+}
+.ansi-37 {
+    color: #b9bbbe;
+}
+.ansi-bold {
+    font-weight: 700;
+}

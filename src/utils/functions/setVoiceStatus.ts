@@ -35,6 +35,6 @@ export async function setVoiceChannelStatus(
             });
         }
     } catch (error) {
-        bot.logger.emit('log', bot.shardId, `[VoiceStatus] Failed to set status: ${error}`);
+        bot.logger.log( bot.shardId, `[VoiceStatus] Failed to set status: ${error}`);
     }
 }

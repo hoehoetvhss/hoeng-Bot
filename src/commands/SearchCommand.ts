@@ -59,7 +59,7 @@ export class SearchCommand extends BaseCommand {
             res = await client.lavashark.search(str);
         } catch (error) {
             console.error(error);
-            bot.logger.emit('error', bot.shardId, `Search Error: ${error}`);
+            bot.logger.error( bot.shardId, `Search Error: ${error}`);
             await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_PLAY_SEARCH', {
                 reason: error instanceof Error ? error.message : String(error)
             }));
@@ -68,7 +68,7 @@ export class SearchCommand extends BaseCommand {
 
         // Handle search results
         if (res.loadType === LoadType.ERROR) {
-            bot.logger.emit('error', bot.shardId, `Search Error: ${JSON.stringify(res)}`);
+            bot.logger.error( bot.shardId, `Search Error: ${JSON.stringify(res)}`);
             await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_PLAY_SEARCH', {
                 reason: (res as any).data?.message
             }));
@@ -148,7 +148,7 @@ export class SearchCommand extends BaseCommand {
             await player.connect();
             player.metadata = metadata;
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, 'Error joining channel: ' + error);
+            bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
             await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
             return null;
         }
@@ -209,7 +209,7 @@ export class SearchCommand extends BaseCommand {
             player.filters.setVolume(curVolume);
             await player.play()
                 .catch(async (error) => {
-                    bot.logger.emit('error', bot.shardId, 'Error playing track: ' + error);
+                    bot.logger.error( bot.shardId, 'Error playing track: ' + error);
                     await context.replyError(bot, client.i18n.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
                     return player.destroy();
                 });
@@ -260,7 +260,7 @@ export class SearchCommand extends BaseCommand {
             player.filters.setVolume(curVolume);
             await player.play()
                 .catch(async (error) => {
-                    bot.logger.emit('error', bot.shardId, 'Error playing track: ' + error);
+                    bot.logger.error( bot.shardId, 'Error playing track: ' + error);
                     await context.replyError(bot, client.i18n.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
                     return player.destroy();
                 });
@@ -323,7 +323,7 @@ export class SearchCommand extends BaseCommand {
                 player.filters.setVolume(curVolume);
                 await player.play()
                     .catch(async (error) => {
-                        bot.logger.emit('error', bot.shardId, 'Error playing track: ' + error);
+                        bot.logger.error( bot.shardId, 'Error playing track: ' + error);
 
                         await context.reply({
                             embeds: [embeds.textErrorMsg(bot, client.i18n.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }))],

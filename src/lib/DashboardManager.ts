@@ -50,7 +50,7 @@ export class DashboardManager {
      */
     public async update(player: Player, track: Track): Promise<void> {
         if (!player.dashboardMsg) {
-            this.#bot.logger.emit('error', this.#bot.shardId, 'Dashboard update called but dashboard is null');
+            this.#bot.logger.error( this.#bot.shardId, 'Dashboard update called but dashboard is null');
             return;
         }
 
@@ -70,7 +70,7 @@ export class DashboardManager {
                 components: [buttons]
             });
         } catch (error) {
-            this.#bot.logger.emit('error', this.#bot.shardId, 'Dashboard update error: ' + error);
+            this.#bot.logger.error( this.#bot.shardId, 'Dashboard update error: ' + error);
         }
     }
 
@@ -88,7 +88,7 @@ export class DashboardManager {
                 components: []
             });
         } catch (error) {
-            this.#bot.logger.emit('error', this.#bot.shardId, 'Dashboard destroy error: ' + error);
+            this.#bot.logger.error( this.#bot.shardId, 'Dashboard destroy error: ' + error);
         }
         finally {
             player.dashboardMsg = null;

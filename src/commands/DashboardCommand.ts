@@ -34,7 +34,7 @@ export class DashboardCommand extends BaseCommand {
         try {
             await player.dashboardMsg.delete();
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, 'Dashboard delete error:' + error);
+            bot.logger.error( bot.shardId, 'Dashboard delete error:' + error);
         }
 
         // Initialize new dashboard

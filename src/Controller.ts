@@ -29,9 +29,11 @@ export class Controller {
         } as unknown as Bot;
 
         setEnvironment(this.#bot.config);
-        this.#bot.logger.emit('shard', 'Set environment variables.');
+        this.#bot.logger.shard( 'Set environment variables.');
 
         this.#shardManager = new ShardingController();
+        // Register IPC listener so all shard log messages are routed through this Logger instance.
+        this.#bot.logger.attachShardManager(this.#shardManager.manager);
 
         this.#localNodeController = new LocalNodeController(
             this.#bot.config.localNode.downloadLink!,
@@ -50,8 +52,8 @@ export class Controller {
             .then(() => this.#shardManager.spwan())
             .then(async () => { if (this.#bot.config.webDashboard.enabled) await loadSite(this.#bot, this.#shardManager.manager, this.#localNodeController); })
             .then(() => {
-                this.#bot.logger.emit('shard', cst.color.green + '*** ShardingController initialization completed ***' + cst.color.white);
-                this.#bot.logger.emit('shard', 'Launching sharding process...');
+                this.#bot.logger.shard( cst.color.green + '*** ShardingController initialization completed ***' + cst.color.white);
+                this.#bot.logger.shard( 'Launching sharding process...');
             });
     }
 }

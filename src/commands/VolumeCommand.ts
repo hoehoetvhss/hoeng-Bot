@@ -151,7 +151,7 @@ export class VolumeCommand extends BaseCommand {
                     embeds: [embeds.textErrorMsg(bot, client.i18n.t('commands:ERROR_TIME_EXPIRED'))],
                     components: []
                 })
-                    .catch(() => bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.'));
+                    .catch(() => bot.logger.discord( bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }

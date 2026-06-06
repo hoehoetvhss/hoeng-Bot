@@ -60,7 +60,7 @@ export class JoinCommand extends BaseCommand {
                 await setIdleVoiceStatus(bot, client, player.voiceChannelId);
             }
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, 'Error joining channel: ' + error);
+            bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
             await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
             return;
         }

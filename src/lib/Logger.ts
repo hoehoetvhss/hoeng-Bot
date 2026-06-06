@@ -1,122 +1,226 @@
-import { EventEmitter } from 'events';
 import fs, { promises as fsPromises } from 'fs';
 import * as path from 'path';
 import * as zlib from 'zlib';
 
-
-export type LoggerEvents = {
-    'api': (message: string) => void;
-    'error': (shardId:number, message: string) => void;
-    'i18n': (message: string) => void;
-    'lavashark': (shardId:number, message: string) => void;
-    'localNode': (message: string) => void;
-    'log': (shardId:number, message: string) => void;
-    'discord': (shardId:number, message: string) => void;
-    'shard': (message: string) => void;
-};
+import { ShardingManager } from 'discord.js';
 
 
-export class Logger extends EventEmitter {
+/**
+ * IPC message sent from shard processes to the main process.
+ * The main process is the single writer for the log file.
+ */
+export interface LogIPCMessage {
+    type: 'LOGGER_LOG';
+    message: string;
+}
+
+function isLogIPCMessage(msg: unknown): msg is LogIPCMessage {
+    return (
+        typeof msg === 'object' &&
+        msg !== null &&
+        (msg as LogIPCMessage).type === 'LOGGER_LOG' &&
+        typeof (msg as LogIPCMessage).message === 'string'
+    );
+}
+
+
+export class Logger {
     public readonly logDir: string;
     public format: string;
 
-    readonly #logFilePath: string;
+    /** True when running inside a Discord.js shard worker process. */
+    readonly #isShardProcess: boolean;
+
+    // Main-process-only state (unused in shard mode)
+    #cachedLogLines: string[];
+    #logFilePath: string;
     #currentLogDate: string;
-    #formatTokens: string[];
     #isWriting: boolean;
-    #logQueue: string[];
+    #logQueue: Array<{ date: string; message: string }>;
+
+    // Common state
+    #formatTokens: string[];
 
 
     /**
-     * @param {string} format - Time format `YYYY-MM-DD HH(hh):mm:ss.l`  
-     * @param {string} logDir - Directory to store log files, default is './logs'
+     * @param {string} format  - Time format string, e.g. `YYYY-MM-DD HH:mm:ss.l`
+     * @param {string} logDir  - Directory for log files (main process only). Default: `./logs`
      */
     constructor(format: string = 'YYYY-MM-DD HH:mm:ss.l', logDir: string = './logs') {
-        super();
-
         this.format = format;
         this.logDir = logDir;
-
-        this.#currentLogDate = this.getCurrentDate();   // 'YYYY-MM-DD'
         this.#formatTokens = this.#parseFormatTokens();
+
+        // Detect whether we are inside a shard worker process spawned by Discord.js.
+        // process.send is only defined in child processes, not in the main process.
+        this.#isShardProcess = typeof process.send === 'function';
+
+        // Initialize all fields with defaults (required for definite assignment)
+        this.#cachedLogLines = [];
+        this.#logFilePath = '';
+        this.#currentLogDate = '';
         this.#isWriting = false;
         this.#logQueue = [];
 
         console.log(this.getFormatTime(), 'Initialize Logger ......');
 
-        // Ensure the log directory exists
-        if (!fs.existsSync(this.logDir)) {
-            fs.mkdirSync(this.logDir, { recursive: true });
+        if (!this.#isShardProcess) {
+            // Main process: set up the log file and archive stale entries
+            this.#currentLogDate = this.getCurrentDate();
+
+            if (!fs.existsSync(logDir)) {
+                fs.mkdirSync(logDir, { recursive: true });
+            }
+
+            this.#logFilePath = path.join(logDir, 'bot.log');
+            this.#checkAndArchiveLogFile();
+            this.#cachedLogLines = this.#loadCachedLogLines();
         }
-
-        this.#logFilePath = path.join(this.logDir, 'bot.log');
-
-        this.#checkAndArchiveLogFile();
-
-        this.#setListener();
     }
 
-    public emit<EventName extends keyof LoggerEvents>(event: EventName, ...args: Parameters<LoggerEvents[EventName]>): boolean {
-        return super.emit(event, ...args);
-    }
 
-    public on<EventName extends keyof LoggerEvents>(event: EventName, listener: LoggerEvents[EventName]): this {
-        return super.on(event, listener);
-    }
-
-    public once<EventName extends keyof LoggerEvents>(event: EventName, listener: LoggerEvents[EventName]): this {
-        return super.once(event, listener);
-    }
-
+    // -------------------------------------------------------------------------
+    // Public logging methods (work in both main and shard processes)
+    // -------------------------------------------------------------------------
 
     /**
-     * @private
+     * Logs a general shard message: `[TIMESTAMP] [#shardId] message`
      */
-    #setListener() {
-        this.on('api', (message: string) => {
-            const msg = `${this.getFormatTime()} [api] ${message}`;
-            this.#addLog(msg);
-        });
+    public log(shardId: number, message: string): void {
+        this.#write(`${this.getFormatTime()} [#${shardId}] ${message}`);
+    }
 
-        this.on('error', (shardId:number, message: string) => {
-            const msg = `${this.getFormatTime()} [#${shardId}] [error] ${message}`;
-            this.#addLog(msg);
-        });
+    /**
+     * Logs a shard error message: `[TIMESTAMP] [#shardId] [error] message`
+     */
+    public error(shardId: number, message: string): void {
+        this.#write(`${this.getFormatTime()} [#${shardId}] [error] ${message}`);
+    }
 
-        this.on('i18n', (message: string) => {
-            const msg = `${this.getFormatTime()} [i18n] ${message}`;
-            this.#addLog(msg);
-        });
+    /**
+     * Logs a shard Discord event message: `[TIMESTAMP] [#shardId] [discord] message`
+     */
+    public discord(shardId: number, message: string): void {
+        this.#write(`${this.getFormatTime()} [#${shardId}] [discord] ${message}`);
+    }
 
-        this.on('lavashark', (shardId:number, message: string) => {
-            const msg = `${this.getFormatTime()} [#${shardId}] [lavashark] ${message}`;
-            this.#addLog(msg);
-        });
+    /**
+     * Logs a shard LavaShark event message: `[TIMESTAMP] [#shardId] [lavashark] message`
+     */
+    public lavashark(shardId: number, message: string): void {
+        this.#write(`${this.getFormatTime()} [#${shardId}] [lavashark] ${message}`);
+    }
 
-        this.on('localNode', (message: string) => {
-            const msg = `${this.getFormatTime()} [localNode] ${message}`;
-            this.#addLog(msg);
-        });
+    /**
+     * Logs a system-level API message: `[TIMESTAMP] [api] message`
+     */
+    public api(message: string): void {
+        this.#write(`${this.getFormatTime()} [api] ${message}`);
+    }
 
-        this.on('log', (shardId:number, message: string) => {
-            const msg = `${this.getFormatTime()} [#${shardId}] ${message}`;
-            this.#addLog(msg);
-        });
+    /**
+     * Logs a system-level i18n message: `[TIMESTAMP] [i18n] message`
+     */
+    public i18n(message: string): void {
+        this.#write(`${this.getFormatTime()} [i18n] ${message}`);
+    }
 
-        this.on('discord', (shardId:number, message: string) => {
-            const msg = `${this.getFormatTime()} [#${shardId}] [discord] ${message}`;
-            this.#addLog(msg);
-        });
+    /**
+     * Logs a system-level local node message: `[TIMESTAMP] [localNode] message`
+     */
+    public localNode(message: string): void {
+        this.#write(`${this.getFormatTime()} [localNode] ${message}`);
+    }
 
-        this.on('shard', (message: string) => {
-            const msg = `${this.getFormatTime()} [shard] ${message}`;
-            this.#addLog(msg);
+    /**
+     * Logs a system-level shard controller message: `[TIMESTAMP] [shard] message`
+     */
+    public shard(message: string): void {
+        this.#write(`${this.getFormatTime()} [shard] ${message}`);
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Public utility methods
+    // -------------------------------------------------------------------------
+
+    /**
+     * Registers a Discord.js ShardingManager so the main-process Logger can receive
+     * log messages forwarded from all shard worker processes via IPC.
+     *
+     * Must be called in the main process before shards are spawned.
+     */
+    public attachShardManager(manager: ShardingManager): void {
+        manager.on('shardCreate', (shard) => {
+            shard.on('message', (msg: unknown) => {
+                if (isLogIPCMessage(msg)) {
+                    this.#receiveShardLog(msg.message);
+                }
+            });
         });
+    }
+
+    /**
+     * Returns all log lines from the current log file.
+     * Reads directly from disk to include entries from all processes.
+     */
+    public async getAllLogs(): Promise<string[] | false> {
+        try {
+            const fileContent = await fsPromises.readFile(this.#logFilePath, 'utf-8');
+            const trimmedContent = fileContent.trim();
+            return trimmedContent ? trimmedContent.split('\n') : [];
+        } catch (error) {
+            console.error(this.getFormatTime(), 'Failed to read log file:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Returns all cached log lines strictly before the given 1-based line number.
+     * Line N is at cache index N-1; this returns indices 0 … N-2 (i.e. lines 1 … N-1).
+     * @param {number} lineNumber - 1-based exclusive upper bound.
+     */
+    public getLogsBeforeLine(lineNumber: number): string[] | false {
+        if (lineNumber < 1) {
+            return false;
+        }
+
+        // slice(0, lineNumber - 1) yields lines 1 … lineNumber-1
+        return this.#cachedLogLines.slice(0, lineNumber - 1);
+    }
+
+    /**
+     * Returns all cached log lines strictly after the given 1-based line number.
+     * Line N is at cache index N-1; this returns indices N … end (i.e. lines N+1 … end).
+     * @param {number} lineNumber - 1-based exclusive lower bound.
+     */
+    public getLogsAfterLine(lineNumber: number): string[] | false {
+        if (lineNumber < 1) {
+            return false;
+        }
+
+        // slice(lineNumber) yields lines lineNumber+1 … end
+        return this.#cachedLogLines.slice(lineNumber);
+    }
+
+    /**
+     * Returns the total number of log lines currently held in the in-process cache.
+     * Useful for computing cursor offsets without reading from disk.
+     */
+    public getLogsCount(): number {
+        return this.#cachedLogLines.length;
+    }
+
+    /**
+     * Returns a stable identifier for the currently active log source.
+     * Always returns today's date so all processes agree on the same ID.
+     */
+    public getActiveLogSourceId(): string {
+        return this.getCurrentDate();
     }
 
     /**
      * Returns the current date in 'YYYY-MM-DD' format.
-     * @returns {string} - 'YYYY-MM-DD'
      */
     public getCurrentDate(): string {
         const now = new Date();
@@ -124,8 +228,7 @@ export class Logger extends EventEmitter {
     }
 
     /**
-     * Get the formatted current time
-     * @returns {string} - 'YYYY-MM-DD HH(hh):mm:ss.l'
+     * Returns the formatted current timestamp, e.g. `[2026-01-01 12:00:00.000]`.
      */
     public getFormatTime(): string {
         const now = new Date();
@@ -141,13 +244,11 @@ export class Logger extends EventEmitter {
             'l': String(now.getMilliseconds()).padStart(3, '0'),
         };
 
-        // Replace each token in the format string with its corresponding value
         const formattedTime = this.#formatTokens.reduce(
             (result, token) => result.replace(token, timeValues[token]),
             this.format
         );
 
-        // 12-hour clock
         if (this.#formatTokens.includes('hh')) {
             const period = Number(timeValues['HH']) < 12 ? 'AM' : 'PM';
             return formattedTime + ` ${period}`;
@@ -156,77 +257,72 @@ export class Logger extends EventEmitter {
         return '[' + formattedTime + ']';
     }
 
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
     /**
-     * Calculation time format  
+     * Core dispatch point for every log message.
+     *
+     * - Shard process: prints to stdout and forwards to the main process via IPC.
+     * - Main process: prints to stdout and enqueues for sequential file writing.
      * @private
      */
-    #parseFormatTokens(): string[] {
-        // Regular expression to match time tokens in the format string
-        const timeTokenRegex = /(YYYY|MM|DD|HH|hh|mm|ss|l)/g;
-        const matches = this.format.match(timeTokenRegex);
-
-        // If there are matches, return the array of matched tokens
-        return matches ? matches : [];
-    }
-
-    public async getAllLogs(): Promise<string[] | false> {
-        try {
-            const fileContent = await fsPromises.readFile(this.#logFilePath, 'utf-8');
-            return fileContent.trim().split('\n');
-        } catch (error) {
-            console.error(this.getFormatTime(), 'Failed to read log file:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Reads log content from the specified line number onward.
-     * @param {number} lineNumber - The line number to start reading from (1-based index).
-     * @returns {Promise<string[] | false>} - Returns a promise resolving to an array of log lines after the specified line number, 
-     *                                        or `false` if the line number does not exist.
-     */
-    public async getLogsFromLine(lineNumber: number): Promise<string[] | false> {
-        if (lineNumber < 1) {
-            return false;
-        }
-
-        try {
-            const fileContent = await fsPromises.readFile(this.#logFilePath, 'utf-8');
-            const lines = fileContent.trim().split('\n');
-
-            if (lineNumber > lines.length) {
-                return false;
-            }
-
-            return lines.slice(lineNumber);
-        } catch (error) {
-            console.error('Failed to read logs:', error);
-            return false;
-        }
-    }
-
-    /**
-     * @private
-     */
-    #addLog(message: string): void {
+    #write(message: string): void {
         console.log(message);
 
-        const currentDate = message.replace(/\r\n|\r|\n/g, ' ').replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');  // 'YYYY-MM-DD'
+        if (this.#isShardProcess) {
+            // Forward to the main process; it owns the log file.
+            const ipcMsg: LogIPCMessage = { type: 'LOGGER_LOG', message };
+            process.send!(ipcMsg);
+        } else {
+            // Extract date from the timestamp in the message (e.g. '2026-01-01')
+            const date = message
+                .replace(/\r\n|\r|\n/g, ' ')
+                .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
 
-        if (currentDate !== this.#currentLogDate) {
-            this.#archiveLogFile();
-            this.#currentLogDate = currentDate;
+            this.#logQueue.push({ date, message });
+            this.#processLogQueue();
         }
+    }
 
-        this.#logQueue.push(message);
+    /**
+     * Called by the IPC listener when a log message arrives from a shard process.
+     * Enqueues the message for file writing, just as locally-generated messages are.
+     * @private
+     */
+    #receiveShardLog(message: string): void {
+        const date = message
+            .replace(/\r\n|\r|\n/g, ' ')
+            .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
+
+        this.#logQueue.push({ date, message });
         this.#processLogQueue();
     }
 
     /**
-     * Processes the log queue and writes each log message to the log file in sequence.
-     * Ensures that log messages are written in the order they are received.
-     * If a write operation is in progress, the function exits early and will be called again
-     * after the current write operation completes.
+     * Pre-loads existing log lines from disk into the in-process cache.
+     * @private
+     */
+    #loadCachedLogLines(): string[] {
+        if (!fs.existsSync(this.#logFilePath)) {
+            return [];
+        }
+
+        try {
+            const fileContent = fs.readFileSync(this.#logFilePath, 'utf-8');
+            const trimmedContent = fileContent.trim();
+            return trimmedContent ? trimmedContent.split('\n') : [];
+        } catch (error) {
+            console.error(this.getFormatTime(), 'Failed to warm log cache:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Processes the log queue sequentially.
+     * Ensures messages are written in arrival order; rotates the file when the date changes.
      * @private
      */
     #processLogQueue(): void {
@@ -235,19 +331,32 @@ export class Logger extends EventEmitter {
         }
 
         this.#isWriting = true;
-        const message = this.#logQueue.shift() + '\n';
+        const entry = this.#logQueue.shift();
+        if (!entry) {
+            this.#isWriting = false;
+            return;
+        }
 
-        fs.appendFile(this.#logFilePath, message, 'utf-8', (error) => {
+        if (entry.date !== this.#currentLogDate) {
+            this.#archiveLogFile();
+            this.#currentLogDate = entry.date;
+            this.#cachedLogLines = [];
+        }
+
+        this.#cachedLogLines.push(entry.message);
+        const line = entry.message + '\n';
+
+        fs.appendFile(this.#logFilePath, line, 'utf-8', (error) => {
             if (error) {
                 console.log('Logger writing error', error);
             }
             this.#isWriting = false;
-            this.#processLogQueue();  // Continue processing the queue
+            this.#processLogQueue();    // Continue processing the queue
         });
     }
 
     /**
-     * Archives the current log file by compressing it and appending the date to the filename.
+     * Compresses and archives the current log file, then removes it.
      * @private
      */
     #archiveLogFile(archiveDate: string = this.#currentLogDate): void {
@@ -270,33 +379,48 @@ export class Logger extends EventEmitter {
     }
 
     /**
-     * Checks if the last log entry in the current log file is from today. If not, archives the log file.
+     * On startup, checks whether the existing log file belongs to a previous day.
+     * If so, archives it before the new session begins.
      * @private
      */
     #checkAndArchiveLogFile(): void {
-        if (fs.existsSync(this.#logFilePath)) {
-            const fileContent = fs.readFileSync(this.#logFilePath, 'utf-8');
-
-            const lines = fileContent.trim().split('\n');
-            const lastLine = lines[lines.length - 1];
-
-            if (lastLine) {
-                // Extract the date from the last line
-                const logDateMatch = lastLine.match(/^\[(\d{4}-\d{2}-\d{2})[^]*?\]/);  // [YYYY-MM-DD]
-
-                if (logDateMatch) {
-                    const logDate = lastLine.replace(/\r\n|\r|\n/g, ' ').replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
-                    const currentDate = this.getFormatTime().replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
-
-                    // Archive the log file if the date is different
-                    if (logDate !== currentDate) {
-                        this.#archiveLogFile(logDate);
-                    }
-                }
-                else {
-                    this.#archiveLogFile();
-                }
-            }
+        if (!fs.existsSync(this.#logFilePath)) {
+            return;
         }
+
+        const fileContent = fs.readFileSync(this.#logFilePath, 'utf-8');
+        const lines = fileContent.trim().split('\n');
+        const lastLine = lines[lines.length - 1];
+
+        if (!lastLine) {
+            return;
+        }
+
+        // Extract the date from the last line: expects format [YYYY-MM-DD ...]
+        const logDateMatch = lastLine.match(/^\[(\d{4}-\d{2}-\d{2})[^]*?\]/);
+
+        if (logDateMatch) {
+            const logDate = lastLine
+                .replace(/\r\n|\r|\n/g, ' ')
+                .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
+            const currentDate = this.getFormatTime()
+                .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
+
+            if (logDate !== currentDate) {
+                this.#archiveLogFile(logDate);
+            }
+        } else {
+            this.#archiveLogFile();
+        }
+    }
+
+    /**
+     * Parses the format string and returns an ordered list of recognised time tokens.
+     * @private
+     */
+    #parseFormatTokens(): string[] {
+        const timeTokenRegex = /(YYYY|MM|DD|HH|hh|mm|ss|l)/g;
+        const matches = this.format.match(timeTokenRegex);
+        return matches ?? [];
     }
 }

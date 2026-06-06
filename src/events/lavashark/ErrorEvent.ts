@@ -15,6 +15,6 @@ export class ErrorEvent extends BaseLavaSharkEvent<'error'> {
     }
 
     public execute(bot: Bot, _client: Client, node: Node, error: any): void {
-        bot.logger.emit('error', bot.shardId, `[LavaShark] ${node.identifier} error: ${error.message}`);
+        bot.logger.error( bot.shardId, `[LavaShark] ${node.identifier} error: ${error.message}`);
     }
 }

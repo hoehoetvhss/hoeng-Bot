@@ -133,7 +133,7 @@ export class FilterCommand extends BaseCommand {
                 components: [],
                 allowedMentions: { repliedUser: false }
             }).catch(() =>
-                bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.')
+                bot.logger.discord( bot.shardId, 'Failed to edit deleted message.')
             );
 
             collector.stop();
@@ -146,7 +146,7 @@ export class FilterCommand extends BaseCommand {
                     components: [],
                     allowedMentions: { repliedUser: false }
                 }).catch(() =>
-                    bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.')
+                    bot.logger.discord( bot.shardId, 'Failed to edit deleted message.')
                 );
             }
         });
@@ -184,7 +184,7 @@ export class FilterCommand extends BaseCommand {
             components: [],
             allowedMentions: { repliedUser: false }
         }).catch(() =>
-            bot.logger.emit('discord', bot.shardId, 'Failed to edit message.')
+            bot.logger.discord( bot.shardId, 'Failed to edit message.')
         );
     }
 }

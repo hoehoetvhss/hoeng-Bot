@@ -87,7 +87,7 @@ export class FairQueueManager {
         // Replace queue contents
         player.queue.tracks.splice(0, player.queue.tracks.length, ...interleaved);
 
-        bot.logger.emit('log', bot.shardId,
+        bot.logger.log( bot.shardId,
             `[FairQueue] Reordered: ${interleaved.length} tracks, rotation: [${rotation.join(', ')}], absent: ${absentTracks.length}`
         );
     }

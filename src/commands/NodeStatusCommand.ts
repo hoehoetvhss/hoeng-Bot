@@ -70,7 +70,7 @@ export class NodeStatusCommand extends BaseCommand {
             }
         }
 
-        bot.logger.emit('log', bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
+        bot.logger.log( bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
 
         await context.reply({
             embeds: [embeds.nodesStatus(bot, unhealthValue, nodesStatus)],
@@ -104,9 +104,9 @@ export class NodeStatusCommand extends BaseCommand {
                     nodePingPromise
                 ]);
 
-                bot.logger.emit('log', bot.shardId, 'nodeInfo: ' + JSON.stringify(nodeInfo));
-                bot.logger.emit('log', bot.shardId, 'nodeStats: ' + JSON.stringify(nodeStats));
-                bot.logger.emit('log', bot.shardId, 'nodePing: ' + nodePing + 'ms');
+                bot.logger.log( bot.shardId, 'nodeInfo: ' + JSON.stringify(nodeInfo));
+                bot.logger.log( bot.shardId, 'nodeStats: ' + JSON.stringify(nodeStats));
+                bot.logger.log( bot.shardId, 'nodePing: ' + nodePing + 'ms');
 
                 await context.reply({
                     embeds: [embeds.nodeStatus(bot, nodeName, nodeInfo, nodeStats, nodePing)],

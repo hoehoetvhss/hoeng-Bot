@@ -128,7 +128,7 @@ export class HelpCommand extends BaseCommand {
                 embeds: [embeds.help(bot, title!, usage)],
                 components: [],
                 allowedMentions: { repliedUser: false }
-            }).catch(() => bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.'));
+            }).catch(() => bot.logger.discord( bot.shardId, 'Failed to edit deleted message.'));
 
             collector.stop();
         });
@@ -139,7 +139,7 @@ export class HelpCommand extends BaseCommand {
                     embeds: [embeds.textErrorMsg(bot, client.i18n.t('commands:ERROR_TIME_EXPIRED'))],
                     components: [],
                     allowedMentions: { repliedUser: false }
-                }).catch(() => bot.logger.emit('discord', bot.shardId, 'Failed to edit deleted message.'));
+                }).catch(() => bot.logger.discord( bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }

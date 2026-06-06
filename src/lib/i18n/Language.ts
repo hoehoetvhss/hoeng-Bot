@@ -69,7 +69,7 @@ export class Language {
         for (const localeDir of localeDirs) {
             if (!localeDir.isDirectory()) {
                 if (localeDir.name !== 'README.md') {
-                    this.logger.emit('i18n', `[warn] ${localeDir.name} is not a language directory`);
+                    this.logger.i18n( `[warn] ${localeDir.name} is not a language directory`);
                 }
 
                 continue;
@@ -77,7 +77,7 @@ export class Language {
 
             const language = localeDir.name;
             if (!/^[a-z]{2}-[A-Z]{2}$/.test(language)) {
-                this.logger.emit('i18n', `[error] Invalid language directory format: ${language}`);
+                this.logger.i18n( `[error] Invalid language directory format: ${language}`);
                 continue;
             }
 
@@ -88,7 +88,7 @@ export class Language {
 
             for (const file of files) {
                 if (!file.isFile() || !file.name.endsWith('.json')) {
-                    this.logger.emit('i18n', `[warn] wrong language file ${file.name}`);
+                    this.logger.i18n( `[warn] wrong language file ${file.name}`);
                     continue;
                 }
 
@@ -143,7 +143,7 @@ export class Language {
 
         for (const key in template) {
             if (!(key in content)) {
-                this.logger.emit('i18n', `[warn] Local ${language} is missing the ${namespace}:${key} key, using default template key.`);
+                this.logger.i18n( `[warn] Local ${language} is missing the ${namespace}:${key} key, using default template key.`);
                 content[key] = template[key];
             }
         }

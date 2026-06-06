@@ -128,7 +128,7 @@ export class DjCommand extends BaseCommand {
             
             await context.replySuccess(bot, description);
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, `Error showing DJ list: ${error}`);
+            bot.logger.error( bot.shardId, `Error showing DJ list: ${error}`);
             await context.replyError(bot, i18next.t('commands:MESSAGE_DJ_LIST_ERROR'));
         }
     }

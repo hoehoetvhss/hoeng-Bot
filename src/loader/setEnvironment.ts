@@ -1,5 +1,4 @@
 import { ActivityType } from 'discord.js';
-import { hashGenerator } from '../lib/hashGenerator.js';
 import { config } from '../../config.js';
 import { DJModeEnum } from './../@types/index.js';
 
@@ -147,7 +146,7 @@ const setEnvironment = (defaultConfig: Config) => {
 
         user: {
             username: config.webDashboard.user.username || defaultConfig.webDashboard.user.username,
-            password: hashGenerator.generateHash(config.webDashboard.user.password || defaultConfig.webDashboard.user.password)
+            password: config.webDashboard.user.password || defaultConfig.webDashboard.user.password
         },
         oauth2: {
             link: config.webDashboard.oauth2.link || defaultConfig.webDashboard.oauth2.link,

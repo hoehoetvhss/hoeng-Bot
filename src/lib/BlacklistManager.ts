@@ -43,9 +43,9 @@ export class BlacklistManager {
                 this.blacklistedUsers.add(row.user_id);
             }
 
-            this.bot.logger.emit('log', this.bot.shardId, `[BlacklistManager] Initialized with ${this.blacklistedUsers.size} blacklisted user(s)`);
+            this.bot.logger.log( this.bot.shardId, `[BlacklistManager] Initialized with ${this.blacklistedUsers.size} blacklisted user(s)`);
         } catch (error) {
-            this.bot.logger.emit('error', this.bot.shardId, `[BlacklistManager] Failed to initialize: ${error}`);
+            this.bot.logger.error( this.bot.shardId, `[BlacklistManager] Failed to initialize: ${error}`);
         }
     }
 
@@ -65,7 +65,7 @@ export class BlacklistManager {
             this.blacklistedUsers.add(userId);
             return true;
         } catch (error) {
-            this.bot.logger.emit('error', this.bot.shardId, `[BlacklistManager] Failed to add user ${userId}: ${error}`);
+            this.bot.logger.error( this.bot.shardId, `[BlacklistManager] Failed to add user ${userId}: ${error}`);
             return false;
         }
     }
@@ -86,7 +86,7 @@ export class BlacklistManager {
             this.blacklistedUsers.delete(userId);
             return true;
         } catch (error) {
-            this.bot.logger.emit('error', this.bot.shardId, `[BlacklistManager] Failed to remove user ${userId}: ${error}`);
+            this.bot.logger.error( this.bot.shardId, `[BlacklistManager] Failed to remove user ${userId}: ${error}`);
             return false;
         }
     }
@@ -111,7 +111,7 @@ export class BlacklistManager {
     public close(): void {
         if (this.db) {
             this.db.close();
-            this.bot.logger.emit('log', this.bot.shardId, '[BlacklistManager] Database connection closed.');
+            this.bot.logger.log( this.bot.shardId, '[BlacklistManager] Database connection closed.');
         }
     }
 }

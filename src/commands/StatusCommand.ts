@@ -72,7 +72,7 @@ export class StatusCommand extends BaseCommand {
                 bot.stats.guildsCount = statsResults.map((shard) => shard.serverCount) || bot.stats.guildsCount;
                 bot.stats.lastRefresh = Date.now();
             } catch (error) {
-                bot.logger.emit('api', `[${bot.shardId}] Failed to get shard info: ${error}`);
+                bot.logger.api( `[${bot.shardId}] Failed to get shard info: ${error}`);
             }
         }
 
@@ -92,7 +92,7 @@ export class StatusCommand extends BaseCommand {
             playing: totalPlaying
         };
 
-        bot.logger.emit('log', bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
+        bot.logger.log( bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
 
         await context.reply({
             embeds: [

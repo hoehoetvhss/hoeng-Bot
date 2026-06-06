@@ -39,7 +39,7 @@ export class CommandValidator {
                 }))],
                 allowedMentions: { repliedUser: false }
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
+                bot.logger.error( bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
             });
 
             return { valid: false, errorSent: true };
@@ -69,7 +69,7 @@ export class CommandValidator {
                     embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_REQUIRE_ADMIN'))],
                     allowedMentions: { repliedUser: false }
                 }).catch((error) => {
-                    bot.logger.emit('error', bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
+                    bot.logger.error( bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
                 });
 
                 return { valid: false, errorSent: true };
@@ -104,7 +104,7 @@ export class CommandValidator {
                     embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_REQUIRE_DJ'))],
                     allowedMentions: { repliedUser: false }
                 }).catch((error) => {
-                    bot.logger.emit('error', bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
+                    bot.logger.error( bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
                 });
 
                 return { valid: false, errorSent: true };
@@ -141,7 +141,7 @@ export class CommandValidator {
                 embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_NOT_IN_VOICE_CHANNEL'))],
                 allowedMentions: { repliedUser: false }
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
+                bot.logger.error( bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
             });
 
             return { valid: false, errorSent: true };
@@ -155,7 +155,7 @@ export class CommandValidator {
                 }))],
                 allowedMentions: { repliedUser: false }
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
+                bot.logger.error( bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
             });
 
             return { valid: false, errorSent: true };
@@ -168,7 +168,7 @@ export class CommandValidator {
                 embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_NOT_IN_SAME_VOICE_CHANNEL'))],
                 allowedMentions: { repliedUser: false }
             }).catch((error) => {
-                bot.logger.emit('error', bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
+                bot.logger.error( bot.shardId, `Error reply: (${username} : ${content}) ${error}`);
             });
 
             return { valid: false, errorSent: true };
@@ -193,7 +193,7 @@ export class CommandValidator {
         try {
             guild = await client.guilds.fetch(guildId);
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, `Error fetching guild (${guildId}): ${error}`);
+            bot.logger.error( bot.shardId, `Error fetching guild (${guildId}): ${error}`);
             await source.reply({
                 embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_GET_GUILD_DATA_CACHE'))],
                 allowedMentions: { repliedUser: false }
@@ -205,7 +205,7 @@ export class CommandValidator {
         try {
             await guild.members.fetch(userId);
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, `Error fetching member (${userId}): ${error}`);
+            bot.logger.error( bot.shardId, `Error fetching member (${userId}): ${error}`);
             await source.reply({
                 embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_GET_GUILD_DATA_CACHE'))],
                 allowedMentions: { repliedUser: false }

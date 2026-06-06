@@ -15,6 +15,6 @@ export class NodeDisconnectEvent extends BaseLavaSharkEvent<'nodeDisconnect'> {
     }
 
     public execute(bot: Bot, _client: Client, node: Node): void {
-        bot.logger.emit('lavashark', bot.shardId, `[nodeDisconnect] Node "${node.identifier}" disconnected!`);
+        bot.logger.lavashark( bot.shardId, `[nodeDisconnect] Node "${node.identifier}" disconnected!`);
     }
 }

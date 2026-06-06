@@ -32,7 +32,7 @@ export class MusicSaveButtonHandler {
                 }).catch(() => { });
             })
             .catch((error) => {
-                bot.logger.emit('error', bot.shardId, '[MusicSaveButtonHandler] Error sending DM: ' + error);
+                bot.logger.error( bot.shardId, '[MusicSaveButtonHandler] Error sending DM: ' + error);
                 interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, client.i18n.t('events:ERROR_SEND_PRIVATE_MESSAGE'))],
                     flags: MessageFlags.Ephemeral

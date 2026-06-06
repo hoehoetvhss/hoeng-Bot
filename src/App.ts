@@ -45,13 +45,13 @@ class App {
         } as any;
 
         setEnvironment(this.bot.config);
-        this.bot.logger.emit('log', this.bot.shardId, 'Set environment variables.');
+        this.bot.logger.log( this.bot.shardId, 'Set environment variables.');
 
         if (this.bot.config.blacklist.length > 0) {
-            this.bot.logger.emit('log', this.bot.shardId, 'Blacklist loaded: ' + this.bot.config.blacklist.length + ' users');
+            this.bot.logger.log( this.bot.shardId, 'Blacklist loaded: ' + this.bot.config.blacklist.length + ' users');
         }
         else {
-            this.bot.logger.emit('log', this.bot.shardId, 'No blacklist entries found.');
+            this.bot.logger.log( this.bot.shardId, 'No blacklist entries found.');
         }
 
         if (this.bot.config.spotify.clientId && this.bot.config.spotify.clientSecret) {
@@ -64,7 +64,7 @@ class App {
                 }
             });
 
-            this.bot.logger.emit('log', this.bot.shardId, 'Spotify credentials configured.');
+            this.bot.logger.log( this.bot.shardId, 'Spotify credentials configured.');
         }
         else {
             this.#client.lavashark = new LavaShark({
@@ -72,12 +72,12 @@ class App {
                 sendWS: (guildId, payload) => { this.#client.guilds.cache.get(guildId)?.shard.send(payload); }
             });
 
-            this.bot.logger.emit('log', this.bot.shardId, 'Spotify credentials not configured.');
+            this.bot.logger.log( this.bot.shardId, 'Spotify credentials not configured.');
         }
 
         // Initialize dashboard manager
         this.#client.dashboard = new DashboardManager(this.bot, this.#client);
-        this.bot.logger.emit('log', this.bot.shardId, 'Dashboard manager initialized.');
+        this.bot.logger.log( this.bot.shardId, 'Dashboard manager initialized.');
 
         // Initialize last played tracks map
         this.#client.lastPlayedTracks = new Map();
@@ -102,11 +102,11 @@ class App {
             .then(() => loadCommands(this.bot, this.#client))
             .then(() => checkNodesStats(this.bot, this.#client.lavashark))
             .then(async () => {
-                this.bot.logger.emit('log', this.bot.shardId, cst.color.green + '*** All loaded successfully ***' + cst.color.white);
+                this.bot.logger.log( this.bot.shardId, cst.color.green + '*** All loaded successfully ***' + cst.color.white);
                 await this.#client.login(process.env.BOT_TOKEN);
 
                 this.#setShutdownSignalHandlers();
-                this.bot.logger.emit('log', this.bot.shardId, 'pid: ' + process.pid);
+                this.bot.logger.log( this.bot.shardId, 'pid: ' + process.pid);
             });
     }
 
@@ -116,17 +116,17 @@ class App {
      */
     #setShutdownSignalHandlers(): void {
         const shutdown = async (signal: string) => {
-            this.bot.logger.emit('log', this.bot.shardId, `Received ${signal}. Closing server gracefully...`);
+            this.bot.logger.log( this.bot.shardId, `Received ${signal}. Closing server gracefully...`);
 
             const timeout = setTimeout(() => {
-                this.bot.logger.emit('log', this.bot.shardId, `Force shutting down due to timeout...`);
+                this.bot.logger.log( this.bot.shardId, `Force shutting down due to timeout...`);
                 process.exit(1);
             }, 30 * 1000);
 
             try {
                 // Stop periodic saves and save all active queues before shutdown
                 if (this.bot.config.queuePersistence.enabled && (this.#client as any).queuePersistence) {
-                    this.bot.logger.emit('log', this.bot.shardId, 'Saving active queues before shutdown...');
+                    this.bot.logger.log( this.bot.shardId, 'Saving active queues before shutdown...');
                     (this.#client as any).queuePersistence.stopAllPeriodicSaves();
                     for (const player of this.#client.lavashark.players.values()) {
                         await (this.#client as any).queuePersistence.saveQueue(player);
@@ -134,44 +134,44 @@ class App {
                 }
 
                 // Close the lavashark players connections
-                this.bot.logger.emit('log', this.bot.shardId, 'Closing voice channel connection...');
+                this.bot.logger.log( this.bot.shardId, 'Closing voice channel connection...');
                 await Promise.allSettled(
                     Array.from(this.#client.lavashark.players.values()).map(player => player.destroy())
                 );
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                this.bot.logger.emit('log', this.bot.shardId, 'Voice channel connection closed.');
+                this.bot.logger.log( this.bot.shardId, 'Voice channel connection closed.');
 
                 // Close the lavashark nodes connections
-                this.bot.logger.emit('log', this.bot.shardId, 'Closing lavashark nodes...');
+                this.bot.logger.log( this.bot.shardId, 'Closing lavashark nodes...');
                 for (const node of this.#client.lavashark.nodes) {
                     node.disconnect();
                 }
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                this.bot.logger.emit('log', this.bot.shardId, 'Lavashark nodes closed.');
+                this.bot.logger.log( this.bot.shardId, 'Lavashark nodes closed.');
 
                 // Close discord.js connection
-                this.bot.logger.emit('log', this.bot.shardId, 'Closing discord.js connection...');
+                this.bot.logger.log( this.bot.shardId, 'Closing discord.js connection...');
                 await this.#client.destroy();
-                this.bot.logger.emit('log', this.bot.shardId, 'Discord.js connection closed.');
+                this.bot.logger.log( this.bot.shardId, 'Discord.js connection closed.');
 
                 // Close queue persistence database
                 if (this.bot.config.queuePersistence.enabled && (this.#client as any).queuePersistence) {
-                    this.bot.logger.emit('log', this.bot.shardId, 'Closing queue persistence database...');
+                    this.bot.logger.log( this.bot.shardId, 'Closing queue persistence database...');
                     (this.#client as any).queuePersistence.close();
                 }
 
                 // Close blacklist manager database
                 if (this.bot.blacklistManager) {
-                    this.bot.logger.emit('log', this.bot.shardId, 'Closing blacklist database...');
+                    this.bot.logger.log( this.bot.shardId, 'Closing blacklist database...');
                     this.bot.blacklistManager.close();
                 }
 
                 clearTimeout(timeout);
-                this.bot.logger.emit('log', this.bot.shardId, 'Server closed gracefully.');
+                this.bot.logger.log( this.bot.shardId, 'Server closed gracefully.');
 
                 process.exit(0);
             } catch (error) {
-                this.bot.logger.emit('error', this.bot.shardId, `Error during shutdown: ${error}`);
+                this.bot.logger.error( this.bot.shardId, `Error during shutdown: ${error}`);
                 clearTimeout(timeout);
                 process.exit(1);
             }

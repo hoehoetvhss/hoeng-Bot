@@ -15,6 +15,6 @@ export class NodeConnectEvent extends BaseLavaSharkEvent<'nodeConnect'> {
     }
 
     public execute(bot: Bot, _client: Client, node: Node): void {
-        bot.logger.emit('lavashark', bot.shardId, `[nodeConnect] Node "${node.identifier}" connected!`);
+        bot.logger.lavashark( bot.shardId, `[nodeConnect] Node "${node.identifier}" connected!`);
     }
 }

@@ -36,7 +36,7 @@ export class TrackAddEvent extends BaseLavaSharkEvent<'trackAdd'> {
         try {
             if (player.dashboardMsg) await player.dashboardMsg.delete();
         } catch (error) {
-            bot.logger.emit('error', bot.shardId, 'Dashboard delete error:' + error);
+            bot.logger.error( bot.shardId, 'Dashboard delete error:' + error);
         }
 
         await client.dashboard.initialize((player.metadata as Message), player);
