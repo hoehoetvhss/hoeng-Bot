@@ -38,7 +38,8 @@ jobs:
         run: npm run typecheck
 
   docker-build:
-    needs: [quality-check]
+    needs: quality-check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
