@@ -5,10 +5,15 @@ on:
     branches: [ "*" ]
   pull_request:
     branches: [ "*" ]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality-check:
@@ -22,13 +27,16 @@ jobs:
         with:
           node-version: '26'
           cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            dashboard/package-lock.json
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install root dependencies
+        run: npm ci
 
       - name: Install dashboard dependencies
         working-directory: dashboard
-        run: npm install
+        run: npm ci
 
       - name: Run Build Test
         run: npm run build
@@ -51,6 +59,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Log in to the Container registry
         uses: docker/login-action@v4
         with:
@@ -68,11 +82,16 @@ jobs:
             type=semver,pattern={{version}}
             type=sha,format=long
             latest
+          flavor: |
+            latest=true
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
