@@ -19,6 +19,9 @@ WORKDIR /tmp
 COPY package*.json ./
 RUN npm install
 
+COPY dashboard/package*.json ./dashboard/
+RUN cd dashboard && npm install
+
 COPY . .
 RUN npm run build
 
@@ -39,11 +42,13 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /bot
 
-COPY --from=node_build /tmp/dist /bot
+COPY --from=node_build /tmp/dist /bot/dist
 COPY --from=node_build /tmp/node_modules /bot/node_modules
 COPY --from=node_build /tmp/dashboard/.output/public /bot/dashboard/.output/public
-COPY --from=node_build /tmp/package*.json /bot
-COPY --from=node_build /tmp/config.js /bot
 
+COPY --from=node_build /tmp/package*.json /bot
+COPY --from=node_build /tmp/config.js /bot/dist/config.js
+
+RUN mkdir -p data logs
 
 ENTRYPOINT ["npm", "run", "start:server"]
