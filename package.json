@@ -5,8 +5,8 @@
     "main": "./src/index.ts",
     "type": "module",
     "scripts": {
-        "start": "npm run build && node ./dist/src/index.js",
-        "start:server": "npm run build:server && node ./dist/src/index.js",
+        "start": "npm run build && node --dns-result-order=ipv4first ./dist/src/index.js",
+        "start:server": "npm run build:server && node --dns-result-order=ipv4first ./dist/src/index.js",
         "build": "npm run build:dashboard && npm run build:server",
         "build:server": "tsc",
         "build:dashboard": "cd dashboard && npm run generate",
