@@ -5,8 +5,8 @@
     "main": "./src/index.ts",
     "type": "module",
     "scripts": {
-        "start": "npm run build && node --dns-result-order=ipv4first ./dist/src/index.js",
-        "start:server": "npm run build:server && node --dns-result-order=ipv4first ./dist/src/index.js",
+        "start": "npm run build && ./dist/src/index.js",
+        "start:server": "npm run build:server && ./dist/src/index.js",
         "build": "npm run build:dashboard && npm run build:server",
         "build:server": "tsc",
         "build:dashboard": "cd dashboard && npm run generate",
@@ -21,7 +21,9 @@
         "url": "https://discord.gg/HMFyw4xeeV"
     },
     "homepage": "https://discord.gg/HMFyw4xeeV",
-    "overrides": {},
+    "overrides": {
+        "undici": "^6.26.0"
+    },
     "dependencies": {
         "bcryptjs": "^3.0.3",
         "better-sqlite3": "^12.10.0",
@@ -32,7 +34,7 @@
         "i18next": "^26.3.1",
         "i18next-fs-backend": "^2.6.6",
         "lavashark": "^2.3.2",
-        "undici": "^8.3.0",
+        "undici": "^6.26.0",
         "zod": "^4.4.3"
     },
     "devDependencies": {
