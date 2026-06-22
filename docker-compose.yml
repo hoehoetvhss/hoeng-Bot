@@ -1,15 +1,24 @@
 services:
-  music-disc:
-    image: hmes98318/music-disc:latest
-    container_name: music-disc
+  hoeng-bot:
+    image: ghcr.io/hoehoetvhss/hoeng-bot:latest
+    container_name: hoeng-bot
     restart: always
+    network_mode: host
+    entrypoint: >
+      /bin/sh -c "
+      until node -e \"const net = require('net'); const client = net.createConnection(2400, 'localhost'); client.on('connect', () => { client.end(); process.exit(0); }); client.on('error', () => { process.exit(1); });\"; do
+        echo 'Waiting for Lavalink to be ready...';
+        sleep 3;
+      done;
+      echo 'Lavalink is ready! Starting the bot...';
+      node ./dist/src/index.js"
+
     environment:
-      TZ: "Asia/Taipei"
-      BOT_TOKEN: "your_token"
+      - TZ=Asia/Seoul
+      - BOT_TOKEN=${BOT_TOKEN}
     volumes:
-      - ./config.js:/bot/config.js              # Bot config
-      - ./logs:/bot/logs                        # Bot logs
-      - ./server:/bot/server                    # localnode configuration file
-      - ./data:/bot/data                        # Queue persistence data
-    ports:
-      - 33333:33333
+      - ./config.js:/bot/dist/config.js
+      - ./data:/bot/data
+      - ./logs:/bot/logs
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
