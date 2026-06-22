@@ -4,11 +4,11 @@
         <!-- Header -->
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-                <h1 class="font-display text-xl font-extrabold tracking-wide text-snow">서버 목록</h1>
-                <p class="mt-1 text-sm text-sub">참여 중인 서버를 확인하고, 재생 상태로 필터링하거나 서버 ID로 검색할 수 있습니다.</p>
+                <h1 class="font-display text-xl font-extrabold tracking-wide text-snow">Servers</h1>
+                <p class="mt-1 text-sm text-sub">Browse guilds, filter by playback state, or search by guild ID.</p>
             </div>
             <span class="rounded-full bg-surface px-3 py-1 text-xs text-fog">
-                총 {{ serversStore.pagination.totalItems }}개
+                Total {{ serversStore.pagination.totalItems }}
             </span>
         </div>
 
@@ -16,12 +16,12 @@
         <div class="rounded-2xl bg-panel p-4 shadow">
             <form class="flex flex-wrap items-end gap-3" @submit.prevent="applyFilters">
                 <div class="flex min-w-60 flex-col gap-1.5">
-                    <span class="text-[11px] font-semibold tracking-wide text-muted">서버 ID</span>
+                    <span class="text-[11px] font-semibold tracking-wide text-muted">Guild ID</span>
                     <input
                         v-model="guildIdInput"
                         class="w-full rounded-lg border border-line bg-input-bg px-4 py-2 text-sm text-snow outline-none placeholder:text-muted focus:border-blurple"
                         inputmode="numeric"
-                        placeholder="필터링할 서버 ID 입력"
+                        placeholder="Filter by exact guild ID"
                     />
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -36,20 +36,20 @@
                         @click="togglePlayingFilter"
                     >
                         <Icon name="lucide:music" class="mr-1.5 inline size-3.5" />
-                        {{ serversStore.playingFilter ? '재생 중인 서버만' : '전체 보기' }}
+                        {{ serversStore.playingFilter ? 'Playing Only' : 'All States' }}
                     </button>
                     <button
                         type="submit"
                         class="rounded-xl bg-blurple px-4 py-2 text-sm font-semibold text-white transition hover:bg-blurple-dark"
                     >
-                        적용
+                        Apply
                     </button>
                     <button
                         type="button"
                         class="rounded-xl bg-hover px-4 py-2 text-sm font-medium text-sub transition hover:text-snow"
                         @click="clearFilters"
                     >
-                        초기화
+                        Clear
                     </button>
                 </div>
             </form>
@@ -67,7 +67,7 @@
                 v-else-if="serversStore.items.length === 0"
                 class="flex h-full min-h-50 items-center justify-center rounded-2xl bg-panel p-10 text-center text-muted"
             >
-                필터 조건에 맞는 서버가 없습니다.
+                No servers matched the current filters.
             </div>
 
             <!-- Server grid -->
@@ -96,15 +96,15 @@
                         <span
                             v-if="server.isPlaying"
                             class="absolute -right-0.5 -top-0.5 size-3 rounded-full border-2 border-panel bg-online"
-                            title="음악 재생 중"
+                            title="Music playing"
                         />
                     </div>
 
                     <!-- Server info -->
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-[15px] font-semibold text-snow">{{ server.name }}</p>
-                        <p class="text-xs text-muted">멤버 {{ (server.memberCount ?? 0).toLocaleString() }}명</p>
-                        <p class="text-xs text-muted">샤드 {{ server.shardId }}</p>
+                        <p class="text-xs text-muted">{{ (server.memberCount ?? 0).toLocaleString() }} members</p>
+                        <p class="text-xs text-muted">Shard {{ server.shardId }}</p>
                         <p class="truncate font-mono text-[11px] text-muted">{{ server.id }}</p>
                     </div>
 
@@ -113,7 +113,7 @@
                         class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
                         :class="server.isPlaying ? 'bg-online/15 text-online' : 'bg-line/50 text-muted'"
                     >
-                        {{ server.isPlaying ? '재생 중' : '대기 중' }}
+                        {{ server.isPlaying ? 'Playing' : 'Idle' }}
                     </span>
                 </NuxtLink>
             </div>

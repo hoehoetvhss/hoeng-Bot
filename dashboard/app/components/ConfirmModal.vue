@@ -55,7 +55,7 @@
                                 class="rounded-xl bg-hover px-5 py-2 text-sm font-medium text-snow transition hover:bg-surface"
                                 @click="handleCancel"
                             >
-                                취소
+                                {{ cancelLabel }}
                             </button>
                             <button
                                 ref="primaryButtonRef"
@@ -63,7 +63,7 @@
                                 :class="isAlertMode ? 'bg-blurple hover:bg-blurple-dark' : 'bg-danger hover:opacity-85'"
                                 @click="handleConfirm"
                             >
-                                {{ isAlertMode ? '확인' : confirmLabel }}
+                                {{ isAlertMode ? okLabel : confirmLabel }}
                             </button>
                         </div>
                     </div>

@@ -346,12 +346,7 @@ const joinedAtLabel = computed(() => formatISODateTime(server.value?.botMember.j
 
 const playbackLabel = computed(() => {
     const s = server.value?.playback.status ?? 'idle';
-    const labels: Record<string, string> = {
-        playing: '재생 중',
-        paused: '일시 중지됨',
-        idle: '대기 중',
-    };
-    return labels[s] ?? s;
+    return s.charAt(0).toUpperCase() + s.slice(1);
 });
 
 const playbackBadgeClass = computed(() => {
@@ -364,8 +359,8 @@ const playbackBadgeClass = computed(() => {
 const capabilities = computed(() => {
     if (!server.value) return [];
     return [
-        { label: '음성 채널 멤버 스냅샷', value: server.value.capabilities.voiceMemberSnapshot },
-        { label: '메시지 내용(Message Content) 권한', value: server.value.capabilities.messageContent },
+        { label: 'Voice Member Snapshot', value: server.value.capabilities.voiceMemberSnapshot },
+        { label: 'Message Content', value: server.value.capabilities.messageContent },
     ];
 });
 
@@ -400,7 +395,7 @@ async function fetchServer(showLoader: boolean): Promise<void> {
         if (!server.value || showLoader) {
             server.value = null;
             thumbnailUrl.value = '';
-            loadError.value = '서버 정보를 불러올 수 없습니다.';
+            loadError.value = 'Unable to load server details right now.';
         }
     } finally {
         loading.value = false;
@@ -420,10 +415,10 @@ async function resolveThumbnail(track: ServerTrack | null): Promise<string> {
 
 async function handleLeave(): Promise<void> {
     const confirmed = await confirm({
-        title: '서버 퇴장 확인',
-        message: `"${server.value?.guild.name}" 서버에서 퇴장하시겠습니까? 봇이 즉시 연결을 끊습니다.`,
-        confirmLabel: '퇴장',
-        cancelLabel: '취소',
+        title: 'Leave Server',
+        message: `Leave server "${server.value?.guild.name}"? The bot will disconnect immediately.`,
+        confirmLabel: 'Leave',
+        cancelLabel: 'Cancel',
     });
 
     if (!confirmed) return;
@@ -432,12 +427,12 @@ async function handleLeave(): Promise<void> {
         await api.deleteServer(guildId.value);
         await router.push('/servers');
     } catch {
-        await alert({ title: '퇴장 실패', message: '서버를 떠나는 도중 오류가 발생했습니다.' });
+        await alert({ title: 'Leave Failed', message: 'The bot could not leave the selected server.' });
     }
 }
 
 function channelLabel(channel: ChannelReference | null): string {
-    return channel ? channel.name : '설정되지 않음';
+    return channel ? channel.name : 'Not configured';
 }
 
 function formatDuration(durationMs: number): string {

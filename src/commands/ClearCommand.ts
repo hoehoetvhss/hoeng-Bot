@@ -26,22 +26,22 @@ export class ClearCommand extends BaseCommand {
         const player = client.lavashark.getPlayer(context.guild!.id);
 
         if (!player || !player.playing) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_NO_PLAYING'));
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_NO_PLAYING'));
             return;
         }
 
         player.queue.clear();
 
         // Update persisted queue to reflect cleared queue (current track still playing)
-        if (bot.config.queuePersistence.enabled && (client as any).queuePersistence) {
-            await (client as any).queuePersistence.saveQueue(player);
+        if (bot.config.queuePersistence.enabled && client.queuePersistence) {
+            await client.queuePersistence.saveQueue(player);
         }
 
         if (context.isMessage()) {
             await context.react('👍');
         }
         else {
-            await context.replySuccess(bot, client.i18n.t('commands:MESSAGE_CLEAR_SUCCESS'));
+            await context.replySuccess(bot, context.t('commands:MESSAGE_CLEAR_SUCCESS'));
         }
     }
 }

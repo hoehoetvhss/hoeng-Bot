@@ -27,21 +27,21 @@ export class ShuffleCommand extends BaseCommand {
         const player = client.lavashark.getPlayer(context.guild!.id);
 
         if (!player || !player.playing) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_NO_PLAYING'));
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_NO_PLAYING'));
             return;
         }
 
         player.queue.shuffle();
 
-        if (bot.config.queuePersistence.enabled && (client as any).queuePersistence) {
-            await (client as any).queuePersistence.saveQueue(player);
+        if (bot.config.queuePersistence.enabled && client.queuePersistence) {
+            await client.queuePersistence.saveQueue(player);
         }
 
         if (context.isMessage()) {
             await context.react('👍');
         }
         else {
-            await context.replySuccess(bot, client.i18n.t('commands:MESSAGE_SHUFFLE_SUCCESS'));
+            await context.replySuccess(bot, context.t('commands:MESSAGE_SHUFFLE_SUCCESS'));
         }
     }
 }

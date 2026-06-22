@@ -158,14 +158,14 @@ async function handleOAuth2Login() {
 
 function oauth2ErrorMessage(code: string): string {
     const messages: Record<string, string> = {
-        blocked: '너무 많은 로그인 시도가 감지되었습니다. 나중에 다시 시도해주세요.',
-        state_invalid: 'Discord 로그인 요청이 만료되었습니다. 다시 시도해주세요.',
-        code_missing: 'Discord 로그인이 취소되었거나 인증 코드를 받지 못했습니다.',
-        bot_not_ready: '봇이 아직 Discord 로그인을 완료할 준비가 되지 않았습니다.',
-        exchange_failed: 'Discord에서 로그인 요청을 거부했습니다. 다시 시도해주세요.',
-        admin_required: '이 Discord 계정은 대시보드에 접근할 권한이 없습니다.',
-        user_fetch_failed: '지금은 Discord 계정 정보를 확인할 수 없습니다.',
+        blocked: 'Too many failed login attempts. Please try again later.',
+        state_invalid: 'The Discord login request expired. Please try again.',
+        code_missing: 'Discord login was cancelled or did not return an authorization code.',
+        bot_not_ready: 'The bot is not ready to complete Discord login yet.',
+        exchange_failed: 'Discord rejected the login request. Please try again.',
+        admin_required: 'This Discord account is not allowed to access the dashboard.',
+        user_fetch_failed: 'Unable to verify the Discord account right now.',
     };
-    return messages[code] ?? 'Discord 로그인 중 예기치 않은 오류가 발생했습니다. 다시 시도해주세요.';
+    return messages[code] ?? 'Discord login failed unexpectedly. Please try again.';
 }
 </script>

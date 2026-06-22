@@ -6,12 +6,12 @@
             @click="$emit('change', page - 1)"
         >
             <Icon name="lucide:chevron-left" class="size-4" />
-            이전
+            Previous
         </button>
 
         <span class="text-sm text-sub">
-            <template v-if="totalPages > 0">{{ page }} / {{ totalPages }} 페이지</template>
-            <template v-else>페이지 없음</template>
+            <template v-if="totalPages > 0">Page {{ page }} / {{ totalPages }}</template>
+            <template v-else>No pages</template>
         </span>
 
         <button
@@ -19,7 +19,7 @@
             :disabled="disabled || totalPages === 0 || page >= totalPages"
             @click="$emit('change', page + 1)"
         >
-            다음
+            Next
             <Icon name="lucide:chevron-right" class="size-4" />
         </button>
     </div>

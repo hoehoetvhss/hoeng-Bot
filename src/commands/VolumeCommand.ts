@@ -19,7 +19,7 @@ import type { Bot, CommandMetadata } from '../@types/index.js';
 
 
 export class VolumeCommand extends BaseCommand {
-    public getMetadata(_bot: Bot): CommandMetadata {
+    public getMetadata(bot: Bot): CommandMetadata {
         return {
             name: 'volume',
             aliases: ['v'],
@@ -32,10 +32,11 @@ export class VolumeCommand extends BaseCommand {
             options: [
                 {
                     name: 'volume',
-                    description: i18next.t('commands:CONFIG_VOLUME_OPTION_DESCRIPTION'),
+                    description: bot.i18n.t('commands:CONFIG_VOLUME_OPTION_DESCRIPTION', { maxVolume: bot.config.bot.volume.max }),
                     type: 4,
                     required: false,
-                    min_value: 1
+                    min_value: 1,
+                    max_value: bot.config.bot.volume.max
                 }
             ]
         };
@@ -45,7 +46,7 @@ export class VolumeCommand extends BaseCommand {
         const player = client.lavashark.getPlayer(context.guild!.id);
 
         if (!player || !player.playing) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_NO_PLAYING'));
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_NO_PLAYING'));
             return;
         }
 
@@ -95,7 +96,7 @@ export class VolumeCommand extends BaseCommand {
             .addComponents(volume25Button, volume50Button, volume75Button, volume100Button);
 
         const msg = await context.reply({
-            embeds: [embeds.textMsg(bot, client.i18n.t('commands:MESSAGE_VOLUME_SELECT', { volume: currentVolume }))],
+            embeds: [embeds.textMsg(bot, context.t('commands:MESSAGE_VOLUME_SELECT', { volume: currentVolume }))],
             components: [row]
         });
 
@@ -118,7 +119,7 @@ export class VolumeCommand extends BaseCommand {
 
             if (player.volume === newVolume) {
                 await i.update({
-                    embeds: [embeds.textWarningMsg(bot, client.i18n.t('commands:MESSAGE_VOLUME_SAME'))],
+                    embeds: [embeds.textWarningMsg(bot, context.t('commands:MESSAGE_VOLUME_SAME'))],
                     components: []
                 });
                 return collector.stop();
@@ -126,7 +127,7 @@ export class VolumeCommand extends BaseCommand {
 
             if (newVolume > maxVolume) {
                 await i.update({
-                    embeds: [embeds.textErrorMsg(bot, client.i18n.t('commands:MESSAGE_VOLUME_ARGS_ERROR_2', { maxVolume }))],
+                    embeds: [embeds.textErrorMsg(bot, context.t('commands:MESSAGE_VOLUME_ARGS_ERROR_2', { maxVolume }))],
                     components: []
                 });
                 return collector.stop();
@@ -138,7 +139,7 @@ export class VolumeCommand extends BaseCommand {
             await client.dashboard.update(player, player.current!);
 
             await i.update({
-                embeds: [embeds.textSuccessMsg(bot, client.i18n.t('commands:MESSAGE_VOLUME_SUCCESS', { volume: newVolume, maxVolume }))],
+                embeds: [embeds.textSuccessMsg(bot, context.t('commands:MESSAGE_VOLUME_SUCCESS', { volume: newVolume, maxVolume }))],
                 components: []
             });
 
@@ -148,7 +149,7 @@ export class VolumeCommand extends BaseCommand {
         collector.on('end', async (collected: Collection<string, ButtonInteraction>, reason: string) => {
             if (reason === 'time' && collected.size === 0) {
                 await msg.edit({
-                    embeds: [embeds.textErrorMsg(bot, client.i18n.t('commands:ERROR_TIME_EXPIRED'))],
+                    embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
                     components: []
                 })
                     .catch(() => bot.logger.discord( bot.shardId, 'Failed to edit deleted message.'));
@@ -166,17 +167,17 @@ export class VolumeCommand extends BaseCommand {
         }
 
         if (!vol) {
-            await context.replyError(bot, client.i18n.t('commands:MESSAGE_VOLUME_ARGS_ERROR', { volume: player.volume, maxVolume }));
+            await context.replyError(bot, context.t('commands:MESSAGE_VOLUME_ARGS_ERROR', { volume: player.volume, maxVolume }));
             return;
         }
 
         if (player.volume === vol) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:MESSAGE_VOLUME_SAME'));
+            await context.replyEphemeralError(bot, context.t('commands:MESSAGE_VOLUME_SAME'));
             return;
         }
 
         if (vol < 0 || vol > maxVolume) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:MESSAGE_VOLUME_ARGS_ERROR_2', { maxVolume }));
+            await context.replyEphemeralError(bot, context.t('commands:MESSAGE_VOLUME_ARGS_ERROR_2', { maxVolume }));
             return;
         }
 
@@ -185,6 +186,6 @@ export class VolumeCommand extends BaseCommand {
 
         await client.dashboard.update(player, player.current!);
 
-        await context.replySuccess(bot, client.i18n.t('commands:MESSAGE_VOLUME_SUCCESS', { volume: vol, maxVolume }));
+        await context.replySuccess(bot, context.t('commands:MESSAGE_VOLUME_SUCCESS', { volume: vol, maxVolume }));
     }
 }

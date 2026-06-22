@@ -11,7 +11,10 @@ import {
 } from './loader/index.js';
 import { Logger } from './lib/Logger.js';
 import { BlacklistManager } from './lib/BlacklistManager.js';
+import { GuildLanguageManager } from './lib/GuildLanguageManager.js';
+import { GuildVolumeManager } from './lib/GuildVolumeManager.js';
 import { DashboardManager } from './lib/DashboardManager.js';
+import { DatabaseManager } from './lib/DatabaseManager.js';
 import { QueuePersistence } from './lib/QueuePersistence.js';
 import { cst } from './utils/constants.js';
 
@@ -82,15 +85,27 @@ class App {
         // Initialize last played tracks map
         this.#client.lastPlayedTracks = new Map();
 
+        // Initialize shared SQLite database
+        this.bot.databaseManager = new DatabaseManager(this.bot);
+        this.bot.databaseManager.initialize();
+
         // Initialize dynamic blacklist manager
         this.bot.blacklistManager = new BlacklistManager(this.bot);
         this.bot.blacklistManager.initialize();
 
         // Initialize queue persistence
         if (this.bot.config.queuePersistence.enabled) {
-            (this.#client as any).queuePersistence = new QueuePersistence(this.bot);
-            (this.#client as any).queuePersistence.initialize();
+            this.#client.queuePersistence = new QueuePersistence(this.bot);
+            this.#client.queuePersistence.initialize();
         }
+
+        // Initialize guild language manager
+        this.bot.guildLanguageManager = new GuildLanguageManager(this.bot);
+        this.bot.guildLanguageManager.initialize();
+
+        // Initialize guild volume manager
+        this.bot.guildVolumeManager = new GuildVolumeManager(this.bot);
+        this.bot.guildVolumeManager.initialize();
     }
 
 
@@ -125,11 +140,11 @@ class App {
 
             try {
                 // Stop periodic saves and save all active queues before shutdown
-                if (this.bot.config.queuePersistence.enabled && (this.#client as any).queuePersistence) {
+                if (this.bot.config.queuePersistence.enabled && this.#client.queuePersistence) {
                     this.bot.logger.log( this.bot.shardId, 'Saving active queues before shutdown...');
-                    (this.#client as any).queuePersistence.stopAllPeriodicSaves();
+                    this.#client.queuePersistence.stopAllPeriodicSaves();
                     for (const player of this.#client.lavashark.players.values()) {
-                        await (this.#client as any).queuePersistence.saveQueue(player);
+                        await this.#client.queuePersistence.saveQueue(player);
                     }
                 }
 
@@ -154,16 +169,33 @@ class App {
                 await this.#client.destroy();
                 this.bot.logger.log( this.bot.shardId, 'Discord.js connection closed.');
 
-                // Close queue persistence database
-                if (this.bot.config.queuePersistence.enabled && (this.#client as any).queuePersistence) {
-                    this.bot.logger.log( this.bot.shardId, 'Closing queue persistence database...');
-                    (this.#client as any).queuePersistence.close();
+                // Stop queue persistence timers
+                if (this.bot.config.queuePersistence.enabled && this.#client.queuePersistence) {
+                    this.bot.logger.log( this.bot.shardId, 'Stopping queue persistence timers...');
+                    this.#client.queuePersistence.close();
                 }
 
-                // Close blacklist manager database
+                // Clear blacklist manager cache
                 if (this.bot.blacklistManager) {
-                    this.bot.logger.log( this.bot.shardId, 'Closing blacklist database...');
+                    this.bot.logger.log( this.bot.shardId, 'Clearing blacklist manager...');
                     this.bot.blacklistManager.close();
+                }
+
+                // Clear guild language manager cache
+                if (this.bot.guildLanguageManager) {
+                    this.bot.logger.log( this.bot.shardId, 'Clearing guild language manager...');
+                    this.bot.guildLanguageManager.close();
+                }
+
+                // Clear guild volume manager cache
+                if (this.bot.guildVolumeManager) {
+                    this.bot.logger.log( this.bot.shardId, 'Clearing guild volume manager...');
+                    this.bot.guildVolumeManager.close();
+                }
+
+                if (this.bot.databaseManager) {
+                    this.bot.logger.log( this.bot.shardId, 'Closing shared database...');
+                    this.bot.databaseManager.close();
                 }
 
                 clearTimeout(timeout);

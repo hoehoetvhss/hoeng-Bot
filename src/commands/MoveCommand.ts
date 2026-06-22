@@ -42,12 +42,12 @@ export class MoveCommand extends BaseCommand {
         const player = client.lavashark.getPlayer(context.guild!.id);
 
         if (!player || !player.playing) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_NO_PLAYING'));
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_NO_PLAYING'));
             return;
         }
 
         if (!player.queue.size) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:ERROR_NO_MUSIC_IN_QUEUE'));
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_NO_MUSIC_IN_QUEUE'));
             return;
         }
 
@@ -62,7 +62,7 @@ export class MoveCommand extends BaseCommand {
             index2 = parseInt(context.args[1], 10);
 
             if (isNaN(index1) || isNaN(index2)) {
-                await context.replyEphemeralError(bot, client.i18n.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
+                await context.replyEphemeralError(bot, context.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
                     max: player.queue.size
                 }));
                 return;
@@ -71,12 +71,12 @@ export class MoveCommand extends BaseCommand {
 
         const isSuccess = player.queue.move(index1 - 1, index2 - 1);
 
-        if (isSuccess && bot.config.queuePersistence.enabled && (client as any).queuePersistence) {
-            await (client as any).queuePersistence.saveQueue(player);
+        if (isSuccess && bot.config.queuePersistence.enabled && client.queuePersistence) {
+            await client.queuePersistence.saveQueue(player);
         }
 
         if (!isSuccess) {
-            await context.replyEphemeralError(bot, client.i18n.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
+            await context.replyEphemeralError(bot, context.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
                 max: player.queue.size
             }));
             return;
@@ -86,7 +86,7 @@ export class MoveCommand extends BaseCommand {
             await context.react('👍');
         }
         else {
-            await context.replySuccess(bot, client.i18n.t('commands:MESSAGE_MOVE_SUCCESS'));
+            await context.replySuccess(bot, context.t('commands:MESSAGE_MOVE_SUCCESS'));
         }
     }
 }

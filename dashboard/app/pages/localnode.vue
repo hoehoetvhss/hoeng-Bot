@@ -34,7 +34,7 @@
                         <!-- Status fields (horizontal) -->
                         <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
                             <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-semibold tracking-wide text-muted">기능 활성화</span>
+                                <span class="text-[11px] font-semibold tracking-wide text-muted">Feature</span>
                                 <span
                                     class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                                     :class="
@@ -43,11 +43,11 @@
                                             : 'bg-danger/15 text-danger'
                                     "
                                 >
-                                    {{ localNodeStore.summary?.enabled ? '활성화됨' : '비활성화됨' }}
+                                    {{ localNodeStore.summary?.enabled ? 'Enabled' : 'Disabled' }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-semibold tracking-wide text-muted">프로세스 상태</span>
+                                <span class="text-[11px] font-semibold tracking-wide text-muted">Process</span>
                                 <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="processClass">
                                     {{ processLabel }}
                                 </span>
@@ -59,13 +59,13 @@
                                 </span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-semibold tracking-wide text-muted">포트</span>
+                                <span class="text-[11px] font-semibold tracking-wide text-muted">Port</span>
                                 <span class="text-sm font-medium text-snow">
                                     {{ localNodeStore.summary?.process.port ?? '—' }}
                                 </span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-semibold tracking-wide text-muted">자동 재시작</span>
+                                <span class="text-[11px] font-semibold tracking-wide text-muted">Auto Restart</span>
                                 <span
                                     class="rounded-full px-2.5 py-0.5 text-xs font-semibold"
                                     :class="
@@ -74,7 +74,7 @@
                                             : 'bg-line/50 text-muted'
                                     "
                                 >
-                                    {{ localNodeStore.summary?.process.autoRestart ? '켜짐' : '꺼짐' }}
+                                    {{ localNodeStore.summary?.process.autoRestart ? 'On' : 'Off' }}
                                 </span>
                             </div>
                         </div>
@@ -95,7 +95,7 @@
                                     class="inline-block size-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
                                 />
                                 <Icon v-else name="lucide:refresh-cw" class="size-4" />
-                                재시작
+                                Restart
                             </button>
                             <button
                                 class="flex items-center gap-2 rounded-xl bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:opacity-85 disabled:opacity-50"
@@ -111,7 +111,7 @@
                                     class="inline-block size-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
                                 />
                                 <Icon v-else name="lucide:square" class="size-4" />
-                                정지
+                                Stop
                             </button>
                         </div>
                     </div>
@@ -182,8 +182,8 @@ const currentAction = ref<'restart' | 'stop' | ''>('');
 const processLabel = computed(() => {
     const p = localNodeStore.summary?.process;
     if (!p) return '—';
-    if (p.starting) return '시작 중...';
-    return p.active ? '실행 중' : '정지됨';
+    if (p.starting) return 'Starting';
+    return p.active ? 'Running' : 'Stopped';
 });
 
 const processClass = computed(() => {

@@ -1,11 +1,12 @@
 <template>
     <div>
-        <h1 class="mb-6 font-display text-xl font-extrabold tracking-wide text-snow">시스템 관리</h1>
+        <h1 class="mb-6 font-display text-xl font-extrabold tracking-wide text-snow">Maintenance</h1>
 
         <div class="max-w-140 rounded-2xl bg-panel p-8 shadow">
-            <h2 class="mb-1 text-[13px] font-semibold tracking-wide text-muted">점검 공지 브로드캐스트</h2>
+            <h2 class="mb-1 text-[13px] font-semibold tracking-wide text-muted">Broadcast Maintenance Notice</h2>
             <p class="mb-6 text-sm leading-relaxed text-sub">
-                현재 음악이 재생 중인 모든 음성 채널에 점검 공지 임베드를 전송합니다. 봇을 점검하거나 재시작하기 전에 사용자에게 알리는 용도로 사용하세요.
+                Send a maintenance notice embed to all active voice channels. This will notify users in every channel
+                where Music Bot is currently playing.
             </p>
 
             <button
@@ -18,7 +19,7 @@
                     class="inline-block size-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
                 />
                 <Icon v-else name="lucide:megaphone" class="size-4" />
-                점검 공지 전송
+                Send Maintenance Notice
             </button>
 
             <p
@@ -45,10 +46,10 @@ const resultSuccess = ref(true);
 
 async function sendNotice() {
     const confirmed = await confirm({
-        title: '점검 공지 전송',
-        message: '모든 활성 음성 채널에 점검 공지를 전송하시겠습니까?',
-        confirmLabel: '전송',
-        cancelLabel: '취소',
+        title: 'Send Maintenance Notice',
+        message: 'Send a maintenance notice to all active voice channels?',
+        confirmLabel: 'Send',
+        cancelLabel: 'Cancel',
     });
     if (!confirmed) return;
 
@@ -57,10 +58,10 @@ async function sendNotice() {
 
     try {
         const res = await api.createMaintenanceNotice();
-        resultMsg.value = `${res.sentGuildCount}개의 서버에 공지를 전송했습니다.`;
+        resultMsg.value = `Delivered to ${res.sentGuildCount} active guild${res.sentGuildCount === 1 ? '' : 's'}.`;
         resultSuccess.value = true;
     } catch {
-        resultMsg.value = '점검 공지 전송에 실패했습니다.';
+        resultMsg.value = 'Failed to send maintenance notice.';
         resultSuccess.value = false;
     } finally {
         loading.value = false;

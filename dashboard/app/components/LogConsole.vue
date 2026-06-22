@@ -15,7 +15,7 @@
             class="sticky top-0 z-10 flex items-center justify-center gap-2 border-b border-line bg-input-bg/90 px-4 py-2 text-xs text-sub"
         >
             <span class="inline-block size-3.5 animate-spin rounded-full border-2 border-line border-t-blurple" />
-            이전 로그를 불러오는 중...
+            Loading older logs...
         </div>
 
         <!-- Initial loading spinner (only shown when there are no entries yet) -->
@@ -132,4 +132,3 @@ function restoreSnapshot(snapshot: { scrollHeight: number; scrollTop: number }):
 
 defineExpose({ captureSnapshot, isNearBottom, restoreSnapshot, scrollToBottom });
 </script>
-cript>

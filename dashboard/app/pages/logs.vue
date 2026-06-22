@@ -2,13 +2,13 @@
     <div class="flex h-full flex-col gap-4">
         <!-- Header -->
         <div class="flex shrink-0 flex-wrap items-center justify-between gap-3">
-            <h1 class="font-display text-xl font-extrabold tracking-wide text-snow">로그 확인</h1>
+            <h1 class="font-display text-xl font-extrabold tracking-wide text-snow">Logs</h1>
             <div class="flex items-center gap-2">
                 <span class="rounded-full bg-surface px-3 py-1 text-xs text-fog">
-                    총 {{ logStream.totalItems.value }}개
+                    Total {{ logStream.totalItems.value }}
                 </span>
                 <span class="rounded-full bg-blurple/15 px-3 py-1 text-xs font-medium text-blurple-light">
-                    {{ countdown }}초 후 갱신
+                    Refresh in {{ countdown }}s
                 </span>
             </div>
         </div>
@@ -21,7 +21,7 @@
                 :initial-loading="logStream.loading.value"
                 :loading-older="logStream.loadingOlder.value"
                 :stretch="true"
-                empty-text="확인 가능한 로그가 없습니다."
+                empty-text="No logs available."
                 @reach-top="loadOlderLogs"
             />
         </div>

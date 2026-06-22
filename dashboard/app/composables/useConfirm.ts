@@ -34,9 +34,9 @@ const isOpen = ref(false);
 const isAlertMode = ref(false);
 const dialogTitle = ref('');
 const dialogMessage = ref('');
-const confirmLabel = ref('확인');
-const cancelLabel = ref('취소');
-const okLabel = ref('확인');
+const confirmLabel = ref('Confirm');
+const cancelLabel = ref('Cancel');
+const okLabel = ref('OK');
 
 let resolveCallback: ((result: boolean) => void) | null = null;
 
@@ -58,8 +58,8 @@ export const useConfirm = () => {
 
         dialogTitle.value = opts.title;
         dialogMessage.value = opts.message;
-        confirmLabel.value = opts.confirmLabel ?? '확인';
-        cancelLabel.value = opts.cancelLabel ?? '취소';
+        confirmLabel.value = opts.confirmLabel ?? 'Confirm';
+        cancelLabel.value = opts.cancelLabel ?? 'Cancel';
         isAlertMode.value = false;
         isOpen.value = true;
 
@@ -84,7 +84,7 @@ export const useConfirm = () => {
 
         dialogTitle.value = opts.title;
         dialogMessage.value = opts.message;
-        okLabel.value = opts.okLabel ?? '확인';
+        okLabel.value = opts.okLabel ?? 'OK';
         isAlertMode.value = true;
         isOpen.value = true;
 
