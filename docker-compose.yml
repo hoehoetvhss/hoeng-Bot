@@ -17,7 +17,7 @@ services:
       - TZ=Asia/Seoul
       - BOT_TOKEN=${BOT_TOKEN}
     volumes:
-      - ./config.js:/bot/dist/config.js
+      - ./config.js:/bot/config.js
       - ./data:/bot/data
       - ./logs:/bot/logs
     labels:

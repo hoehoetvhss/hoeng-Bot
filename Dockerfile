@@ -47,7 +47,7 @@ COPY --from=node_build /tmp/node_modules /bot/node_modules
 COPY --from=node_build /tmp/dashboard/.output/public /bot/dashboard/.output/public
 
 COPY --from=node_build /tmp/package*.json /bot
-COPY --from=node_build /tmp/config.js /bot/dist/config.js
+COPY --from=node_build /tmp/config.js /bot/config.js
 
 RUN mkdir -p data logs
 
