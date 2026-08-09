@@ -1,8 +1,14 @@
 import { ActivityType } from 'discord.js';
-import { config } from '../../config.js';
-import { DJModeEnum } from './../@types/index.js';
+import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+import { DJModeEnum, AdminModeEnum } from './../@types/index.js';
 
 import type { Config } from './../@types/index.js';
+
+
+const configModuleUrl = pathToFileURL(path.resolve('config.js')).href;
+const { config } = await import(configModuleUrl) as { config: Config };
 
 
 const setEnvironment = (defaultConfig: Config) => {
@@ -10,10 +16,14 @@ const setEnvironment = (defaultConfig: Config) => {
         textCommand: config.bot.textCommand ?? defaultConfig.bot.textCommand,
         slashCommand: config.bot.slashCommand ?? defaultConfig.bot.slashCommand,
 
+        adminMode: Object.values(AdminModeEnum).includes(config.bot.adminMode as any)
+            ? config.bot.adminMode
+            : defaultConfig.bot.adminMode,
         // Admin of the bot (user_id[])
         admin: (Array.isArray(config.bot.admin) && config.bot.admin.length > 0)
             ? config.bot.admin
             : defaultConfig.bot.admin,
+
         // DJ of the bot (user_id[])
         dj: (Array.isArray(config.bot.dj) && config.bot.dj.length > 0)
             ? config.bot.dj
