@@ -24,9 +24,7 @@
         "url": "https://discord.gg/HMFyw4xeeV"
     },
     "homepage": "https://discord.gg/HMFyw4xeeV",
-    "overrides": {
-        "esbuild": "^0.28.2"
-    },
+    "overrides": {},
     "dependencies": {
         "bcryptjs": "^3.0.3",
         "better-sqlite3": "^13.0.3",
