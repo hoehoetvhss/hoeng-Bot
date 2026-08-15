@@ -1,21 +1,23 @@
 import i18next from 'i18next';
 import { ApplicationCommandOptionType } from 'discord.js';
+import { ConnectionState, RepeatMode } from 'lavashark';
 
 import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory, DJModeEnum } from '../@types/index.js';
 import { DJManager } from '../lib/DjManager.js';
+import { decodeTrackWithRetry } from '../utils/functions/lavasharkRequest.js';
 
 import type { Client, GuildMember } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
 export class RadioCommand extends BaseCommand {
-    public getMetadata(_bot: Bot): CommandMetadata {
+    public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
             name: 'radio',
-            aliases: ['record'],
-            description: i18next.t('commands:CONFIG_RADIO_DESCRIPTION'),
-            usage: i18next.t('commands:CONFIG_RADIO_USAGE'),
+            aliases: [],
+            description: i18next.t('commands:CONFIG_RADIO_DESCRIPTION', { lng }),
+            usage: i18next.t('commands:CONFIG_RADIO_USAGE', { lng }),
             category: CommandCategory.MUSIC,
             voiceChannel: true,
             showHelp: true,
@@ -23,13 +25,13 @@ export class RadioCommand extends BaseCommand {
             options: [
                 {
                     name: 'playlist',
-                    description: i18next.t('commands:CONFIG_RADIO_OPTION_PLAYLIST'),
+                    description: i18next.t('commands:CONFIG_RADIO_OPTION_PLAYLIST', { lng }),
                     type: ApplicationCommandOptionType.String,
                     required: true
                 },
                 {
                     name: 'channel',
-                    description: i18next.t('commands:CONFIG_RADIO_OPTION_CHANNEL'),
+                    description: i18next.t('commands:CONFIG_RADIO_OPTION_CHANNEL', { lng }),
                     type: ApplicationCommandOptionType.String,
                     required: true
                 }
@@ -122,13 +124,18 @@ const DEFAULT_MAX_SAMPLES_COUNT = 10;
 
         const metadata = context.isMessage() ? context.getMessage() : context.getInteraction();
 
-        try {
-            await player.connect();
+        if (player.state !== ConnectionState.CONNECTED) {
+            try {
+                await player.connect();
+                player.metadata = metadata;
+            } catch (error) {
+                bot.logger.error(bot.shardId, 'Error joining channel: ' + error);
+                await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
+                await player.destroy();
+                return;
+            }
+        } else {
             player.metadata = metadata;
-        } catch (error) {
-            bot.logger.error(bot.shardId, 'Error joining channel: ' + error);
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
-            return;
         }
 
         try {
@@ -154,21 +161,33 @@ const DEFAULT_MAX_SAMPLES_COUNT = 10;
         await context.replySuccess(bot, context.t('commands:MESSAGE_RADIO_SEARCHING', { playlist: playlistName, title: targetTrack.title }));
 
         try {
-            let searchResult = null;
-            if (targetTrack.url) {
+            let radioTrack = null;
+            if (targetTrack.encoded) {
                 try {
-                    searchResult = await client.lavashark.search(targetTrack.url);
+                    radioTrack = await decodeTrackWithRetry(client.lavashark, targetTrack.encoded);
                 } catch (_) {}
             }
 
-            if (!searchResult || !searchResult.tracks || searchResult.tracks.length === 0) {
+            if (!radioTrack && targetTrack.url) {
                 try {
-                    searchResult = await client.lavashark.search(`ytsearch:${targetTrack.title}`);
+                    const result = await client.lavashark.search(targetTrack.url);
+                    if (result && Array.isArray(result.tracks) && result.tracks.length > 0) {
+                        radioTrack = result.tracks[0];
+                    }
                 } catch (_) {}
             }
 
-            if (searchResult && searchResult.tracks && searchResult.tracks.length > 0) {
-                const track = searchResult.tracks[0];
+            if (!radioTrack && targetTrack.title) {
+                try {
+                    const result = await client.lavashark.search(`ytsearch:${targetTrack.title}`);
+                    if (result && Array.isArray(result.tracks) && result.tracks.length > 0) {
+                        radioTrack = result.tracks[0];
+                    }
+                } catch (_) {}
+            }
+
+            if (radioTrack) {
+                const track = radioTrack;
                 (track as any).requester = requester;
 
                 const isAlreadyPlaying = player.playing;
@@ -179,6 +198,9 @@ const DEFAULT_MAX_SAMPLES_COUNT = 10;
                 (track as any).isRadio = true;
 
                 if (isAlreadyPlaying) {
+                    if (player.repeatMode === RepeatMode.TRACK) {
+                        player.setRepeatMode(RepeatMode.OFF);
+                    }
                     await player.skip();
                 } else {
                     player.filters.setVolume(curVolume);
