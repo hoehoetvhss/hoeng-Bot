@@ -1,35 +1,55 @@
-FROM node:22.22.3-slim AS node_build
+FROM ubuntu:26.04 AS node_build
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    build-essential \
+    python3 \
+    tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /tmp
 
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y g++ make python3
+COPY package*.json ./
+RUN npm install
+
+COPY dashboard/package*.json ./dashboard/
+RUN cd dashboard && npm install
 
 COPY . .
+RUN npm run build
 
-RUN npm ci && \
-    npm --prefix ./dashboard ci && \
-    npm run build
+FROM ubuntu:26.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
 
-############################################################
-
-FROM node:22.22.3-slim
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && curl -fsSL https://deb.nodesource.com/setup_26.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /bot
 
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y openjdk-17-jre-headless && \
-    rm -rf /var/lib/apt/lists/*
+COPY --from=node_build /tmp/dist /bot/dist
+COPY --from=node_build /tmp/node_modules /bot/node_modules
+COPY --from=node_build /tmp/dashboard/.output/public /bot/dashboard/.output/public
 
+COPY --from=node_build /tmp/package*.json /bot
+COPY --from=node_build /tmp/config.js /bot/config.js
 
-COPY --from=node_build /tmp/dist ./dist
-COPY --from=node_build /tmp/node_modules ./node_modules
-COPY --from=node_build /tmp/server ./server
-COPY --from=node_build /tmp/dashboard/.output/public ./dashboard/.output/public
-
-COPY --from=node_build /tmp/package*.json ./
-COPY --from=node_build /tmp/config.js ./
-
+RUN mkdir -p data logs
 
 ENTRYPOINT ["npm", "run", "start:server"]
