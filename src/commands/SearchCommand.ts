@@ -6,11 +6,13 @@ import {
     StringSelectMenuInteraction,
 } from 'discord.js';
 import i18next from 'i18next';
+import { ConnectionState } from 'lavashark';
 
 import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory, DJModeEnum, LoadType, SelectButtonId } from '../@types/index.js';
 import { embeds } from '../embeds/index.js';
 import { isUserInBlacklist } from '../utils/functions/isUserInBlacklist.js';
+import { cleanSearchQuery } from '../utils/functions/cleanSearchQuery.js';
 import { DJManager } from '../lib/DjManager.js';
 import { QueueLimitManager } from '../lib/QueueLimitManager.js';
 
@@ -21,12 +23,12 @@ import type { Bot, CommandMetadata } from '../@types/index.js';
 
 
 export class SearchCommand extends BaseCommand {
-    public getMetadata(_bot: Bot): CommandMetadata {
+    public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
             name: 'search',
             aliases: ['find'],
-            description: i18next.t('commands:CONFIG_SEARCH_DESCRIPTION'),
-            usage: i18next.t('commands:CONFIG_SEARCH_USAGE'),
+            description: i18next.t('commands:CONFIG_SEARCH_DESCRIPTION', { lng }),
+            usage: i18next.t('commands:CONFIG_SEARCH_USAGE', { lng }),
             category: CommandCategory.MUSIC,
             voiceChannel: true,
             showHelp: true,
@@ -34,7 +36,7 @@ export class SearchCommand extends BaseCommand {
             options: [
                 {
                     name: 'search',
-                    description: i18next.t('commands:CONFIG_SEARCH_OPTION_DESCRIPTION'),
+                    description: i18next.t('commands:CONFIG_SEARCH_OPTION_DESCRIPTION', { lng }),
                     type: 3,
                     required: true
                 }
@@ -44,9 +46,11 @@ export class SearchCommand extends BaseCommand {
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         // Get search query
-        const str = context.isMessage()
+        const rawStr = context.isMessage()
             ? context.args.join(' ')
             : context.getStringOption('search');
+
+        const str = cleanSearchQuery(rawStr || '');
 
         if (!str) {
             await context.replyEphemeralError(bot, context.t('commands:MESSAGE_PLAY_ARGS_ERROR'));
@@ -119,20 +123,28 @@ export class SearchCommand extends BaseCommand {
     }
 
     /**
-     * Create and initialize player
+     * Create and initialize player (or reuse existing player)
      * @private
      */
     async #createPlayer(bot: Bot, client: Client, context: CommandContext): Promise<Player | null> {
+        const guildId = String(context.guild?.id);
         const voiceChannelId = context.isMessage()
             ? String(context.getMessage().member?.voice.channelId)
             : String(context.getInteraction().guild!.members.cache.get(context.user.id)?.voice.channelId);
 
-        const player = client.lavashark.createPlayer({
-            guildId: String(context.guild?.id),
-            voiceChannelId: voiceChannelId,
-            textChannelId: context.channel!.id,
-            selfDeaf: true
-        });
+        let player = client.lavashark.getPlayer(guildId);
+
+        if (!player) {
+            player = client.lavashark.createPlayer({
+                guildId: guildId,
+                voiceChannelId: voiceChannelId,
+                textChannelId: context.channel!.id,
+                selfDeaf: true
+            });
+        } else {
+            player.voiceChannelId = voiceChannelId;
+            player.textChannelId = context.channel!.id;
+        }
 
         if (!player.setting) {
             player.setting = {
@@ -143,14 +155,17 @@ export class SearchCommand extends BaseCommand {
         }
 
         const metadata = context.isMessage() ? context.getMessage() : context.getInteraction();
+        player.metadata = metadata;
 
-        try {
-            await player.connect();
-            player.metadata = metadata;
-        } catch (error) {
-            bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
-            return null;
+        if (player.state !== ConnectionState.CONNECTED) {
+            try {
+                await player.connect();
+            } catch (error) {
+                bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
+                await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
+                await player.destroy();
+                return null;
+            }
         }
 
         try {
@@ -297,7 +312,7 @@ export class SearchCommand extends BaseCommand {
         });
 
         collector.on('collect', async (i: StringSelectMenuInteraction) => {
-            if (i.customId != SelectButtonId.Music) return;
+            if (i.customId !== SelectButtonId.Music) return;
 
             // Check queue limits before adding selected track
             const checkResult = QueueLimitManager.canAddSongs(bot, player, userId, guildMember, 1);
@@ -317,7 +332,7 @@ export class SearchCommand extends BaseCommand {
             const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
             const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
-            player.addTracks(res.tracks.find((x: any) => x.uri == i.values[0])!, requester as any);
+            player.addTracks(res.tracks.find((x: any) => x.uri === i.values[0])!, requester as any);
 
             if (!player.playing) {
                 player.filters.setVolume(curVolume);
@@ -344,7 +359,7 @@ export class SearchCommand extends BaseCommand {
         });
 
         collector.on('end', async (collected: Collection<string, ButtonInteraction>, reason: string) => {
-            if (reason == 'time' && collected.size == 0) {
+            if (reason === 'time' && collected.size === 0) {
                 if (!player.playing) {
                     player.destroy();
                 }
@@ -357,3 +372,4 @@ export class SearchCommand extends BaseCommand {
         });
     }
 }
+
