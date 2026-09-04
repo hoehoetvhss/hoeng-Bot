@@ -10,6 +10,7 @@
   "MESSAGE_BLACKLIST_REMOVED": "✅ <@{{userId}}> has been removed from the blacklist",
   "MESSAGE_BLACKLIST_ALREADY_LISTED": "❌ <@{{userId}}> is already blacklisted",
   "MESSAGE_BLACKLIST_NOT_LISTED": "❌ <@{{userId}}> is not on the blacklist",
+  "ERROR_BLACKLIST_TARGET_IMMUNE": "❌ Bot administrators or the bot itself cannot be blacklisted",
   "MESSAGE_BLACKLIST_LIST_TITLE": "Current Blacklist",
   "MESSAGE_BLACKLIST_LIST_EMPTY": "The blacklist is currently empty",
   "CONFIG_CLEAR_DESCRIPTION": "Clear the music queue",

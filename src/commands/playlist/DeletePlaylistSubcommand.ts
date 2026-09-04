@@ -1,4 +1,5 @@
 import { BasePlaylistSubcommand } from './BasePlaylistSubcommand.js';
+import { DJManager } from '../../lib/DjManager.js';
 
 import type {
     PlaylistSubcommandContext,
@@ -16,6 +17,18 @@ export class DeletePlaylistSubcommand extends BasePlaylistSubcommand {
      * Validate the playlist name and delete the matching playlist
      */
     public async execute(context: PlaylistSubcommandContext): Promise<void> {
+        const userId = context.command.user.id;
+        const member = context.command.member;
+        const player = context.client.lavashark.getPlayer(context.command.guild!.id);
+
+        if (!DJManager.isDJ(context.bot, userId, member, player ?? undefined)) {
+            await context.command.replyEphemeralError(
+                context.bot,
+                context.command.t('events:ERROR_REQUIRE_DJ'),
+            );
+            return;
+        }
+
         const name = this.getPlaylistName(context.command);
         if (!name) {
             await context.command.replyEphemeralError(

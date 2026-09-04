@@ -156,7 +156,7 @@ export const cst = {
         // Command permission settings
         command: {
             disableCommand      : [],                                   // Disabled commands, all enabled by default
-            adminCommand        : ['language', 'server', 'status', 'volume-default'], // Admin commands, only Admin role user can use
+            adminCommand        : ['blacklist', 'language', 'server', 'status', 'volume-default'], // Admin commands, only Admin role user can use
             djCommand           : ['dj'],                               // DJ commands, only DJ role user can use
 
 

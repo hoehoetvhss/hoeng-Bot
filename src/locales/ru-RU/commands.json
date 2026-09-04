@@ -10,6 +10,7 @@
   "MESSAGE_BLACKLIST_REMOVED": "✅ <@{{userId}}> удалён из чёрного списка",
   "MESSAGE_BLACKLIST_ALREADY_LISTED": "❌ <@{{userId}}> уже в чёрном списке",
   "MESSAGE_BLACKLIST_NOT_LISTED": "❌ <@{{userId}}> нет в чёрном списке",
+  "ERROR_BLACKLIST_TARGET_IMMUNE": "❌ Нельзя добавить в чёрный список администраторов бота или самого бота",
   "MESSAGE_BLACKLIST_LIST_TITLE": "Текущий чёрный список",
   "MESSAGE_BLACKLIST_LIST_EMPTY": "Сейчас чёрный список пуст",
   "CONFIG_CLEAR_DESCRIPTION": "Очистить очередь музыки",

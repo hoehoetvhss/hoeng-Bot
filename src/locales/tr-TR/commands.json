@@ -10,6 +10,7 @@
   "MESSAGE_BLACKLIST_REMOVED": "✅ <@{{userId}}> kara listeden çıkarıldı",
   "MESSAGE_BLACKLIST_ALREADY_LISTED": "❌ <@{{userId}}> zaten kara listede",
   "MESSAGE_BLACKLIST_NOT_LISTED": "❌ <@{{userId}}> kara listede değil",
+  "ERROR_BLACKLIST_TARGET_IMMUNE": "❌ Bot yöneticileri veya botun kendisi kara listeye eklenemez",
   "MESSAGE_BLACKLIST_LIST_TITLE": "Kara Liste",
   "MESSAGE_BLACKLIST_LIST_EMPTY": "Kara liste şu anda boş",
   "CONFIG_CLEAR_DESCRIPTION": "Kuyruktaki tüm parçaları temizle",

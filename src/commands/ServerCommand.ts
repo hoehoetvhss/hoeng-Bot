@@ -26,9 +26,13 @@ export class ServerCommand extends BaseCommand {
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
-        const serverlist = client.guilds.cache
+        let serverlist = client.guilds.cache
             .map(g => `${context.t('commands:MESSAGE_SERVER_GUILD_ID')}: ${g.id}\n ${context.t('commands:MESSAGE_SERVER_GUILD')}: ${g.name}\n ${context.t('commands:MESSAGE_SERVER_MEMBERS')}: ${g.memberCount}`)
             .join('\n\n');
+
+        if (serverlist.length > 3900) {
+            serverlist = serverlist.substring(0, 3900) + '...';
+        }
 
         // Get DJ information
         const player = client.lavashark.getPlayer(context.guild!.id);

@@ -53,16 +53,20 @@ export class RemoveCommand extends BaseCommand {
         }
 
         // Get index parameters
-        const index1 = context.isInteraction()
+        const rawIndex1 = context.isInteraction()
             ? context.getInteraction().options.getNumber('index')
-            : (context.args[0] ? parseInt(context.args[0]) : null);
-        const index2 = context.isInteraction()
+            : (context.args[0] !== undefined ? parseInt(context.args[0], 10) : null);
+        const rawIndex2 = context.isInteraction()
             ? context.getInteraction().options.getNumber('index2')
-            : (context.args[1] ? parseInt(context.args[1]) : null);
+            : (context.args[1] !== undefined ? parseInt(context.args[1], 10) : null);
+
+        const index1 = (rawIndex1 !== null && !isNaN(rawIndex1)) ? rawIndex1 : null;
+        const index2 = (rawIndex2 !== null && !isNaN(rawIndex2)) ? rawIndex2 : null;
 
         // Case 1: Single index removal (text: +rm 1, slash: /rm index:1)
         if ((index1 !== null && index2 === null) || (index1 === null && index2 !== null)) {
-            await this.#removeSingleTrack(bot, client, context, player, tracks, index1 || index2!);
+            const targetIndex = index1 ?? index2!;
+            await this.#removeSingleTrack(bot, client, context, player, tracks, targetIndex);
         }
         // Case 2: Range removal (text: +rm 3 4, slash: /rm index:3 index2:4)
         else if (index1 !== null && index2 !== null) {
@@ -86,6 +90,16 @@ export class RemoveCommand extends BaseCommand {
         tracks: string[],
         index: number
     ): Promise<void> {
+        if (index < 1 || index > tracks.length) {
+            if (context.isMessage()) {
+                await context.react('❌');
+            }
+            else {
+                await context.replyError(bot, context.t('commands:MESSAGE_REMOVE_FAIL'));
+            }
+            return;
+        }
+
         const SUCCESS = player.queue.remove(index - 1);
 
         if (SUCCESS && bot.config.queuePersistence.enabled && client.queuePersistence) {
@@ -125,7 +139,21 @@ export class RemoveCommand extends BaseCommand {
         index1: number,
         index2: number
     ): Promise<void> {
-        const SUCCESS = player.queue.remove(index1 - 1, index2 - index1 + 1);
+        const start = Math.min(index1, index2);
+        const end = Math.max(index1, index2);
+
+        if (start < 1 || end > tracks.length) {
+            if (context.isMessage()) {
+                await context.react('❌');
+            }
+            else {
+                await context.replyError(bot, context.t('commands:MESSAGE_REMOVE_FAIL'));
+            }
+            return;
+        }
+
+        const count = end - start + 1;
+        const SUCCESS = player.queue.remove(start - 1, count);
 
         if (SUCCESS && bot.config.queuePersistence.enabled && client.queuePersistence) {
             await client.queuePersistence.saveQueue(player);
@@ -141,7 +169,7 @@ export class RemoveCommand extends BaseCommand {
             return;
         }
 
-        const musicTitle = tracks.slice(index1 - 1, index2).join('\n');
+        const musicTitle = tracks.slice(start - 1, end).join('\n');
 
         if (context.isMessage()) {
             await context.react('👍');

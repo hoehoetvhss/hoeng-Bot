@@ -292,14 +292,16 @@ export class SearchCommand extends BaseCommand {
         const userId = context.user.id;
         const guildMember = member as GuildMember | null;
 
+        const candidateTracks = (res.tracks as any[]).slice(0, 25);
+
         const select = new StringSelectMenuBuilder()
             .setCustomId(SelectButtonId.Music)
             .setPlaceholder(context.t('commands:MESSAGE_PLAY_SELECT_TITLE'))
-            .setOptions(res.tracks.map((x: any) => {
+            .setOptions(candidateTracks.map((x: any, index: number) => {
                 return {
                     label: x.title.length >= 25 ? x.title.substring(0, 22) + '...' : x.title,
                     description: context.t('commands:MESSAGE_PLAY_SELECT_DURATION', { label: x.duration.label }),
-                    value: x.uri
+                    value: String(index)
                 };
             }));
 
@@ -332,7 +334,11 @@ export class SearchCommand extends BaseCommand {
             const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
             const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
-            player.addTracks(res.tracks.find((x: any) => x.uri === i.values[0])!, requester as any);
+            const selectedIndex = parseInt(i.values[0], 10);
+            const selectedTrack = candidateTracks[selectedIndex];
+            if (!selectedTrack) return;
+
+            player.addTracks(selectedTrack, requester as any);
 
             if (!player.playing) {
                 player.filters.setVolume(curVolume);

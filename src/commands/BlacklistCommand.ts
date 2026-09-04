@@ -59,7 +59,7 @@ export class BlacklistCommand extends BaseCommand {
      */
     protected async run(
         bot: Bot,
-        _client: Client,
+        client: Client,
         context: CommandContext,
     ): Promise<void> {
         const blacklistManager = bot.blacklistManager;
@@ -89,7 +89,7 @@ export class BlacklistCommand extends BaseCommand {
         }
 
         if (action === 'add') {
-            await this.addUser(bot, blacklistManager, context, userId);
+            await this.addUser(bot, client, blacklistManager, context, userId);
         } else {
             await this.removeUser(bot, blacklistManager, context, userId);
         }
@@ -152,10 +152,19 @@ export class BlacklistCommand extends BaseCommand {
      */
     private async addUser(
         bot: Bot,
+        client: Client,
         blacklistManager: BlacklistManager,
         context: CommandContext,
         userId: string,
     ): Promise<void> {
+        if (bot.config.bot.admin.includes(userId) || client.user?.id === userId) {
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_BLACKLIST_TARGET_IMMUNE'),
+            );
+            return;
+        }
+
         if (blacklistManager.add(userId)) {
             await context.replySuccess(
                 bot,

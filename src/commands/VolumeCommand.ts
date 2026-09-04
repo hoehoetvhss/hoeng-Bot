@@ -166,7 +166,7 @@ export class VolumeCommand extends BaseCommand {
             await context.react('👍');
         }
 
-        if (!vol) {
+        if (vol === null || vol === undefined || isNaN(vol)) {
             await context.replyError(bot, context.t('commands:MESSAGE_VOLUME_ARGS_ERROR', { volume: player.volume, maxVolume }));
             return;
         }

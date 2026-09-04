@@ -10,6 +10,7 @@
   "MESSAGE_BLACKLIST_REMOVED": "✅ <@{{userId}}> je uklonjen sa crne liste",
   "MESSAGE_BLACKLIST_ALREADY_LISTED": "❌ <@{{userId}}> je već na crnoj listi",
   "MESSAGE_BLACKLIST_NOT_LISTED": "❌ <@{{userId}}> nije na crnoj listi",
+  "ERROR_BLACKLIST_TARGET_IMMUNE": "❌ Administratori bota ili sam bot ne mogu biti dodati na crnu listu",
   "MESSAGE_BLACKLIST_LIST_TITLE": "Crna lista",
   "MESSAGE_BLACKLIST_LIST_EMPTY": "Crna lista je trenutno prazna",
   "CONFIG_CLEAR_DESCRIPTION": "Obriši svu muziku iz reda",

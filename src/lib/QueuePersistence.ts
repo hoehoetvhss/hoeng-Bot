@@ -124,13 +124,18 @@ export class QueuePersistence {
             const serializeTrack = (track: Track): SerializedTrack | null => {
                 if (!track) return null;
                 const encodedTrack = ('encoded' in track && typeof track.encoded === 'string') ? track.encoded : ((track as any).track ?? '');
+                const rawDuration = (track as any).duration;
+                const length = typeof rawDuration === 'number'
+                    ? rawDuration
+                    : (typeof rawDuration?.value === 'number' ? rawDuration.value : (Number(rawDuration) || 0));
+
                 return {
                     track: encodedTrack,
                     info: {
                         identifier: track.identifier || '',
                         title: track.title || '',
                         author: track.author || '',
-                        length: typeof track.duration === 'number' ? track.duration : 0,
+                        length,
                         uri: track.uri || '',
                         sourceName: (track as any).sourceName || 'youtube',
                         isSeekable: track.isSeekable ?? true,
