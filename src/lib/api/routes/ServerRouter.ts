@@ -6,7 +6,6 @@ import { BaseRouter } from './BaseRouter.js';
 import type { Request, Response } from 'express';
 import type { VoiceChannel } from 'discord.js';
 
-
 /**
  * Handles Discord server (guild) management routes:
  *   GET    /api/servers          - List paginated guild summaries
@@ -81,9 +80,8 @@ export class ServerRouter extends BaseRouter {
                     totalPages,
                 },
             });
-        }
-        catch (error) {
-            this.bot.logger.api( `Failed to list guilds: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Failed to list guilds: ${error}`);
             return problem(res, {
                 status: 503,
                 title: 'Server list unavailable',
@@ -117,7 +115,7 @@ export class ServerRouter extends BaseRouter {
 
                         const player = client.lavashark.getPlayer(context.guildID as string);
                         const voiceChannel = player
-                            ? client.channels.cache.get(player.voiceChannelId) as VoiceChannel | undefined
+                            ? (client.channels.cache.get(player.voiceChannelId) as VoiceChannel | undefined)
                             : undefined;
 
                         let textChannels = 0;
@@ -134,27 +132,27 @@ export class ServerRouter extends BaseRouter {
 
                         const currentTrack = player?.current
                             ? {
-                                title: player.current.title,
-                                author: player.current.author,
-                                url: player.current.uri,
-                                durationMs: player.current.duration.value,
-                                sourceName: player.current.source,
-                                identifier: player.current.identifier,
-                            }
+                                  title: player.current.title,
+                                  author: player.current.author,
+                                  url: player.current.uri,
+                                  durationMs: player.current.duration.value,
+                                  sourceName: player.current.source,
+                                  identifier: player.current.identifier,
+                              }
                             : null;
 
                         const voiceMembers = voiceChannel
                             ? Array.from(voiceChannel.members.values()).map((member) => ({
-                                id: member.id,
-                                username: member.user.username,
-                                displayName: member.displayName,
-                                avatarUrl: member.displayAvatarURL(),
-                                isBot: member.user.bot,
-                                isMuted: member.voice.mute,
-                                isDeafened: member.voice.deaf,
-                                isStreaming: member.voice.streaming,
-                                hasVideo: member.voice.selfVideo,
-                            }))
+                                  id: member.id,
+                                  username: member.user.username,
+                                  displayName: member.displayName,
+                                  avatarUrl: member.displayAvatarURL(),
+                                  isBot: member.user.bot,
+                                  isMuted: member.voice.mute,
+                                  isDeafened: member.voice.deaf,
+                                  isStreaming: member.voice.streaming,
+                                  hasVideo: member.voice.selfVideo,
+                              }))
                             : [];
 
                         const repeatMode = ['off', 'track', 'queue'][player?.repeatMode ?? 0] ?? 'off';
@@ -191,7 +189,7 @@ export class ServerRouter extends BaseRouter {
                             },
                             playback: {
                                 active: Boolean(player && currentTrack),
-                                status: !player || !currentTrack ? 'idle' : (player.paused ? 'paused' : 'playing'),
+                                status: !player || !currentTrack ? 'idle' : player.paused ? 'paused' : 'playing',
                                 endpoint: player?.voiceState.event?.endpoint ?? null,
                                 volume: {
                                     current: player ? player.volume : null,
@@ -202,23 +200,22 @@ export class ServerRouter extends BaseRouter {
                             },
                             voiceChannel: voiceChannel
                                 ? {
-                                    id: voiceChannel.id,
-                                    name: voiceChannel.name,
-                                    memberCount: voiceMembers.length,
-                                    members: voiceMembers,
-                                }
+                                      id: voiceChannel.id,
+                                      name: voiceChannel.name,
+                                      memberCount: voiceMembers.length,
+                                      members: voiceMembers,
+                                  }
                                 : null,
                             capabilities: {
                                 voiceMemberSnapshot: true,
                                 messageContent: true,
                             },
                         };
-                    }
-                    catch (_) {
+                    } catch (_) {
                         return null;
                     }
                 },
-                { context: { guildID, maxVolume } }
+                { context: { guildID, maxVolume } },
             );
 
             const guild = guildData.find((data) => data !== null);
@@ -232,9 +229,8 @@ export class ServerRouter extends BaseRouter {
             }
 
             return ok(res, guild);
-        }
-        catch (error) {
-            this.bot.logger.api( `Failed to fetch guild detail: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Failed to fetch guild detail: ${error}`);
             return problem(res, {
                 status: 503,
                 title: 'Server detail unavailable',
@@ -265,12 +261,11 @@ export class ServerRouter extends BaseRouter {
                         if (player) player.destroy();
                         await guild.leave();
                         return true;
-                    }
-                    catch (_) {
+                    } catch (_) {
                         return false;
                     }
                 },
-                { context: { guildID } }
+                { context: { guildID } },
             );
 
             if (result.some((value) => value === true)) {
@@ -283,9 +278,8 @@ export class ServerRouter extends BaseRouter {
                 detail: 'The bot is not currently connected to the requested guild.',
                 code: 'GUILD_NOT_FOUND',
             });
-        }
-        catch (error) {
-            this.bot.logger.api( `Error processing leave request: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Error processing leave request: ${error}`);
             return problem(res, {
                 status: 500,
                 title: 'Failed to leave server',

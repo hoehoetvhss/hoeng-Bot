@@ -4,7 +4,6 @@ import { BaseRouter } from './BaseRouter.js';
 
 import type { Request, Response } from 'express';
 
-
 /**
  * Handles maintenance broadcast routes:
  *   POST /api/maintenance/notices - Send a maintenance notice to all active players
@@ -38,26 +37,25 @@ export class MaintenanceRouter extends BaseRouter {
                             }
 
                             try {
-                                await (channel as { send: (payload: unknown) => Promise<unknown> })
-                                    .send({ embeds: [context.maintainEmbed] });
+                                await (channel as { send: (payload: unknown) => Promise<unknown> }).send({
+                                    embeds: [context.maintainEmbed],
+                                });
                                 return 1;
-                            }
-                            catch {
+                            } catch {
                                 return 0;
                             }
-                        })
+                        }),
                     );
 
                     return deliveries.reduce<number>((total, count) => total + count, 0);
                 },
-                { context: { maintainEmbed } }
+                { context: { maintainEmbed } },
             );
 
             const sentGuildCount = sentCounts.reduce<number>((total, count) => total + count, 0);
             return ok(res, { sentGuildCount });
-        }
-        catch (error) {
-            this.bot.logger.api( `Failed to broadcast maintenance notice: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Failed to broadcast maintenance notice: ${error}`);
             return problem(res, {
                 status: 503,
                 title: 'Maintenance notice failed',

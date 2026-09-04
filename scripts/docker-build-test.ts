@@ -1,9 +1,4 @@
-import {
-    assertIsError,
-    buildImage,
-    getImageReference,
-    runDocker,
-} from './docker.js';
+import { assertIsError, buildImage, getImageReference, runDocker } from './docker.js';
 
 const EXPECTED_ENTRYPOINT = ['npm', 'run', 'start:server'];
 const REQUIRED_PATHS = [
@@ -18,34 +13,27 @@ const REQUIRED_PATHS = [
 ];
 
 async function verifyImageConfiguration(imageReference: string): Promise<void> {
-    const workingDirectory = await runDocker([
-        'image',
-        'inspect',
-        '--format',
-        '{{.Config.WorkingDir}}',
-        imageReference,
-    ], { captureOutput: true });
+    const workingDirectory = await runDocker(
+        ['image', 'inspect', '--format', '{{.Config.WorkingDir}}', imageReference],
+        { captureOutput: true },
+    );
     if (workingDirectory !== '/bot') {
-        throw new Error(
-            `Expected image working directory "/bot", received "${workingDirectory}".`,
-        );
+        throw new Error(`Expected image working directory "/bot", received "${workingDirectory}".`);
     }
 
-    const entrypointJson = await runDocker([
-        'image',
-        'inspect',
-        '--format',
-        '{{json .Config.Entrypoint}}',
-        imageReference,
-    ], { captureOutput: true });
+    const entrypointJson = await runDocker(
+        ['image', 'inspect', '--format', '{{json .Config.Entrypoint}}', imageReference],
+        { captureOutput: true },
+    );
     const entrypoint: unknown = JSON.parse(entrypointJson);
-    if (!Array.isArray(entrypoint) ||
+    if (
+        !Array.isArray(entrypoint) ||
         !entrypoint.every((value): value is string => typeof value === 'string') ||
         entrypoint.length !== EXPECTED_ENTRYPOINT.length ||
-        !entrypoint.every((value, index) => value === EXPECTED_ENTRYPOINT[index])) {
+        !entrypoint.every((value, index) => value === EXPECTED_ENTRYPOINT[index])
+    ) {
         throw new Error(
-            `Expected image entrypoint ${JSON.stringify(EXPECTED_ENTRYPOINT)}, ` +
-            `received ${entrypointJson}.`,
+            `Expected image entrypoint ${JSON.stringify(EXPECTED_ENTRYPOINT)}, ` + `received ${entrypointJson}.`,
         );
     }
 }
@@ -65,15 +53,7 @@ async function verifyRequiredFiles(imageReference: string): Promise<void> {
         "console.log('Container runtime smoke test passed.');",
     ].join('\n');
 
-    await runDocker([
-        'run',
-        '--rm',
-        '--entrypoint',
-        'node',
-        imageReference,
-        '-e',
-        verificationScript,
-    ]);
+    await runDocker(['run', '--rm', '--entrypoint', 'node', imageReference, '-e', verificationScript]);
 }
 
 async function main(): Promise<void> {

@@ -1,7 +1,11 @@
 import type { VoiceBasedChannel } from 'discord.js';
 import type { BlacklistManager } from '../../lib/BlacklistManager.js';
 
-const isUserInBlacklist = (voiceChannel: VoiceBasedChannel | null | undefined, blacklist: string[], blacklistManager?: BlacklistManager) => {
+const isUserInBlacklist = (
+    voiceChannel: VoiceBasedChannel | null | undefined,
+    blacklist: string[],
+    blacklistManager?: BlacklistManager,
+) => {
     if (!voiceChannel) {
         return [];
     }

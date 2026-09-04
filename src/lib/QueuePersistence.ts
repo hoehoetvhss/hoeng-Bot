@@ -11,7 +11,6 @@ import {
 } from '../utils/functions/lavasharkRequest.js';
 import { isRadioTrack } from '../utils/functions/isRadioTrack.js';
 
-
 /**
  * Persisted queue data structure
  */
@@ -108,12 +107,8 @@ export class QueuePersistence {
         }
 
         try {
-            const currentTrack = isRadioTrack(player.current)
-                ? null
-                : player.current;
-            const queuedTracks = player.queue.tracks.filter(
-                (track) => !isRadioTrack(track),
-            );
+            const currentTrack = isRadioTrack(player.current) ? null : player.current;
+            const queuedTracks = player.queue.tracks.filter((track) => !isRadioTrack(track));
 
             // Radio is an ephemeral request rather than persisted queue state.
             if (!currentTrack && queuedTracks.length === 0) {
@@ -123,11 +118,17 @@ export class QueuePersistence {
 
             const serializeTrack = (track: Track): SerializedTrack | null => {
                 if (!track) return null;
-                const encodedTrack = ('encoded' in track && typeof track.encoded === 'string') ? track.encoded : ((track as any).track ?? '');
+                const encodedTrack =
+                    'encoded' in track && typeof track.encoded === 'string'
+                        ? track.encoded
+                        : ((track as any).track ?? '');
                 const rawDuration = (track as any).duration;
-                const length = typeof rawDuration === 'number'
-                    ? rawDuration
-                    : (typeof rawDuration?.value === 'number' ? rawDuration.value : (Number(rawDuration) || 0));
+                const length =
+                    typeof rawDuration === 'number'
+                        ? rawDuration
+                        : typeof rawDuration?.value === 'number'
+                          ? rawDuration.value
+                          : Number(rawDuration) || 0;
 
                 return {
                     track: encodedTrack,
@@ -139,19 +140,17 @@ export class QueuePersistence {
                         uri: track.uri || '',
                         sourceName: (track as any).sourceName || 'youtube',
                         isSeekable: track.isSeekable ?? true,
-                        isStream: track.isStream ?? false
+                        isStream: track.isStream ?? false,
                     },
                     requesterId: track.requester?.id || '',
-                    requesterTag: track.requester?.tag || ''
+                    requesterTag: track.requester?.tag || '',
                 };
             };
 
             // Include current track at front of saved tracks list
             const serializedTracks: SerializedTrack[] = [];
 
-            const currentSerialized = currentTrack
-                ? serializeTrack(currentTrack)
-                : null;
+            const currentSerialized = currentTrack ? serializeTrack(currentTrack) : null;
             if (currentSerialized) {
                 serializedTracks.push(currentSerialized);
             }
@@ -162,7 +161,11 @@ export class QueuePersistence {
                 if (s) serializedTracks.push(s);
             }
 
-            const currentVolume = player.volume ?? (player.setting as any)?.volume ?? this.bot.guildVolumeManager?.get(player.guildId) ?? this.bot.config.bot.volume.default;
+            const currentVolume =
+                player.volume ??
+                (player.setting as any)?.volume ??
+                this.bot.guildVolumeManager?.get(player.guildId) ??
+                this.bot.config.bot.volume.default;
 
             const queueData: PersistedQueue = {
                 guildId: player.guildId,
@@ -174,12 +177,12 @@ export class QueuePersistence {
                 repeatMode: player.repeatMode,
                 paused: currentTrack ? player.paused : false,
                 position: currentTrack ? player.position : 0,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
 
-            this.bot.databaseManager.executeTransaction(
-                (db, data: PersistedQueue) => {
-                    db.prepare(`
+            this.bot.databaseManager.executeTransaction((db, data: PersistedQueue) => {
+                db.prepare(
+                    `
                         INSERT OR REPLACE INTO queues
                         (
                             guild_id,
@@ -194,25 +197,30 @@ export class QueuePersistence {
                             timestamp
                         )
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    `).run(
-                        data.guildId,
-                        data.voiceChannelId,
-                        data.textChannelId,
-                        JSON.stringify(data.tracks),
-                        data.currentTrackIndex,
-                        data.volume,
-                        data.repeatMode,
-                        data.paused ? 1 : 0,
-                        data.position,
-                        data.timestamp
-                    );
-                },
-                queueData
-            );
+                    `,
+                ).run(
+                    data.guildId,
+                    data.voiceChannelId,
+                    data.textChannelId,
+                    JSON.stringify(data.tracks),
+                    data.currentTrackIndex,
+                    data.volume,
+                    data.repeatMode,
+                    data.paused ? 1 : 0,
+                    data.position,
+                    data.timestamp,
+                );
+            }, queueData);
 
-            this.bot.logger.log(this.bot.shardId, `[QueuePersistence] Saved queue for guild ${player.guildId} (${serializedTracks.length} tracks)`);
+            this.bot.logger.log(
+                this.bot.shardId,
+                `[QueuePersistence] Saved queue for guild ${player.guildId} (${serializedTracks.length} tracks)`,
+            );
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Failed to save queue for guild ${player.guildId}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[QueuePersistence] Failed to save queue for guild ${player.guildId}: ${error}`,
+            );
         }
     }
 
@@ -258,10 +266,13 @@ export class QueuePersistence {
                         repeatMode: row.repeat_mode,
                         paused: row.paused === 1,
                         position: row.position,
-                        timestamp: row.timestamp
+                        timestamp: row.timestamp,
                     });
                 } catch (parseError) {
-                    this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Corrupted queue data for guild ${row.guild_id}, skipping: ${parseError}`);
+                    this.bot.logger.error(
+                        this.bot.shardId,
+                        `[QueuePersistence] Corrupted queue data for guild ${row.guild_id}, skipping: ${parseError}`,
+                    );
                     this.deleteQueue(row.guild_id);
                 }
             }
@@ -284,22 +295,31 @@ export class QueuePersistence {
         try {
             const guild = client.guilds.cache.get(queueData.guildId);
             if (!guild) {
-                this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Guild ${queueData.guildId} not found, skipping queue restore`);
+                this.bot.logger.error(
+                    this.bot.shardId,
+                    `[QueuePersistence] Guild ${queueData.guildId} not found, skipping queue restore`,
+                );
                 this.deleteQueue(queueData.guildId);
                 return;
             }
 
             const voiceChannel = guild.channels.cache.get(queueData.voiceChannelId);
             if (!voiceChannel || !voiceChannel.isVoiceBased()) {
-                this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Voice channel ${queueData.voiceChannelId} not found or not voice-based, skipping queue restore`);
+                this.bot.logger.error(
+                    this.bot.shardId,
+                    `[QueuePersistence] Voice channel ${queueData.voiceChannelId} not found or not voice-based, skipping queue restore`,
+                );
                 this.deleteQueue(queueData.guildId);
                 return;
             }
 
             // Check if there are any members in the voice channel (excluding bots)
-            const hasMembers = voiceChannel.members.filter(m => !m.user.bot).size > 0;
+            const hasMembers = voiceChannel.members.filter((m) => !m.user.bot).size > 0;
             if (!hasMembers) {
-                this.bot.logger.log(this.bot.shardId, `[QueuePersistence] No members in voice channel ${queueData.voiceChannelId}, skipping queue restore`);
+                this.bot.logger.log(
+                    this.bot.shardId,
+                    `[QueuePersistence] No members in voice channel ${queueData.voiceChannelId}, skipping queue restore`,
+                );
                 return;
             }
 
@@ -311,7 +331,7 @@ export class QueuePersistence {
                     voiceChannelId: queueData.voiceChannelId,
                     textChannelId: queueData.textChannelId,
                     selfDeaf: true,
-                    selfMute: false
+                    selfMute: false,
                 });
             }
 
@@ -319,26 +339,30 @@ export class QueuePersistence {
                 player.setting = {
                     queuePage: null,
                     volume: null,
-                    fairQueueRotation: []
+                    fairQueueRotation: [],
                 };
             }
 
             // Initialize dashboard if text channel is available
             const textChannel = guild.channels.cache.get(queueData.textChannelId);
-            if (textChannel && (textChannel.type === ChannelType.GuildText || textChannel.type === ChannelType.GuildAnnouncement)) {
+            if (
+                textChannel &&
+                (textChannel.type === ChannelType.GuildText || textChannel.type === ChannelType.GuildAnnouncement)
+            ) {
                 try {
                     await client.dashboard.initialize(textChannel, player);
                 } catch (error) {
-                    this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Failed to initialize dashboard for guild ${queueData.guildId}: ${error}`);
+                    this.bot.logger.error(
+                        this.bot.shardId,
+                        `[QueuePersistence] Failed to initialize dashboard for guild ${queueData.guildId}: ${error}`,
+                    );
                 }
             }
 
             // Restore tracks in batch chunks with bulk decode and retry
             const TRACK_REQUEST_DELAY_MS = 250;
             const serializedEntries = queueData.tracks.map((track, index) => ({ track, index }));
-            const encodedEntries = serializedEntries.filter(
-                ({ track }) => track.track && track.track.trim() !== '',
-            );
+            const encodedEntries = serializedEntries.filter(({ track }) => track.track && track.track.trim() !== '');
 
             const restoredByIndex = new Map<number, any>();
 
@@ -404,21 +428,33 @@ export class QueuePersistence {
             // Seek to saved position after playback starts
             if (queueData.position > 0) {
                 // Wait briefly for the player to initialize playback before seeking
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise((resolve) => setTimeout(resolve, 2000));
 
                 try {
                     if (player.playing || player.paused) {
                         await player.seek(queueData.position);
-                        this.bot.logger.log(this.bot.shardId, `[QueuePersistence] Seeked to position ${queueData.position}ms for guild ${queueData.guildId}`);
+                        this.bot.logger.log(
+                            this.bot.shardId,
+                            `[QueuePersistence] Seeked to position ${queueData.position}ms for guild ${queueData.guildId}`,
+                        );
                     }
                 } catch (error) {
-                    this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Failed to seek to position for guild ${queueData.guildId}: ${error}`);
+                    this.bot.logger.error(
+                        this.bot.shardId,
+                        `[QueuePersistence] Failed to seek to position for guild ${queueData.guildId}: ${error}`,
+                    );
                 }
             }
 
-            this.bot.logger.log(this.bot.shardId, `[QueuePersistence] Restored queue for guild ${queueData.guildId} (${queueData.tracks.length} tracks)`);
+            this.bot.logger.log(
+                this.bot.shardId,
+                `[QueuePersistence] Restored queue for guild ${queueData.guildId} (${queueData.tracks.length} tracks)`,
+            );
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Failed to restore queue for guild ${queueData.guildId}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[QueuePersistence] Failed to restore queue for guild ${queueData.guildId}: ${error}`,
+            );
         }
     }
 
@@ -428,19 +464,13 @@ export class QueuePersistence {
      * to searching by URI, then by title + author. Requests are retried once
      * each because Lavalink nodes rate-limit REST calls (HTTP 429).
      */
-    private async restoreTrack(
-        client: Client,
-        serializedTrack: SerializedTrack,
-    ): Promise<any | null> {
+    private async restoreTrack(client: Client, serializedTrack: SerializedTrack): Promise<any | null> {
         try {
             let resolvedTrack: any = null;
 
             // 1) Decode the saved encoded track exactly (preserves the original track data)
             if (serializedTrack.track && serializedTrack.track.trim() !== '') {
-                resolvedTrack = await decodeTrackWithRetry(
-                    client.lavashark,
-                    serializedTrack.track,
-                );
+                resolvedTrack = await decodeTrackWithRetry(client.lavashark, serializedTrack.track);
             }
 
             // 2) Fallback: search by URI
@@ -466,9 +496,15 @@ export class QueuePersistence {
                 return this.applySerializedMetadata(resolvedTrack, serializedTrack);
             }
 
-            this.bot.logger.log(this.bot.shardId, `[QueuePersistence] Could not restore track "${serializedTrack.info.title}", skipping`);
+            this.bot.logger.log(
+                this.bot.shardId,
+                `[QueuePersistence] Could not restore track "${serializedTrack.info.title}", skipping`,
+            );
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Failed to restore track ${serializedTrack.info.title}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[QueuePersistence] Failed to restore track ${serializedTrack.info.title}: ${error}`,
+            );
         }
         return null;
     }
@@ -491,7 +527,7 @@ export class QueuePersistence {
         }
         track.requester = {
             id: serializedTrack.requesterId,
-            tag: serializedTrack.requesterTag
+            tag: serializedTrack.requesterTag,
         } as any;
         return track;
     }
@@ -532,7 +568,10 @@ export class QueuePersistence {
 
             this.bot.logger.log(this.bot.shardId, `[QueuePersistence] Deleted queue for guild ${guildId}`);
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Failed to delete queue for guild ${guildId}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[QueuePersistence] Failed to delete queue for guild ${guildId}: ${error}`,
+            );
         }
     }
 
@@ -554,7 +593,10 @@ export class QueuePersistence {
                     await this.saveQueue(player);
                 }
             } catch (error) {
-                this.bot.logger.error(this.bot.shardId, `[QueuePersistence] Periodic save failed for guild ${player.guildId}: ${error}`);
+                this.bot.logger.error(
+                    this.bot.shardId,
+                    `[QueuePersistence] Periodic save failed for guild ${player.guildId}: ${error}`,
+                );
             }
         }, QueuePersistence.PERIODIC_SAVE_INTERVAL);
 

@@ -5,7 +5,6 @@ import type { VoiceBasedChannel, GuildMember, Client } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../@types/index.js';
 
-
 /**
  * DJ Management utilities for both static and dynamic DJ modes
  */
@@ -15,7 +14,7 @@ export class DJManager {
      */
     public static hasDJRoleInChannel(bot: Bot, voiceChannel: VoiceBasedChannel): boolean {
         if (!bot.config.bot.djRoleId) return false;
-        return voiceChannel.members.some(m => !m.user.bot && m.roles.cache.has(bot.config.bot.djRoleId!));
+        return voiceChannel.members.some((m) => !m.user.bot && m.roles.cache.has(bot.config.bot.djRoleId!));
     }
 
     /**
@@ -25,7 +24,6 @@ export class DJManager {
         if (PermissionManager.isAdmin(bot, userId, member)) {
             return true;
         }
-
 
         // Static mode: Check config DJ list and role
         if (bot.config.bot.djMode === DJModeEnum.STATIC) {
@@ -97,7 +95,12 @@ export class DJManager {
      * Get DJ information categorized by type
      * Each user appears in only one category using priority: Admin > Role > Dynamic/Static
      */
-    public static async getDJInfo(bot: Bot, client: Client, guild: any, player?: Player): Promise<{
+    public static async getDJInfo(
+        bot: Bot,
+        client: Client,
+        guild: any,
+        player?: Player,
+    ): Promise<{
         admins: string[];
         roleDJs: string[];
         dynamicDJs: string[];
@@ -122,13 +125,13 @@ export class DJManager {
                     });
                 }
             } catch (error) {
-                bot.logger.error( bot.shardId, 'Error fetching guild members for DJ role check: ' + error);
+                bot.logger.error(bot.shardId, 'Error fetching guild members for DJ role check: ' + error);
             }
         }
 
         // Dynamic DJs, excluding anyone already counted as admin or role DJ
-        const rawDynamicDJs = (player && player.djUsers) ? Array.from(player.djUsers) : [];
-        const dynamicDJs = rawDynamicDJs.filter(id => !seen.has(id));
+        const rawDynamicDJs = player && player.djUsers ? Array.from(player.djUsers) : [];
+        const dynamicDJs = rawDynamicDJs.filter((id) => !seen.has(id));
 
         return { admins, roleDJs, dynamicDJs, staticDJs };
     }
@@ -144,14 +147,13 @@ export class DJManager {
         // In DYNAMIC mode, only display the active dynamic DJs (not all admins/roles)
         if (bot.config.bot.djMode === DJModeEnum.DYNAMIC) {
             // Show dynamic DJs (excluding admins)
-            const djUserIds = (player && player.djUsers) ? Array.from(player.djUsers) : [];
+            const djUserIds = player && player.djUsers ? Array.from(player.djUsers) : [];
             for (const userId of djUserIds) {
                 if (!bot.config.bot.admin.includes(userId)) {
                     displayNames.push(`<@${userId}> (D-DJ)`);
                 }
             }
-        }
-        else {
+        } else {
             // STATIC mode: show all categories with deduplication (handled by getDJInfo)
             const djInfo = await this.getDJInfo(bot, client, guild, player);
 
@@ -181,7 +183,13 @@ export class DJManager {
      * COOLDOWN mode: Removes DJ immediately, then auto-assigns next eligible member after cooldown.
      * DJ role users and admins are permanent DJs and are not affected.
      */
-    public static handleDJLeave(bot: Bot, client: Client, player: Player, userId: string, voiceChannel: VoiceBasedChannel): void {
+    public static handleDJLeave(
+        bot: Bot,
+        client: Client,
+        player: Player,
+        userId: string,
+        voiceChannel: VoiceBasedChannel,
+    ): void {
         if (bot.config.bot.djMode !== DJModeEnum.DYNAMIC || !player.djUsers?.has(userId)) {
             return;
         }
@@ -219,10 +227,11 @@ export class DJManager {
                 }
 
                 // Get non-bot members in the voice channel, excluding admins and DJ-role users
-                const members = voiceChannel.members.filter((m: GuildMember) =>
-                    !m.user.bot &&
-                    !bot.config.bot.admin.includes(m.user.id) &&
-                    !(bot.config.bot.djRoleId && m.roles.cache.has(bot.config.bot.djRoleId))
+                const members = voiceChannel.members.filter(
+                    (m: GuildMember) =>
+                        !m.user.bot &&
+                        !bot.config.bot.admin.includes(m.user.id) &&
+                        !(bot.config.bot.djRoleId && m.roles.cache.has(bot.config.bot.djRoleId)),
                 );
                 if (members.size === 0) {
                     return;
@@ -231,7 +240,10 @@ export class DJManager {
                 // Pick the first eligible member as new DJ
                 const nextDJ = members.first()!;
                 this.addDJ(player, nextDJ.user.id);
-                bot.logger.log( bot.shardId, `[Guild ${player.guildId}] Auto-assigned DJ to <@${nextDJ.user.id}> after cooldown`);
+                bot.logger.log(
+                    bot.shardId,
+                    `[Guild ${player.guildId}] Auto-assigned DJ to <@${nextDJ.user.id}> after cooldown`,
+                );
             }, bot.config.bot.djLeave.cooldown);
         }
     }

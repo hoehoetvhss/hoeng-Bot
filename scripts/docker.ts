@@ -14,7 +14,7 @@ export function getImageReference(versionTag: string): string {
     if (!DOCKER_TAG_PATTERN.test(versionTag)) {
         throw new Error(
             `Invalid Docker version tag "${versionTag}". ` +
-            'Use 1-128 letters, numbers, periods, underscores, or hyphens.',
+                'Use 1-128 letters, numbers, periods, underscores, or hyphens.',
         );
     }
 
@@ -22,10 +22,7 @@ export function getImageReference(versionTag: string): string {
 }
 
 /** Runs Docker without a shell so arguments work consistently across platforms. */
-export function runDocker(
-    args: readonly string[],
-    options: DockerCommandOptions = {},
-): Promise<string> {
+export function runDocker(args: readonly string[], options: DockerCommandOptions = {}): Promise<string> {
     return new Promise((resolve, reject) => {
         const captureOutput = options.captureOutput ?? false;
         const child = spawn('docker', args, {

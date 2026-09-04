@@ -13,7 +13,6 @@ import { BaseRouter } from './BaseRouter.js';
 
 import type { Request, Response } from 'express';
 
-
 /** Options applied to the session cookie set after successful login. */
 const SESSION_COOKIE_OPTIONS = {
     httpOnly: true,
@@ -35,12 +34,11 @@ const OAUTH2_STATE_COOKIE_OPTIONS = {
  */
 const OAUTH2_STATE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-/** 
+/**
  * Max concurrent pending OAuth2 states. Prevents memory exhaustion from repeated /oauth2-link calls.
  */
 const OAUTH2_STATE_MAX = 200;
 const OAUTH2_STATE_MAX_PER_IP = 10;
-
 
 /**
  * Handles all authentication routes:
@@ -75,7 +73,6 @@ export class AuthRouter extends BaseRouter {
         }
     }
 
-
     // -------------------------------------------------------------------------
     // Route handlers
     // -------------------------------------------------------------------------
@@ -98,7 +95,7 @@ export class AuthRouter extends BaseRouter {
         const userIP = req.ip ?? '';
 
         if (this.sessionManager.checkBlocked(userIP)) {
-            this.bot.logger.api( `Blocked IP: ${userIP}, attempts to log in.`);
+            this.bot.logger.api(`Blocked IP: ${userIP}, attempts to log in.`);
             return problem(res, {
                 status: 429,
                 title: 'Too many login attempts',
@@ -269,7 +266,7 @@ export class AuthRouter extends BaseRouter {
         const userIP = req.ip ?? '';
 
         if (this.sessionManager.checkBlocked(userIP)) {
-            this.bot.logger.api( `Blocked IP: ${userIP}, attempts OAuth2 login.`);
+            this.bot.logger.api(`Blocked IP: ${userIP}, attempts OAuth2 login.`);
             this.#redirectToLogin(res, 'blocked');
             return;
         }
@@ -285,7 +282,13 @@ export class AuthRouter extends BaseRouter {
 
         // Validate CSRF state — reject if missing, expired, or unknown
         const stateRecord = state ? this.#oauthStates.get(state) : undefined;
-        if (!state || !stateCookie || stateCookie !== state || stateRecord === undefined || stateRecord.expiresAt < Date.now()) {
+        if (
+            !state ||
+            !stateCookie ||
+            stateCookie !== state ||
+            stateRecord === undefined ||
+            stateRecord.expiresAt < Date.now()
+        ) {
             if (state) this.#oauthStates.delete(state);
             this.#clearOAuthStateCookie(res);
             this.#redirectToLogin(res, 'state_invalid');
@@ -324,12 +327,12 @@ export class AuthRouter extends BaseRouter {
 
             // Fail fast if Discord rejected the token exchange (e.g., expired/used code)
             if (tokenResponse.statusCode !== 200) {
-                this.bot.logger.api( `OAuth2 token exchange failed: HTTP ${tokenResponse.statusCode}`);
+                this.bot.logger.api(`OAuth2 token exchange failed: HTTP ${tokenResponse.statusCode}`);
                 this.#redirectToLogin(res, 'exchange_failed');
                 return;
             }
 
-            const oauthData = await tokenResponse.body.json() as {
+            const oauthData = (await tokenResponse.body.json()) as {
                 token_type: string;
                 access_token: string;
             };
@@ -339,7 +342,7 @@ export class AuthRouter extends BaseRouter {
             });
 
             if (userResult.statusCode === 200) {
-                const user = await userResult.body.json() as { id: string };
+                const user = (await userResult.body.json()) as { id: string };
 
                 if (this.bot.config.bot.admin.includes(user.id)) {
                     this.sessionManager.unblockIP(userIP);
@@ -349,26 +352,22 @@ export class AuthRouter extends BaseRouter {
 
                     res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
                     res.redirect('/');
-                }
-                else {
+                } else {
                     // Do NOT block the IP for a non-admin Discord account:
                     // blocking here would cause collateral damage on shared NAT networks
                     // where multiple users (including legitimate admins) share one IP.
-                    this.bot.logger.api( `OAuth2 login denied — non-admin user: ${user.id} from ${userIP}`);
+                    this.bot.logger.api(`OAuth2 login denied — non-admin user: ${user.id} from ${userIP}`);
                     this.#redirectToLogin(res, 'admin_required');
                 }
-            }
-            else {
+            } else {
                 this.sessionManager.blockIP(userIP);
                 this.#redirectToLogin(res, 'user_fetch_failed');
             }
-        }
-        catch (error) {
-            this.bot.logger.api( `OAuth2 callback error: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`OAuth2 callback error: ${error}`);
             this.#redirectToLogin(res, 'callback_failed');
         }
     }
-
 
     // -------------------------------------------------------------------------
     // Private helpers
@@ -397,10 +396,7 @@ export class AuthRouter extends BaseRouter {
         const inputBuf = Buffer.from(input);
         const storedBuf = Buffer.from(stored);
 
-        return (
-            inputBuf.length === storedBuf.length &&
-            timingSafeEqual(inputBuf, storedBuf)
-        );
+        return inputBuf.length === storedBuf.length && timingSafeEqual(inputBuf, storedBuf);
     }
 
     /** Removes OAuth2 state tokens that have passed their expiry time. */

@@ -12,9 +12,9 @@ import type { Bot, CommandMetadata } from '../@types/index.js';
 
 export class LanguageCommand extends BaseCommand {
     public getMetadata(bot: Bot, lng?: string): CommandMetadata {
-        const choices = bot.lang.languages.slice(0, 25).map(lang => ({
+        const choices = bot.lang.languages.slice(0, 25).map((lang) => ({
             name: getLanguageDisplayName(lang),
-            value: lang
+            value: lang,
         }));
 
         return {
@@ -32,26 +32,26 @@ export class LanguageCommand extends BaseCommand {
                     description: i18next.t('commands:CONFIG_LANG_OPTION_DESCRIPTION', { lng }),
                     type: 3,
                     required: false,
-                    choices
-                }
-            ]
+                    choices,
+                },
+            ],
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         const locale = context.isInteraction()
-            ? (context.getStringOption('language') || context.getStringOption('locale'))
+            ? context.getStringOption('language') || context.getStringOption('locale')
             : context.args.join(' ');
 
         if (!locale) {
             const currentLocale = context.guildId
-                ? (bot.guildLanguageManager?.get(context.guildId) || bot.config.bot.i18n.defaultLocale)
+                ? bot.guildLanguageManager?.get(context.guildId) || bot.config.bot.i18n.defaultLocale
                 : bot.config.bot.i18n.defaultLocale;
 
-            const selectOptions = bot.lang.languages.map(lang => ({
+            const selectOptions = bot.lang.languages.map((lang) => ({
                 label: getLanguageDisplayName(lang),
                 value: lang,
-                default: lang === currentLocale
+                default: lang === currentLocale,
             }));
 
             const selectMenu = new StringSelectMenuBuilder()
@@ -62,18 +62,26 @@ export class LanguageCommand extends BaseCommand {
             const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
             await context.reply({
-                embeds: [embeds.textMsg(bot, context.t('commands:MESSAGE_LANG_AVAILABLE_LIST', {
-                    langList: bot.lang.languages.map(lang => `\`${lang}\``).join(', ')
-                }))],
-                components: [row]
+                embeds: [
+                    embeds.textMsg(
+                        bot,
+                        context.t('commands:MESSAGE_LANG_AVAILABLE_LIST', {
+                            langList: bot.lang.languages.map((lang) => `\`${lang}\``).join(', '),
+                        }),
+                    ),
+                ],
+                components: [row],
             });
             return;
         }
 
         if (!bot.lang.languages.includes(locale)) {
-            await context.replyEphemeralError(bot, context.t('commands:MESSAGE_LANG_ARGS_ERROR', {
-                langList: bot.lang.languages.map(lang => `\`${lang}\``).join(', ')
-            }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:MESSAGE_LANG_ARGS_ERROR', {
+                    langList: bot.lang.languages.map((lang) => `\`${lang}\``).join(', '),
+                }),
+            );
             return;
         }
 
@@ -83,8 +91,7 @@ export class LanguageCommand extends BaseCommand {
 
         if (context.isMessage()) {
             await context.react('👍');
-        }
-        else {
+        } else {
             await context.replySuccess(bot, context.t('commands:MESSAGE_LANG_SUCCESS', { locale }));
         }
     }

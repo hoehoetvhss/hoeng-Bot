@@ -2,7 +2,6 @@ import type { Client } from 'discord.js';
 import type { LavaSharkEvents } from 'lavashark/typings/src/@types/LavaShark.types.js';
 import type { Bot } from '../../../@types/index.js';
 
-
 /**
  * Base class for all LavaShark events
  * Provides a unified structure for LavaShark event handling

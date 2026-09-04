@@ -1,6 +1,5 @@
 import type { Response } from 'express';
 
-
 export interface ApiProblem {
     type?: string;
     title: string;
@@ -47,14 +46,7 @@ export function noContent(res: Response): Response {
 
 export function problem(
     res: Response,
-    {
-        status,
-        title,
-        detail,
-        code,
-        errors,
-        type = 'about:blank',
-    }: ApiProblem,
+    { status, title, detail, code, errors, type = 'about:blank' }: ApiProblem,
 ): Response<ApiProblem> {
     return res.status(status).json({
         type,

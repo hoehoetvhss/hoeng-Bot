@@ -7,7 +7,6 @@ import { VoiceStateUpdateEvent } from './VoiceStateUpdateEvent.js';
 import type { DiscordEventRegistry } from './base/DiscordEventRegistry.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Register all Discord events to the registry
  *

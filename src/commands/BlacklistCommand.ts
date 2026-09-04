@@ -10,7 +10,6 @@ import type { Bot, CommandMetadata } from '../@types/index.js';
 import type { BlacklistManager } from '../lib/BlacklistManager.js';
 import type { CommandContext } from './base/CommandContext.js';
 
-
 type BlacklistAction = 'add' | 'list' | 'remove';
 type BlacklistMutationAction = Exclude<BlacklistAction, 'list'>;
 
@@ -31,16 +30,8 @@ export class BlacklistCommand extends BaseCommand {
             description: i18next.t('commands:CONFIG_BLACKLIST_DESCRIPTION', { lng }),
             name: 'blacklist',
             options: [
-                this.createUserSubcommand(
-                    'add',
-                    'commands:CONFIG_BLACKLIST_OPTION_ADD',
-                    lng,
-                ),
-                this.createUserSubcommand(
-                    'remove',
-                    'commands:CONFIG_BLACKLIST_OPTION_REMOVE',
-                    lng,
-                ),
+                this.createUserSubcommand('add', 'commands:CONFIG_BLACKLIST_OPTION_ADD', lng),
+                this.createUserSubcommand('remove', 'commands:CONFIG_BLACKLIST_OPTION_REMOVE', lng),
                 {
                     description: i18next.t('commands:CONFIG_BLACKLIST_OPTION_LIST', { lng }),
                     name: 'list',
@@ -57,17 +48,10 @@ export class BlacklistCommand extends BaseCommand {
     /**
      * Resolve and execute the requested blacklist action
      */
-    protected async run(
-        bot: Bot,
-        client: Client,
-        context: CommandContext,
-    ): Promise<void> {
+    protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         const blacklistManager = bot.blacklistManager;
         if (!blacklistManager) {
-            await context.replyEphemeralError(
-                bot,
-                context.t('commands:ERROR_BLACKLIST_NOT_INITIALIZED'),
-            );
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_BLACKLIST_NOT_INITIALIZED'));
             return;
         }
 
@@ -101,7 +85,7 @@ export class BlacklistCommand extends BaseCommand {
     private createUserSubcommand(
         name: BlacklistMutationAction,
         descriptionKey: string,
-        lng?: string
+        lng?: string,
     ): ApplicationCommandSubCommandData {
         return {
             description: i18next.t(descriptionKey, { lng }),
@@ -125,9 +109,7 @@ export class BlacklistCommand extends BaseCommand {
         const value = context.isMessage()
             ? context.args[0]?.toLowerCase()
             : context.getInteraction().options.getSubcommand(false);
-        return BLACKLIST_ACTIONS.has(value as BlacklistAction)
-            ? value as BlacklistAction
-            : null;
+        return BLACKLIST_ACTIONS.has(value as BlacklistAction) ? (value as BlacklistAction) : null;
     }
 
     /**
@@ -142,9 +124,7 @@ export class BlacklistCommand extends BaseCommand {
         if (mentionedUser) return mentionedUser.id;
 
         const rawValue = context.args[1];
-        return rawValue && DISCORD_USER_ID_PATTERN.test(rawValue)
-            ? rawValue
-            : null;
+        return rawValue && DISCORD_USER_ID_PATTERN.test(rawValue) ? rawValue : null;
     }
 
     /**
@@ -158,25 +138,16 @@ export class BlacklistCommand extends BaseCommand {
         userId: string,
     ): Promise<void> {
         if (bot.config.bot.admin.includes(userId) || client.user?.id === userId) {
-            await context.replyEphemeralError(
-                bot,
-                context.t('commands:ERROR_BLACKLIST_TARGET_IMMUNE'),
-            );
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_BLACKLIST_TARGET_IMMUNE'));
             return;
         }
 
         if (blacklistManager.add(userId)) {
-            await context.replySuccess(
-                bot,
-                context.t('commands:MESSAGE_BLACKLIST_ADDED', { userId }),
-            );
+            await context.replySuccess(bot, context.t('commands:MESSAGE_BLACKLIST_ADDED', { userId }));
             return;
         }
 
-        await context.replyEphemeralError(
-            bot,
-            context.t('commands:MESSAGE_BLACKLIST_ALREADY_LISTED', { userId }),
-        );
+        await context.replyEphemeralError(bot, context.t('commands:MESSAGE_BLACKLIST_ALREADY_LISTED', { userId }));
     }
 
     /**
@@ -189,33 +160,20 @@ export class BlacklistCommand extends BaseCommand {
         userId: string,
     ): Promise<void> {
         if (blacklistManager.remove(userId)) {
-            await context.replySuccess(
-                bot,
-                context.t('commands:MESSAGE_BLACKLIST_REMOVED', { userId }),
-            );
+            await context.replySuccess(bot, context.t('commands:MESSAGE_BLACKLIST_REMOVED', { userId }));
             return;
         }
 
-        await context.replyEphemeralError(
-            bot,
-            context.t('commands:MESSAGE_BLACKLIST_NOT_LISTED', { userId }),
-        );
+        await context.replyEphemeralError(bot, context.t('commands:MESSAGE_BLACKLIST_NOT_LISTED', { userId }));
     }
 
     /**
      * Display all users in the persistent blacklist
      */
-    private async listUsers(
-        bot: Bot,
-        blacklistManager: BlacklistManager,
-        context: CommandContext,
-    ): Promise<void> {
+    private async listUsers(bot: Bot, blacklistManager: BlacklistManager, context: CommandContext): Promise<void> {
         const userIds = blacklistManager.getAll();
         if (userIds.length === 0) {
-            await context.replyText(
-                bot,
-                context.t('commands:MESSAGE_BLACKLIST_LIST_EMPTY'),
-            );
+            await context.replyText(bot, context.t('commands:MESSAGE_BLACKLIST_LIST_EMPTY'));
             return;
         }
 
@@ -227,13 +185,7 @@ export class BlacklistCommand extends BaseCommand {
     /**
      * Reply with localized blacklist command usage
      */
-    private async replyWithUsage(
-        bot: Bot,
-        context: CommandContext,
-    ): Promise<void> {
-        await context.replyEphemeralError(
-            bot,
-            context.t('commands:CONFIG_BLACKLIST_USAGE'),
-        );
+    private async replyWithUsage(bot: Bot, context: CommandContext): Promise<void> {
+        await context.replyEphemeralError(bot, context.t('commands:CONFIG_BLACKLIST_USAGE'));
     }
 }

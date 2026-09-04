@@ -19,7 +19,6 @@ import { DashboardButtonId, QueueButtonId, MusicButtonId } from '../../@types/in
 import type { Client } from 'discord.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * InteractionCreate event handler
  * Handles slash commands and button interactions
@@ -33,17 +32,17 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
         // Basic validation
         if (!interaction.guild || !interaction.guild.members) return;
         if (interaction.user.bot) return;
-        const isBlacklisted = bot.config.blacklist.includes(interaction.user.id) || (bot.blacklistManager?.has(interaction.user.id) ?? false);
+        const isBlacklisted =
+            bot.config.blacklist.includes(interaction.user.id) ||
+            (bot.blacklistManager?.has(interaction.user.id) ?? false);
         if (isBlacklisted) return;
 
         if (interaction.isButton()) {
             await this.#handleButtonInteraction(bot, client, interaction);
-        }
-        else if (interaction.isStringSelectMenu()) {
+        } else if (interaction.isStringSelectMenu()) {
             await LanguageSelectHandler.handle(bot, client, interaction);
             await NodeSelectHandler.handle(bot, client, interaction);
-        }
-        else if (interaction.isCommand() && interaction.inGuild() && interaction.isChatInputCommand()) {
+        } else if (interaction.isCommand() && interaction.inGuild() && interaction.isChatInputCommand()) {
             await this.#handleCommandInteraction(bot, client, interaction);
         }
     }
@@ -55,9 +54,10 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
     async #handleButtonInteraction(bot: Bot, client: Client, interaction: Interaction): Promise<void> {
         if (!interaction.isButton()) return;
 
-        const isMusicPlayerButton = (Object.values(DashboardButtonId) as string[]).includes(interaction.customId)
-            || (Object.values(QueueButtonId) as string[]).includes(interaction.customId)
-            || (Object.values(MusicButtonId) as string[]).includes(interaction.customId);
+        const isMusicPlayerButton =
+            (Object.values(DashboardButtonId) as string[]).includes(interaction.customId) ||
+            (Object.values(QueueButtonId) as string[]).includes(interaction.customId) ||
+            (Object.values(MusicButtonId) as string[]).includes(interaction.customId);
 
         if (!isMusicPlayerButton) return;
 
@@ -67,24 +67,31 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
 
         // Validate voice channel
         if (!voiceChannel) {
-            await interaction.reply({
-                embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_NOT_IN_VOICE_CHANNEL', { lng }))],
-                flags: MessageFlags.Ephemeral,
-                components: []
-            }).catch((error) => {
-                bot.logger.error( bot.shardId, '[interactionCreate] Error reply: ' + error);
-            });
+            await interaction
+                .reply({
+                    embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_NOT_IN_VOICE_CHANNEL', { lng }))],
+                    flags: MessageFlags.Ephemeral,
+                    components: [],
+                })
+                .catch((error) => {
+                    bot.logger.error(bot.shardId, '[interactionCreate] Error reply: ' + error);
+                });
             return;
         }
 
-        if (interaction.guild?.members.me?.voice.channel && voiceChannel.id !== interaction.guild.members.me.voice.channelId) {
-            await interaction.reply({
-                embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_NOT_IN_SAME_VOICE_CHANNEL', { lng }))],
-                flags: MessageFlags.Ephemeral,
-                components: []
-            }).catch((error) => {
-                bot.logger.error( bot.shardId, '[interactionCreate] Error reply: ' + error);
-            });
+        if (
+            interaction.guild?.members.me?.voice.channel &&
+            voiceChannel.id !== interaction.guild.members.me.voice.channelId
+        ) {
+            await interaction
+                .reply({
+                    embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_NOT_IN_SAME_VOICE_CHANNEL', { lng }))],
+                    flags: MessageFlags.Ephemeral,
+                    components: [],
+                })
+                .catch((error) => {
+                    bot.logger.error(bot.shardId, '[interactionCreate] Error reply: ' + error);
+                });
             return;
         }
 
@@ -92,12 +99,14 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
         const player = client.lavashark.getPlayer(interaction.guild!.id);
 
         if (!player) {
-            await interaction.reply({
-                embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_NOT_PLAYING', { lng }))],
-                allowedMentions: { repliedUser: false }
-            }).catch((error) => {
-                bot.logger.error( bot.shardId, '[interactionCreate] Error reply: ' + error);
-            });
+            await interaction
+                .reply({
+                    embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_NOT_PLAYING', { lng }))],
+                    allowedMentions: { repliedUser: false },
+                })
+                .catch((error) => {
+                    bot.logger.error(bot.shardId, '[interactionCreate] Error reply: ' + error);
+                });
             return;
         }
 
@@ -154,9 +163,8 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
                     break;
                 }
             }
-        }
-        catch (error) {
-            bot.logger.error( bot.shardId, '[interactionCreate] Dashboard error: ' + error);
+        } catch (error) {
+            bot.logger.error(bot.shardId, '[interactionCreate] Dashboard error: ' + error);
         }
     }
 
@@ -171,12 +179,17 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
 
         // Check if slash commands are enabled
         if (!bot.config.bot.slashCommand) {
-            await interaction.reply({
-                embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_SLASH_NOT_ENABLE', { lng }))],
-                allowedMentions: { repliedUser: false }
-            }).catch((error) => {
-                bot.logger.error( bot.shardId, `[interactionCreate] Error reply: (${interaction.user.username} : /${interaction.commandName}) ${error}`);
-            });
+            await interaction
+                .reply({
+                    embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_SLASH_NOT_ENABLE', { lng }))],
+                    allowedMentions: { repliedUser: false },
+                })
+                .catch((error) => {
+                    bot.logger.error(
+                        bot.shardId,
+                        `[interactionCreate] Error reply: (${interaction.user.username} : /${interaction.commandName}) ${error}`,
+                    );
+                });
             return;
         }
 
@@ -188,7 +201,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
             bot,
             client,
             interaction,
-            interaction.channelId
+            interaction.channelId,
         );
         if (!channelValidation.valid) return;
 
@@ -198,7 +211,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
             client,
             interaction,
             cmd,
-            interaction.user.id
+            interaction.user.id,
         );
         if (!adminValidation.valid) return;
 
@@ -210,7 +223,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
             cmd,
             interaction.user.id,
             interaction.member as GuildMember,
-            interaction.guild!.id
+            interaction.guild!.id,
         );
         if (!djValidation.valid) return;
 
@@ -221,7 +234,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
             interaction,
             cmd,
             interaction.member as GuildMember,
-            interaction.guild!.id
+            interaction.guild!.id,
         );
         if (!voiceValidation.valid) return;
 
@@ -229,7 +242,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
         const guildMember = interaction.guild!.members.cache.get(interaction.user.id);
         bot.logger.discord(
             bot.shardId,
-            `[interactionCreate] (${cst.color.grey}${guildMember?.guild.name}${cst.color.white}) ${interaction.user.username} : /${interaction.commandName}`
+            `[interactionCreate] (${cst.color.grey}${guildMember?.guild.name}${cst.color.white}) ${interaction.user.username} : /${interaction.commandName}`,
         );
 
         // Ensure guild cache
@@ -238,7 +251,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
             client,
             interaction,
             interaction.guildId!,
-            interaction.user.id
+            interaction.user.id,
         );
         if (!cacheValidation.valid) return;
 
@@ -246,7 +259,7 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
         try {
             await interaction.deferReply();
         } catch (error) {
-            bot.logger.error( bot.shardId, '[interactionCreate] Error deferReply: ' + error);
+            bot.logger.error(bot.shardId, '[interactionCreate] Error deferReply: ' + error);
             return;
         }
 
@@ -255,11 +268,21 @@ export class InteractionCreateEvent extends BaseDiscordEvent<Events.InteractionC
             const context = new CommandContext(bot, interaction);
             await cmd.execute(bot, client, context);
         } catch (error) {
-            bot.logger.error( bot.shardId, `[interactionCreate] Error executing command /${interaction.commandName}: ${error}`);
+            bot.logger.error(
+                bot.shardId,
+                `[interactionCreate] Error executing command /${interaction.commandName}: ${error}`,
+            );
             if (interaction.deferred) {
-                await interaction.editReply({
-                    embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_PLAY_MUSIC', { lng, reason: 'Command Execution Error' }))],
-                }).catch(() => {});
+                await interaction
+                    .editReply({
+                        embeds: [
+                            embeds.textErrorMsg(
+                                bot,
+                                bot.i18n.t('events:ERROR_PLAY_MUSIC', { lng, reason: 'Command Execution Error' }),
+                            ),
+                        ],
+                    })
+                    .catch(() => {});
             }
         }
     }

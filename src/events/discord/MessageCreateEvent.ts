@@ -8,7 +8,6 @@ import { CommandValidator } from './base/CommandValidator.js';
 import type { Client, Message } from 'discord.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * MessageCreate event handler
  * Handles text command execution from Discord messages
@@ -26,7 +25,8 @@ export class MessageCreateEvent extends BaseDiscordEvent<Events.MessageCreate> {
         if (message.content.indexOf(prefix) !== 0) return;
 
         if (message.author.bot || message.channel.type !== ChannelType.GuildText) return;
-        const isBlacklisted = bot.config.blacklist.includes(message.author.id) || (bot.blacklistManager?.has(message.author.id) ?? false);
+        const isBlacklisted =
+            bot.config.blacklist.includes(message.author.id) || (bot.blacklistManager?.has(message.author.id) ?? false);
         if (isBlacklisted) return;
 
         // Parse command and arguments
@@ -41,7 +41,7 @@ export class MessageCreateEvent extends BaseDiscordEvent<Events.MessageCreate> {
             bot,
             client,
             message,
-            message.channelId
+            message.channelId,
         );
         if (!channelValidation.valid) return;
 
@@ -51,7 +51,7 @@ export class MessageCreateEvent extends BaseDiscordEvent<Events.MessageCreate> {
             client,
             message,
             cmd,
-            message.author.id
+            message.author.id,
         );
         if (!adminValidation.valid) return;
 
@@ -63,7 +63,7 @@ export class MessageCreateEvent extends BaseDiscordEvent<Events.MessageCreate> {
             cmd,
             message.author.id,
             message.member,
-            message.guild.id
+            message.guild.id,
         );
         if (!djValidation.valid) return;
 
@@ -74,14 +74,14 @@ export class MessageCreateEvent extends BaseDiscordEvent<Events.MessageCreate> {
             message,
             cmd,
             message.member,
-            message.guild.id
+            message.guild.id,
         );
         if (!voiceValidation.valid) return;
 
         // Log command execution
         bot.logger.discord(
             bot.shardId,
-            `[messageCreate] (${cst.color.grey}${message.guild.name}${cst.color.white}) ${message.author.username} : ${message.content}`
+            `[messageCreate] (${cst.color.grey}${message.guild.name}${cst.color.white}) ${message.author.username} : ${message.content}`,
         );
 
         // Ensure guild cache
@@ -90,7 +90,7 @@ export class MessageCreateEvent extends BaseDiscordEvent<Events.MessageCreate> {
             client,
             message,
             message.guildId!,
-            message.author.id
+            message.author.id,
         );
         if (!cacheValidation.valid) return;
 

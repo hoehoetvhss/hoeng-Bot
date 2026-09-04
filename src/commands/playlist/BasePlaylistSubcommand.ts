@@ -9,18 +9,10 @@ import type { PlaylistOverwriteAction } from '../../embeds/playlist.embed.js';
 import type { PlaylistManager } from '../../lib/PlaylistManager.js';
 import type { CommandContext } from '../base/CommandContext.js';
 
-
 /**
  * Supported playlist subcommand names
  */
-export type PlaylistSubcommandName =
-    | 'delete'
-    | 'import'
-    | 'info'
-    | 'list'
-    | 'play'
-    | 'remove-track'
-    | 'save';
+export type PlaylistSubcommandName = 'delete' | 'import' | 'info' | 'list' | 'play' | 'remove-track' | 'save';
 
 /**
  * Dependencies shared by playlist subcommand executions
@@ -49,18 +41,14 @@ export abstract class BasePlaylistSubcommand {
      * Read a playlist name from message arguments or slash command options
      */
     protected getPlaylistName(command: CommandContext): string {
-        const value = command.isMessage()
-            ? command.args.slice(1).join(' ')
-            : command.getStringOption('name');
+        const value = command.isMessage() ? command.args.slice(1).join(' ') : command.getStringOption('name');
         return value?.trim() ?? '';
     }
 
     /**
      * Read the playlist name and remote URL used by the import subcommand
      */
-    protected getImportArguments(
-        command: CommandContext,
-    ): { name: string; url: string } | null {
+    protected getImportArguments(command: CommandContext): { name: string; url: string } | null {
         if (command.isInteraction()) {
             const name = command.getStringOption('name')?.trim();
             const url = command.getStringOption('url')?.trim();
@@ -75,9 +63,7 @@ export abstract class BasePlaylistSubcommand {
     /**
      * Read the playlist name and one-based track index used for removal
      */
-    protected getRemoveTrackArguments(
-        command: CommandContext,
-    ): { index: number; name: string } | null {
+    protected getRemoveTrackArguments(command: CommandContext): { index: number; name: string } | null {
         if (command.isInteraction()) {
             const name = command.getStringOption('name')?.trim();
             const index = command.getIntegerOption('index');
@@ -99,23 +85,11 @@ export abstract class BasePlaylistSubcommand {
         trackCount: number,
     ): Promise<boolean> {
         const { bot, command } = context;
-        const confirmId = action === 'save'
-            ? PlaylistButtonId.SaveConfirm
-            : PlaylistButtonId.ImportConfirm;
+        const confirmId = action === 'save' ? PlaylistButtonId.SaveConfirm : PlaylistButtonId.ImportConfirm;
         // Send one confirmation message for both save and import workflows
         const message = await command.reply({
-            embeds: [embeds.playlistOverwrite(
-                bot,
-                action,
-                name,
-                trackCount,
-                command.language,
-            )],
-            components: [embeds.playlistOverwriteButtons(
-                bot,
-                action,
-                command.language,
-            )],
+            embeds: [embeds.playlistOverwrite(bot, action, name, trackCount, command.language)],
+            components: [embeds.playlistOverwriteButtons(bot, action, command.language)],
         });
         const collector = message.createMessageComponentCollector({
             componentType: ComponentType.Button,
@@ -129,9 +103,7 @@ export abstract class BasePlaylistSubcommand {
                 // Only the user who invoked the command may confirm the action
                 if (interaction.user.id !== command.user.id) {
                     await interaction.reply({
-                        content: command.t(
-                            'commands:ERROR_ONLY_COMMAND_USER_CONFIRM',
-                        ),
+                        content: command.t('commands:ERROR_ONLY_COMMAND_USER_CONFIRM'),
                         flags: MessageFlags.Ephemeral,
                     });
                     return;
@@ -139,15 +111,14 @@ export abstract class BasePlaylistSubcommand {
 
                 const confirmed = interaction.customId === confirmId;
                 settled = true;
-                const cancelKey = action === 'save'
-                    ? 'commands:MESSAGE_PLAYLIST_SAVE_CANCELLED'
-                    : 'commands:MESSAGE_PLAYLIST_IMPORT_CANCELLED';
+                const cancelKey =
+                    action === 'save'
+                        ? 'commands:MESSAGE_PLAYLIST_SAVE_CANCELLED'
+                        : 'commands:MESSAGE_PLAYLIST_IMPORT_CANCELLED';
 
                 try {
                     await interaction.update({
-                        content: command.t(confirmed
-                            ? 'commands:MESSAGE_PLAYLIST_OVERWRITING'
-                            : cancelKey),
+                        content: command.t(confirmed ? 'commands:MESSAGE_PLAYLIST_OVERWRITING' : cancelKey),
                         components: [],
                         embeds: [],
                     });
@@ -165,9 +136,10 @@ export abstract class BasePlaylistSubcommand {
                 settled = true;
 
                 if (reason === 'time') {
-                    const timeoutKey = action === 'save'
-                        ? 'commands:MESSAGE_PLAYLIST_SAVE_TIMEOUT'
-                        : 'commands:MESSAGE_PLAYLIST_IMPORT_TIMEOUT';
+                    const timeoutKey =
+                        action === 'save'
+                            ? 'commands:MESSAGE_PLAYLIST_SAVE_TIMEOUT'
+                            : 'commands:MESSAGE_PLAYLIST_IMPORT_TIMEOUT';
                     try {
                         await message.edit({
                             content: command.t(timeoutKey),
@@ -187,14 +159,7 @@ export abstract class BasePlaylistSubcommand {
     /**
      * Log failures raised after the command execution stack has returned
      */
-    private logInteractionError(
-        context: PlaylistSubcommandContext,
-        action: string,
-        error: unknown,
-    ): void {
-        context.bot.logger.error(
-            context.bot.shardId,
-            `[PlaylistCommand] Failed to ${action} interaction: ${error}`,
-        );
+    private logInteractionError(context: PlaylistSubcommandContext, action: string, error: unknown): void {
+        context.bot.logger.error(context.bot.shardId, `[PlaylistCommand] Failed to ${action} interaction: ${error}`);
     }
 }

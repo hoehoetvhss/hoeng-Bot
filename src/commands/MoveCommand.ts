@@ -7,7 +7,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class MoveCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -25,16 +24,16 @@ export class MoveCommand extends BaseCommand {
                     description: i18next.t('commands:CONFIG_MOVE_OPTION_DESCRIPTION', { lng }),
                     type: 4,
                     required: true,
-                    min_value: 1
+                    min_value: 1,
                 },
                 {
                     name: 'moveindex2',
                     description: i18next.t('commands:CONFIG_MOVE_OPTION_DESCRIPTION_2', { lng }),
                     type: 4,
                     required: true,
-                    min_value: 1
-                }
-            ]
+                    min_value: 1,
+                },
+            ],
         };
     }
 
@@ -56,15 +55,17 @@ export class MoveCommand extends BaseCommand {
         if (context.isInteraction()) {
             index1 = Math.floor(context.getInteraction().options.getInteger('moveindex1')!);
             index2 = Math.floor(context.getInteraction().options.getInteger('moveindex2')!);
-        }
-        else {
+        } else {
             index1 = parseInt(context.args[0], 10);
             index2 = parseInt(context.args[1], 10);
 
             if (isNaN(index1) || isNaN(index2)) {
-                await context.replyEphemeralError(bot, context.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
-                    max: player.queue.size
-                }));
+                await context.replyEphemeralError(
+                    bot,
+                    context.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
+                        max: player.queue.size,
+                    }),
+                );
                 return;
             }
         }
@@ -76,16 +77,18 @@ export class MoveCommand extends BaseCommand {
         }
 
         if (!isSuccess) {
-            await context.replyEphemeralError(bot, context.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
-                max: player.queue.size
-            }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:MESSAGE_MOVE_WRONG_INDEX', {
+                    max: player.queue.size,
+                }),
+            );
             return;
         }
 
         if (context.isMessage()) {
             await context.react('👍');
-        }
-        else {
+        } else {
             await context.replySuccess(bot, context.t('commands:MESSAGE_MOVE_SUCCESS'));
         }
     }

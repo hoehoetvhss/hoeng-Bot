@@ -1,7 +1,6 @@
 import type { Database } from 'better-sqlite3';
 import type { Bot } from '../@types/index.js';
 
-
 export const PLAYLIST_TRACK_LIMIT = 500;
 
 export interface PlaylistTrack {
@@ -15,8 +14,6 @@ export interface PlaylistTrack {
     position: number;
 }
 
-
-
 export interface Playlist {
     id: number;
     guildId: string;
@@ -27,8 +24,7 @@ export interface Playlist {
 }
 
 export type PlaylistImportResult =
-    | {success: true; trackCount: number}
-    | {success: false; reason: 'EMPTY' | 'SAVE_FAILED' | 'TRACK_LIMIT'};
+    { success: true; trackCount: number } | { success: false; reason: 'EMPTY' | 'SAVE_FAILED' | 'TRACK_LIMIT' };
 
 export class PlaylistManager {
     private readonly bot: Bot;
@@ -63,11 +59,15 @@ export class PlaylistManager {
         if (!db) return null;
 
         try {
-            const playlistRow = db.prepare(`
+            const playlistRow = db
+                .prepare(
+                    `
                 SELECT id, guild_id as guildId, name, created_at as createdAt, is_m3u as isM3u
                 FROM playlists
                 WHERE guild_id = ? AND name = ? COLLATE NOCASE
-            `).get(guildId, name) as any;
+            `,
+                )
+                .get(guildId, name) as any;
 
             if (!playlistRow) return null;
 
@@ -79,14 +79,18 @@ export class PlaylistManager {
                 isM3u: Boolean(playlistRow.isM3u),
             };
 
-            const tracks = db.prepare(`
+            const tracks = db
+                .prepare(
+                    `
                 SELECT id, playlist_id as playlistId, title, url, encoded, author, duration, position
                 FROM playlist_tracks
                 WHERE playlist_id = ?
                 ORDER BY position ASC
-            `).all(playlist.id) as any[];
+            `,
+                )
+                .all(playlist.id) as any[];
 
-            playlist.tracks = tracks.map(t => ({
+            playlist.tracks = tracks.map((t) => ({
                 id: t.id,
                 playlistId: t.playlistId,
                 title: t.title,
@@ -94,7 +98,7 @@ export class PlaylistManager {
                 encoded: t.encoded,
                 author: t.author,
                 duration: t.duration,
-                position: t.position
+                position: t.position,
             }));
 
             return playlist;
@@ -125,19 +129,23 @@ export class PlaylistManager {
         if (!db) return [];
 
         try {
-            const rows = db.prepare(`
+            const rows = db
+                .prepare(
+                    `
                 SELECT p.name, p.created_at as createdAt, COUNT(t.id) as trackCount
                 FROM playlists p
                 LEFT JOIN playlist_tracks t ON p.id = t.playlist_id
                 WHERE p.guild_id = ?
                 GROUP BY p.id
                 ORDER BY p.name ASC
-            `).all(guildId) as any[];
+            `,
+                )
+                .all(guildId) as any[];
 
-            return rows.map(r => ({
+            return rows.map((r) => ({
                 name: r.name,
                 trackCount: Number(r.trackCount),
-                createdAt: Number(r.createdAt)
+                createdAt: Number(r.createdAt),
             }));
         } catch (error) {
             this.bot.logger.error(this.bot.shardId, `[PlaylistManager] Error listing playlists: ${error}`);
@@ -145,7 +153,12 @@ export class PlaylistManager {
         }
     }
 
-    public saveCurrentQueue(guildId: string, name: string, tracks: Omit<PlaylistTrack, 'position'>[], isM3u: boolean = false): boolean {
+    public saveCurrentQueue(
+        guildId: string,
+        name: string,
+        tracks: Omit<PlaylistTrack, 'position'>[],
+        isM3u: boolean = false,
+    ): boolean {
         const db = this.db;
         if (!db || tracks.length === 0 || tracks.length > PLAYLIST_TRACK_LIMIT) return false;
 
@@ -158,10 +171,14 @@ export class PlaylistManager {
             const replacePlaylist = db.transaction(() => {
                 db.prepare('DELETE FROM playlists WHERE guild_id = ? AND name = ? COLLATE NOCASE').run(guildId, name);
 
-                const playlistInfo = db.prepare(`
+                const playlistInfo = db
+                    .prepare(
+                        `
                     INSERT INTO playlists (guild_id, name, created_at, is_m3u)
                     VALUES (?, ?, ?, ?)
-                `).run(guildId, name, Date.now(), isM3u ? 1 : 0);
+                `,
+                    )
+                    .run(guildId, name, Date.now(), isM3u ? 1 : 0);
                 const playlistId = Number(playlistInfo.lastInsertRowid);
 
                 for (let i = 0; i < tracks.length; i++) {
@@ -173,7 +190,7 @@ export class PlaylistManager {
                         track.encoded ?? null,
                         track.author ?? null,
                         track.duration ?? null,
-                        i
+                        i,
                     );
                 }
             });
@@ -182,7 +199,10 @@ export class PlaylistManager {
 
             return true;
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[PlaylistManager] Error saving queue to playlist ${name}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[PlaylistManager] Error saving queue to playlist ${name}: ${error}`,
+            );
             return false;
         }
     }
@@ -192,27 +212,34 @@ export class PlaylistManager {
         if (!db) return false;
 
         try {
-            const countRow = db.prepare('SELECT COUNT(*) as count FROM playlist_tracks WHERE playlist_id = ?').get(playlistId) as { count: number };
+            const countRow = db
+                .prepare('SELECT COUNT(*) as count FROM playlist_tracks WHERE playlist_id = ?')
+                .get(playlistId) as { count: number };
             if (countRow.count >= PLAYLIST_TRACK_LIMIT) return false;
 
             const position = countRow.count;
 
-            db.prepare(`
+            db.prepare(
+                `
                 INSERT INTO playlist_tracks (playlist_id, title, url, encoded, author, duration, position)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            `).run(
+            `,
+            ).run(
                 playlistId,
                 track.title,
                 track.url,
                 track.encoded ?? null,
                 track.author ?? null,
                 track.duration ?? null,
-                position
+                position,
             );
 
             return true;
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[PlaylistManager] Error adding track to playlist ${playlistId}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[PlaylistManager] Error adding track to playlist ${playlistId}: ${error}`,
+            );
             return false;
         }
     }
@@ -222,22 +249,30 @@ export class PlaylistManager {
         if (!db) return false;
 
         try {
-            const track = db.prepare(`
+            const track = db
+                .prepare(
+                    `
                 SELECT id FROM playlist_tracks
                 WHERE playlist_id = ?
                 ORDER BY position ASC
                 LIMIT 1 OFFSET ?
-            `).get(playlistId, index) as { id: number } | undefined;
+            `,
+                )
+                .get(playlistId, index) as { id: number } | undefined;
 
             if (!track) return false;
 
             db.prepare('DELETE FROM playlist_tracks WHERE id = ?').run(track.id);
 
-            const tracks = db.prepare(`
+            const tracks = db
+                .prepare(
+                    `
                 SELECT id FROM playlist_tracks
                 WHERE playlist_id = ?
                 ORDER BY position ASC
-            `).all(playlistId) as { id: number }[];
+            `,
+                )
+                .all(playlistId) as { id: number }[];
 
             const updateStmt = db.prepare('UPDATE playlist_tracks SET position = ? WHERE id = ?');
             db.transaction(() => {
@@ -248,28 +283,31 @@ export class PlaylistManager {
 
             return true;
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[PlaylistManager] Error removing track from playlist ${playlistId}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[PlaylistManager] Error removing track from playlist ${playlistId}: ${error}`,
+            );
             return false;
         }
     }
 
     public importFromM3u(guildId: string, name: string, m3uContent: string): PlaylistImportResult {
         const tracks = this.parseM3U(m3uContent);
-        if (tracks.length === 0) return {success: false, reason: 'EMPTY'};
-        if (tracks.length > PLAYLIST_TRACK_LIMIT) return {success: false, reason: 'TRACK_LIMIT'};
+        if (tracks.length === 0) return { success: false, reason: 'EMPTY' };
+        if (tracks.length > PLAYLIST_TRACK_LIMIT) return { success: false, reason: 'TRACK_LIMIT' };
 
-        const playlistTracks: Omit<PlaylistTrack, 'position'>[] = tracks.map(t => ({
+        const playlistTracks: Omit<PlaylistTrack, 'position'>[] = tracks.map((t) => ({
             title: t.title,
             url: t.url,
             duration: t.duration,
             encoded: null,
-            author: null
+            author: null,
         }));
 
         const success = this.saveCurrentQueue(guildId, name, playlistTracks, true);
         return success
-            ? {success: true, trackCount: playlistTracks.length}
-            : {success: false, reason: 'SAVE_FAILED'};
+            ? { success: true, trackCount: playlistTracks.length }
+            : { success: false, reason: 'SAVE_FAILED' };
     }
 
     private parseM3U(content: string): Array<{ title: string; url: string; duration: number }> {
@@ -300,7 +338,7 @@ export class PlaylistManager {
                     tracks.push({
                         title: currentTitle || line,
                         url: line,
-                        duration: currentDuration
+                        duration: currentDuration,
                     });
 
                     if (tracks.length > PLAYLIST_TRACK_LIMIT) {

@@ -1,11 +1,7 @@
 import { BasePlaylistSubcommand } from './BasePlaylistSubcommand.js';
 import { DJManager } from '../../lib/DjManager.js';
 
-import type {
-    PlaylistSubcommandContext,
-    PlaylistSubcommandName,
-} from './BasePlaylistSubcommand.js';
-
+import type { PlaylistSubcommandContext, PlaylistSubcommandName } from './BasePlaylistSubcommand.js';
 
 /**
  * Remove one track from a stored playlist
@@ -22,10 +18,7 @@ export class RemovePlaylistTrackSubcommand extends BasePlaylistSubcommand {
         const player = context.client.lavashark.getPlayer(context.command.guild!.id);
 
         if (!DJManager.isDJ(context.bot, userId, member, player ?? undefined)) {
-            await context.command.replyEphemeralError(
-                context.bot,
-                context.command.t('events:ERROR_REQUIRE_DJ'),
-            );
+            await context.command.replyEphemeralError(context.bot, context.command.t('events:ERROR_REQUIRE_DJ'));
             return;
         }
 
@@ -38,10 +31,7 @@ export class RemovePlaylistTrackSubcommand extends BasePlaylistSubcommand {
             return;
         }
 
-        const playlist = context.playlistManager.getPlaylist(
-            context.command.guild!.id,
-            args.name,
-        );
+        const playlist = context.playlistManager.getPlaylist(context.command.guild!.id, args.name);
         if (!playlist) {
             await context.command.replyEphemeralError(
                 context.bot,
@@ -52,10 +42,7 @@ export class RemovePlaylistTrackSubcommand extends BasePlaylistSubcommand {
             return;
         }
 
-        const removed = context.playlistManager.removeTrackFromPlaylist(
-            playlist.id,
-            args.index - 1,
-        );
+        const removed = context.playlistManager.removeTrackFromPlaylist(playlist.id, args.index - 1);
         if (!removed) {
             await context.command.replyEphemeralError(
                 context.bot,

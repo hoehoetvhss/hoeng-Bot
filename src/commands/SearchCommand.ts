@@ -21,7 +21,6 @@ import type { Player } from 'lavashark';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class SearchCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -38,17 +37,15 @@ export class SearchCommand extends BaseCommand {
                     name: 'search',
                     description: i18next.t('commands:CONFIG_SEARCH_OPTION_DESCRIPTION', { lng }),
                     type: 3,
-                    required: true
-                }
-            ]
+                    required: true,
+                },
+            ],
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         // Get search query
-        const rawStr = context.isMessage()
-            ? context.args.join(' ')
-            : context.getStringOption('search');
+        const rawStr = context.isMessage() ? context.args.join(' ') : context.getStringOption('search');
 
         const str = cleanSearchQuery(rawStr || '');
 
@@ -63,22 +60,27 @@ export class SearchCommand extends BaseCommand {
             res = await client.lavashark.search(str);
         } catch (error) {
             console.error(error);
-            bot.logger.error( bot.shardId, `Search Error: ${error}`);
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_SEARCH', {
-                reason: error instanceof Error ? error.message : String(error)
-            }));
+            bot.logger.error(bot.shardId, `Search Error: ${error}`);
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_PLAY_SEARCH', {
+                    reason: error instanceof Error ? error.message : String(error),
+                }),
+            );
             return;
         }
 
         // Handle search results
         if (res.loadType === LoadType.ERROR) {
-            bot.logger.error( bot.shardId, `Search Error: ${JSON.stringify(res)}`);
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_SEARCH', {
-                reason: (res as any).data?.message
-            }));
+            bot.logger.error(bot.shardId, `Search Error: ${JSON.stringify(res)}`);
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_PLAY_SEARCH', {
+                    reason: (res as any).data?.message,
+                }),
+            );
             return;
-        }
-        else if (res.loadType === LoadType.EMPTY) {
+        } else if (res.loadType === LoadType.EMPTY) {
             await context.replyEphemeralError(bot, context.t('commands:MESSAGE_PLAY_SEARCH_NO_MATCH'));
             return;
         }
@@ -91,7 +93,7 @@ export class SearchCommand extends BaseCommand {
         const validBlackist = isUserInBlacklist(voiceChannel, bot.config.blacklist, bot.blacklistManager);
         if (validBlackist.length > 0) {
             await context.reply({
-                embeds: [embeds.blacklist(bot, validBlackist, context.language)]
+                embeds: [embeds.blacklist(bot, validBlackist, context.language)],
             });
             return;
         }
@@ -113,11 +115,9 @@ export class SearchCommand extends BaseCommand {
         // Handle different load types
         if (res.loadType === LoadType.PLAYLIST) {
             await this.#handlePlaylist(bot, client, context, player, res, member);
-        }
-        else if (res.tracks.length === 1) {
+        } else if (res.tracks.length === 1) {
             await this.#handleSingleTrack(bot, client, context, player, res, member);
-        }
-        else {
+        } else {
             await this.#handleMusicSelection(bot, client, context, player, res, member);
         }
     }
@@ -139,7 +139,7 @@ export class SearchCommand extends BaseCommand {
                 guildId: guildId,
                 voiceChannelId: voiceChannelId,
                 textChannelId: context.channel!.id,
-                selfDeaf: true
+                selfDeaf: true,
             });
         } else {
             player.voiceChannelId = voiceChannelId;
@@ -150,7 +150,7 @@ export class SearchCommand extends BaseCommand {
             player.setting = {
                 queuePage: null,
                 volume: null,
-                fairQueueRotation: []
+                fairQueueRotation: [],
             };
         }
 
@@ -161,7 +161,7 @@ export class SearchCommand extends BaseCommand {
             try {
                 await player.connect();
             } catch (error) {
-                bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
+                bot.logger.error(bot.shardId, 'Error joining channel: ' + error);
                 await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
                 await player.destroy();
                 return null;
@@ -179,8 +179,8 @@ export class SearchCommand extends BaseCommand {
         // Set first user as DJ in dynamic mode (skip admins and if DJ-role user is in channel)
         if (bot.config.bot.djMode === DJModeEnum.DYNAMIC && !DJManager.hasDJSet(player)) {
             const djMember = context.isMessage()
-                ? context.getMessage().member as GuildMember | null
-                : context.getInteraction().member as GuildMember | null;
+                ? (context.getMessage().member as GuildMember | null)
+                : (context.getInteraction().member as GuildMember | null);
             const vc = djMember?.voice.channel;
             const isAdmin = bot.config.bot.admin.includes(context.user.id);
             const hasDJRoleUser = vc?.isVoiceBased() ? DJManager.hasDJRoleInChannel(bot, vc) : false;
@@ -197,50 +197,73 @@ export class SearchCommand extends BaseCommand {
      * Handle playlist load type
      * @private
      */
-    async #handlePlaylist(bot: Bot, client: Client, context: CommandContext, player: Player, res: any, member: GuildMember | null | undefined): Promise<void> {
+    async #handlePlaylist(
+        bot: Bot,
+        client: Client,
+        context: CommandContext,
+        player: Player,
+        res: any,
+        member: GuildMember | null | undefined,
+    ): Promise<void> {
         const userId = context.user.id;
         const guildMember = member as GuildMember | null;
         const playlistSize = res.tracks.length;
-        
+
         // Check queue limits for playlist
-        const playlistCheck = QueueLimitManager.calculatePlaylistAddition(bot, player, userId, guildMember, playlistSize);
+        const playlistCheck = QueueLimitManager.calculatePlaylistAddition(
+            bot,
+            player,
+            userId,
+            guildMember,
+            playlistSize,
+        );
 
         if (playlistCheck.limitReached) {
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
-                current: QueueLimitManager.countUserSongsInQueue(player, userId),
-                limit: QueueLimitManager.getUserLimit(bot, userId, guildMember, player)
-            }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
+                    current: QueueLimitManager.countUserSongsInQueue(player, userId),
+                    limit: QueueLimitManager.getUserLimit(bot, userId, guildMember, player),
+                }),
+            );
             return;
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
+        const curVolume =
+            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
         // Add only allowed tracks
-        const tracksToAdd = playlistCheck.canAddCount < playlistSize ? res.tracks.slice(0, playlistCheck.canAddCount) : res.tracks;
+        const tracksToAdd =
+            playlistCheck.canAddCount < playlistSize ? res.tracks.slice(0, playlistCheck.canAddCount) : res.tracks;
         player.addTracks(tracksToAdd, requester as any);
 
         if (!player.playing) {
             player.filters.setVolume(curVolume);
-            await player.play()
-                .catch(async (error) => {
-                    bot.logger.error( bot.shardId, 'Error playing track: ' + error);
-                    await context.replyError(bot, context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
-                    return player.destroy();
-                });
+            await player.play().catch(async (error) => {
+                bot.logger.error(bot.shardId, 'Error playing track: ' + error);
+                await context.replyError(
+                    bot,
+                    context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }),
+                );
+                return player.destroy();
+            });
         }
 
         // Show appropriate message
         if (playlistCheck.willSkipCount > 0) {
             const currentCount = QueueLimitManager.countUserSongsInQueue(player, userId);
             const limit = QueueLimitManager.getUserLimit(bot, userId, guildMember, player);
-            
-            await context.replyWarning(bot, context.t('commands:MESSAGE_PLAYLIST_PARTIAL', {
-                added: playlistCheck.canAddCount,
-                skipped: playlistCheck.willSkipCount,
-                current: currentCount,
-                limit: limit
-            }));
+
+            await context.replyWarning(
+                bot,
+                context.t('commands:MESSAGE_PLAYLIST_PARTIAL', {
+                    added: playlistCheck.canAddCount,
+                    skipped: playlistCheck.willSkipCount,
+                    current: currentCount,
+                    limit: limit,
+                }),
+            );
         } else {
             await context.replySuccess(bot, context.t('commands:MESSAGE_PLAY_MUSIC_ADD'));
         }
@@ -250,35 +273,48 @@ export class SearchCommand extends BaseCommand {
      * Handle single track
      * @private
      */
-    async #handleSingleTrack(bot: Bot, client: Client, context: CommandContext, player: Player, res: any, member: GuildMember | null | undefined): Promise<void> {
+    async #handleSingleTrack(
+        bot: Bot,
+        client: Client,
+        context: CommandContext,
+        player: Player,
+        res: any,
+        member: GuildMember | null | undefined,
+    ): Promise<void> {
         const userId = context.user.id;
         const guildMember = member as GuildMember | null;
-        
+
         // Check queue limits for single track
         const checkResult = QueueLimitManager.canAddSongs(bot, player, userId, guildMember, 1);
-        
+
         if (!checkResult.canAdd) {
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
-                current: checkResult.currentCount,
-                limit: checkResult.limit
-            }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
+                    current: checkResult.currentCount,
+                    limit: checkResult.limit,
+                }),
+            );
             return;
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
+        const curVolume =
+            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
         const track = res.tracks[0];
 
         player.addTracks(track, requester as any);
 
         if (!player.playing) {
             player.filters.setVolume(curVolume);
-            await player.play()
-                .catch(async (error) => {
-                    bot.logger.error( bot.shardId, 'Error playing track: ' + error);
-                    await context.replyError(bot, context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
-                    return player.destroy();
-                });
+            await player.play().catch(async (error) => {
+                bot.logger.error(bot.shardId, 'Error playing track: ' + error);
+                await context.replyError(
+                    bot,
+                    context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }),
+                );
+                return player.destroy();
+            });
         }
 
         await context.replySuccess(bot, context.t('commands:MESSAGE_PLAY_MUSIC_ADD'));
@@ -288,7 +324,14 @@ export class SearchCommand extends BaseCommand {
      * Handle interactive music selection
      * @private
      */
-    async #handleMusicSelection(bot: Bot, client: Client, context: CommandContext, player: Player, res: any, member: GuildMember | null | undefined): Promise<void> {
+    async #handleMusicSelection(
+        bot: Bot,
+        client: Client,
+        context: CommandContext,
+        player: Player,
+        res: any,
+        member: GuildMember | null | undefined,
+    ): Promise<void> {
         const userId = context.user.id;
         const guildMember = member as GuildMember | null;
 
@@ -297,20 +340,22 @@ export class SearchCommand extends BaseCommand {
         const select = new StringSelectMenuBuilder()
             .setCustomId(SelectButtonId.Music)
             .setPlaceholder(context.t('commands:MESSAGE_PLAY_SELECT_TITLE'))
-            .setOptions(candidateTracks.map((x: any, index: number) => {
-                return {
-                    label: x.title.length >= 25 ? x.title.substring(0, 22) + '...' : x.title,
-                    description: context.t('commands:MESSAGE_PLAY_SELECT_DURATION', { label: x.duration.label }),
-                    value: String(index)
-                };
-            }));
+            .setOptions(
+                candidateTracks.map((x: any, index: number) => {
+                    return {
+                        label: x.title.length >= 25 ? x.title.substring(0, 22) + '...' : x.title,
+                        description: context.t('commands:MESSAGE_PLAY_SELECT_DURATION', { label: x.duration.label }),
+                        value: String(index),
+                    };
+                }),
+            );
 
         const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
         const msg = await context.reply({ components: [row.toJSON()] });
 
         const collector = msg.createMessageComponentCollector({
             time: 20000, // 20s
-            filter: i => i.user.id === context.user.id
+            filter: (i) => i.user.id === context.user.id,
         });
 
         collector.on('collect', async (i: StringSelectMenuInteraction) => {
@@ -318,21 +363,27 @@ export class SearchCommand extends BaseCommand {
 
             // Check queue limits before adding selected track
             const checkResult = QueueLimitManager.canAddSongs(bot, player, userId, guildMember, 1);
-            
+
             if (!checkResult.canAdd) {
                 await i.deferUpdate();
                 await msg.edit({
-                    embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
-                        current: checkResult.currentCount,
-                        limit: checkResult.limit
-                    }))],
-                    components: []
+                    embeds: [
+                        embeds.textErrorMsg(
+                            bot,
+                            context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
+                                current: checkResult.currentCount,
+                                limit: checkResult.limit,
+                            }),
+                        ),
+                    ],
+                    components: [],
                 });
                 return;
             }
 
             const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-            const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
+            const curVolume =
+                player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
             const selectedIndex = parseInt(i.values[0], 10);
             const selectedTrack = candidateTracks[selectedIndex];
@@ -342,25 +393,29 @@ export class SearchCommand extends BaseCommand {
 
             if (!player.playing) {
                 player.filters.setVolume(curVolume);
-                await player.play()
-                    .catch(async (error) => {
-                        bot.logger.error( bot.shardId, 'Error playing track: ' + error);
+                await player.play().catch(async (error) => {
+                    bot.logger.error(bot.shardId, 'Error playing track: ' + error);
 
-                        await context.reply({
-                            embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }))],
-                            components: [],
-                            allowedMentions: { repliedUser: false }
-                        });
-
-                        return player.destroy();
+                    await context.reply({
+                        embeds: [
+                            embeds.textErrorMsg(
+                                bot,
+                                context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }),
+                            ),
+                        ],
+                        components: [],
+                        allowedMentions: { repliedUser: false },
                     });
+
+                    return player.destroy();
+                });
             }
 
             await i.deferUpdate();
 
             await msg.edit({
                 embeds: [embeds.textSuccessMsg(bot, context.t('commands:MESSAGE_PLAY_MUSIC_ADD'))],
-                components: []
+                components: [],
             });
         });
 
@@ -372,10 +427,9 @@ export class SearchCommand extends BaseCommand {
 
                 await msg.edit({
                     embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
-                    components: []
+                    components: [],
                 });
             }
         });
     }
 }
-

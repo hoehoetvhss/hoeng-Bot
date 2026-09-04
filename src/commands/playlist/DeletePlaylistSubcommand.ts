@@ -1,11 +1,7 @@
 import { BasePlaylistSubcommand } from './BasePlaylistSubcommand.js';
 import { DJManager } from '../../lib/DjManager.js';
 
-import type {
-    PlaylistSubcommandContext,
-    PlaylistSubcommandName,
-} from './BasePlaylistSubcommand.js';
-
+import type { PlaylistSubcommandContext, PlaylistSubcommandName } from './BasePlaylistSubcommand.js';
 
 /**
  * Delete a stored playlist from the current guild
@@ -22,10 +18,7 @@ export class DeletePlaylistSubcommand extends BasePlaylistSubcommand {
         const player = context.client.lavashark.getPlayer(context.command.guild!.id);
 
         if (!DJManager.isDJ(context.bot, userId, member, player ?? undefined)) {
-            await context.command.replyEphemeralError(
-                context.bot,
-                context.command.t('events:ERROR_REQUIRE_DJ'),
-            );
+            await context.command.replyEphemeralError(context.bot, context.command.t('events:ERROR_REQUIRE_DJ'));
             return;
         }
 
@@ -38,10 +31,7 @@ export class DeletePlaylistSubcommand extends BasePlaylistSubcommand {
             return;
         }
 
-        const deleted = context.playlistManager.deletePlaylist(
-            context.command.guild!.id,
-            name,
-        );
+        const deleted = context.playlistManager.deletePlaylist(context.command.guild!.id, name);
         if (!deleted) {
             await context.command.replyEphemeralError(
                 context.bot,

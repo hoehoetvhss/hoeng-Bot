@@ -7,23 +7,19 @@ import type { Client, StringSelectMenuInteraction } from 'discord.js';
 import type { Bot } from '../../@types/index.js';
 
 export class NodeSelectHandler {
-    public static async handle(
-        bot: Bot,
-        client: Client,
-        interaction: StringSelectMenuInteraction
-    ): Promise<void> {
+    public static async handle(bot: Bot, client: Client, interaction: StringSelectMenuInteraction): Promise<void> {
         if (interaction.customId !== 'select_node') return;
 
         const lng = bot.guildLanguageManager?.get(interaction.guildId!) || bot.config.bot.i18n.defaultLocale;
         const nodeName = interaction.values[0];
         const nodes = client.lavashark.nodes;
 
-        const targetNode = nodes.find(node => node.identifier === nodeName);
+        const targetNode = nodes.find((node) => node.identifier === nodeName);
 
         if (!targetNode) {
             await interaction.reply({
-                embeds: [embeds.validNodeName(bot, nodes.map(n => `\`${n.identifier}\``).join('\n'), lng)],
-                flags: MessageFlags.Ephemeral
+                embeds: [embeds.validNodeName(bot, nodes.map((n) => `\`${n.identifier}\``).join('\n'), lng)],
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -31,7 +27,7 @@ export class NodeSelectHandler {
         if (targetNode.state !== NodeState.CONNECTED) {
             await interaction.reply({
                 embeds: [embeds.nodeDisconnected(bot, nodeName, lng)],
-                flags: MessageFlags.Ephemeral
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -42,7 +38,7 @@ export class NodeSelectHandler {
             const [nodeInfo, nodeStats, pingList] = await Promise.all([
                 targetNode.getInfo(),
                 targetNode.getStats(),
-                client.lavashark.nodesPing()
+                client.lavashark.nodesPing(),
             ]);
             const nodePing = pingList[nodes.indexOf(targetNode)] ?? -1;
 
@@ -54,9 +50,9 @@ export class NodeSelectHandler {
                     value: node.identifier,
                     default: node.identifier === nodeName,
                     description: isConnected
-                        ? (bot.i18n.t('embeds:NODE_STATUS_PING', { lng }) + `: ${ping}ms`)
+                        ? bot.i18n.t('embeds:NODE_STATUS_PING', { lng }) + `: ${ping}ms`
                         : bot.i18n.t('embeds:NODE_DISCONNECTED', { lng }).replace(/\*/g, ''),
-                    emoji: isConnected ? '✅' : '❌'
+                    emoji: isConnected ? '✅' : '❌',
                 };
             });
 
@@ -69,7 +65,7 @@ export class NodeSelectHandler {
 
             await interaction.editReply({
                 embeds: [embeds.nodeStatus(bot, nodeName, nodeInfo, nodeStats, nodePing, lng)],
-                components: [row]
+                components: [row],
             });
         } catch (error) {
             bot.logger.error(bot.shardId, '[NodeSelectHandler] Error fetching node status: ' + error);

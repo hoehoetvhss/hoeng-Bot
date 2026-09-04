@@ -6,7 +6,6 @@ import { BaseRouter } from './BaseRouter.js';
 
 import type { Request, Response } from 'express';
 
-
 /**
  * Handles local Lavalink node control routes:
  *   GET    /api/localnode         - Local node summary
@@ -43,7 +42,10 @@ export class LocalNodeRouter extends BaseRouter {
         const query = validateQuery(paginatedLogsQuerySchema, req, res);
         if (!query) return res as unknown as Response;
 
-        return ok(res, paginateLogLines(this.localNodeController.lavalinkLogs, query, this.localNodeController.getLogSourceId()));
+        return ok(
+            res,
+            paginateLogLines(this.localNodeController.lavalinkLogs, query, this.localNodeController.getLogSourceId()),
+        );
     }
 
     /**
@@ -83,15 +85,13 @@ export class LocalNodeRouter extends BaseRouter {
                         code: 'LOCAL_NODE_RESTART_CONFLICT',
                     });
                 }
-            }
-            else {
+            } else {
                 await this.localNodeController.initialize();
             }
 
             return ok(res, this.#buildProcessState());
-        }
-        catch (error) {
-            this.bot.logger.api( `Failed to upsert local node process: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Failed to upsert local node process: ${error}`);
             return problem(res, {
                 status: 503,
                 title: 'Local node process unavailable',
@@ -145,9 +145,8 @@ export class LocalNodeRouter extends BaseRouter {
             }
 
             return noContent(res);
-        }
-        catch (error) {
-            this.bot.logger.api( `Failed to stop local node process: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Failed to stop local node process: ${error}`);
             return problem(res, {
                 status: 503,
                 title: 'Failed to stop local node',

@@ -1,13 +1,12 @@
 import { BaseCommand } from './BaseCommand.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Command registry for managing all bot commands
  */
 export class CommandRegistry {
     #commands = new Map<string, BaseCommand>();
-    #aliases = new Map<string, string>();   // alias -> command name
+    #aliases = new Map<string, string>(); // alias -> command name
 
     /**
      * Register a command
@@ -69,17 +68,13 @@ export class CommandRegistry {
      * Get commands by category
      */
     public getByCategory(category: string, bot: Bot): BaseCommand[] {
-        return this.getAll().filter(cmd =>
-            cmd.getMetadata(bot).category === category
-        );
+        return this.getAll().filter((cmd) => cmd.getMetadata(bot).category === category);
     }
 
     /**
      * Get all commands that should be shown in help
      */
     public getHelpCommands(bot: Bot, lng?: string): BaseCommand[] {
-        return this.getAll().filter(cmd =>
-            cmd.getMetadata(bot, lng).showHelp
-        );
+        return this.getAll().filter((cmd) => cmd.getMetadata(bot, lng).showHelp);
     }
 }

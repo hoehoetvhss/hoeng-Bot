@@ -5,7 +5,6 @@ import { BaseRouter } from './BaseRouter.js';
 
 import type { Request, Response } from 'express';
 
-
 /**
  * Handles Lavalink node status routes:
  *   GET /api/nodes - Returns status info for all configured nodes
@@ -39,7 +38,7 @@ export class NodeRouter extends BaseRouter {
 
                         try {
                             const timeout = new Promise<never>((_, reject) =>
-                                setTimeout(() => reject(new Error(`nodes_status "${node.identifier}" Timeout`)), 1500)
+                                setTimeout(() => reject(new Error(`nodes_status "${node.identifier}" Timeout`)), 1500),
                             );
 
                             const [nodeInfo, nodeStats, nodePing] = await (Promise.race([
@@ -47,24 +46,28 @@ export class NodeRouter extends BaseRouter {
                                 timeout,
                             ]) as Promise<[unknown, unknown, number]>);
 
-                            return { id: node.identifier, state: node.state, info: nodeInfo, stats: nodeStats, ping: nodePing };
-                        }
-                        catch (_) {
+                            return {
+                                id: node.identifier,
+                                state: node.state,
+                                info: nodeInfo,
+                                stats: nodeStats,
+                                ping: nodePing,
+                            };
+                        } catch (_) {
                             return { id: node.identifier, state: node.state, info: {}, stats: {}, ping: -1 };
                         }
                     });
 
                     return Promise.all(nodesPromises);
                 },
-                { context: { NodeState } }
+                { context: { NodeState } },
             );
 
             // Only shard 0 returns data; filter out nulls from other shards
             const nodesStatusList = nodeStatuses.find((result) => result !== null) ?? [];
             return ok(res, { items: nodesStatusList });
-        }
-        catch (error) {
-            this.bot.logger.api( `Error while fetching node data: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Error while fetching node data: ${error}`);
             return problem(res, {
                 status: 503,
                 title: 'Node status unavailable',

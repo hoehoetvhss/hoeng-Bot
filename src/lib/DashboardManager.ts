@@ -9,9 +9,7 @@ import type { Player, Track } from 'lavashark';
 import type { Bot } from '../@types/index.js';
 import type { Client, SendableChannels } from 'discord.js';
 
-
 type DashboardTarget = ChatInputCommandInteraction | Message | SendableChannels;
-
 
 /**
  * Dashboard management system for music playback control
@@ -32,29 +30,18 @@ export class DashboardManager {
      * Serialized with updates and destroys so no two dashboard messages
      * can ever be created for the same player at the same time.
      */
-    public async initialize(
-        target: DashboardTarget,
-        player: Player
-    ): Promise<void> {
-        return this.#enqueue(
-            player,
-            () => this.#performInitialize(target, player),
-        );
+    public async initialize(target: DashboardTarget, player: Player): Promise<void> {
+        return this.#enqueue(player, () => this.#performInitialize(target, player));
     }
 
-    async #performInitialize(
-        target: DashboardTarget,
-        player: Player
-    ): Promise<void> {
+    async #performInitialize(target: DashboardTarget, player: Player): Promise<void> {
         let channel: SendableChannels | null;
 
         if (target instanceof Message) {
             channel = target.channel.isSendable() ? target.channel : null;
-        }
-        else if (target instanceof ChatInputCommandInteraction) {
+        } else if (target instanceof ChatInputCommandInteraction) {
             channel = target.channel?.isSendable() ? target.channel : null;
-        }
-        else {
+        } else {
             channel = target;
         }
 
@@ -78,8 +65,10 @@ export class DashboardManager {
             if ('messages' in channel) {
                 const messages = await channel.messages.fetch({ limit: 30 });
                 for (const message of messages.values()) {
-                    if (message.author.id === this.#client.user?.id &&
-                        message.embeds.some((embed) => embed.title === dashboardTitle)) {
+                    if (
+                        message.author.id === this.#client.user?.id &&
+                        message.embeds.some((embed) => embed.title === dashboardTitle)
+                    ) {
                         await message.delete().catch(() => {});
                     }
                 }
@@ -88,7 +77,7 @@ export class DashboardManager {
 
         player.dashboardMsg = await channel.send({
             embeds: [embeds.connected(this.#bot, lng)],
-            components: []
+            components: [],
         });
     }
 
@@ -104,19 +93,16 @@ export class DashboardManager {
         let subtitle = await this.#buildSubtitle(player, track, lng);
         const buttons = ButtonsBuilder.createDashboardButtons(player, lng);
 
-        const safeTitle = track.title.length > 256
-            ? track.title.substring(0, 253) + '...'
-            : track.title;
+        const safeTitle = track.title.length > 256 ? track.title.substring(0, 253) + '...' : track.title;
 
         if (subtitle.length > 1024) {
             subtitle = subtitle.substring(0, 1021) + '...';
         }
 
-        const cachedChannel = player.textChannelId
-            ? this.#client.channels.cache.get(player.textChannelId)
-            : null;
+        const cachedChannel = player.textChannelId ? this.#client.channels.cache.get(player.textChannelId) : null;
         const dashboardChannel = player.dashboardMsg?.channel;
-        const channel = (dashboardChannel?.isSendable() ? dashboardChannel : null) ??
+        const channel =
+            (dashboardChannel?.isSendable() ? dashboardChannel : null) ??
             (cachedChannel?.isSendable() ? cachedChannel : null);
 
         if (!channel) {
@@ -125,22 +111,22 @@ export class DashboardManager {
         }
 
         const embedPayload = {
-            embeds: [embeds.dashboard(
-                this.#bot,
-                this.#bot.i18n.t('embeds:DASHBOARD_TITLE', { lng }),
-                safeTitle,
-                subtitle,
-                track.uri,
-                track.thumbnail!
-            )],
-            components: [buttons]
+            embeds: [
+                embeds.dashboard(
+                    this.#bot,
+                    this.#bot.i18n.t('embeds:DASHBOARD_TITLE', { lng }),
+                    safeTitle,
+                    subtitle,
+                    track.uri,
+                    track.thumbnail!,
+                ),
+            ],
+            components: [buttons],
         };
 
         if (player.dashboardMsg) {
             try {
-                const lastMsgId = 'lastMessageId' in channel
-                    ? channel.lastMessageId
-                    : null;
+                const lastMsgId = 'lastMessageId' in channel ? channel.lastMessageId : null;
                 if (!lastMsgId || lastMsgId === player.dashboardMsg.id) {
                     await player.dashboardMsg.edit(embedPayload);
                     return;
@@ -165,8 +151,7 @@ export class DashboardManager {
                     // Message is gone: drop the reference and send a new one
                     player.dashboardMsg = null;
                 }
-            }
-            else {
+            } else {
                 player.dashboardMsg = null;
             }
         }
@@ -198,10 +183,10 @@ export class DashboardManager {
         try {
             await player.dashboardMsg.edit({
                 embeds: [embeds.disconnect(this.#bot, lng)],
-                components: []
+                components: [],
             });
         } catch (error) {
-            this.#bot.logger.error( this.#bot.shardId, 'Dashboard destroy error: ' + error);
+            this.#bot.logger.error(this.#bot.shardId, 'Dashboard destroy error: ' + error);
         }
     }
 
@@ -209,10 +194,7 @@ export class DashboardManager {
      * Serialize dashboard operations for one guild. Failures are logged and
      * do not poison later queued work or reject event-handler promises.
      */
-    async #enqueue(
-        player: Player,
-        operation: () => Promise<void>,
-    ): Promise<void> {
+    async #enqueue(player: Player, operation: () => Promise<void>): Promise<void> {
         const guildId = player.guildId;
         const previous = this.#updatePromises.get(guildId) ?? Promise.resolve();
         const current = previous.then(operation);
@@ -239,7 +221,8 @@ export class DashboardManager {
     async #buildSubtitle(player: Player, track: Track, lng?: string): Promise<string> {
         const repeatModeLabel = this.#getRepeatModeLabel(player.repeatMode, lng);
 
-        const currentVolume = player.volume ??
+        const currentVolume =
+            player.volume ??
             player.setting?.volume ??
             this.#bot.guildVolumeManager?.get(player.guildId) ??
             this.#bot.config.bot.volume.default;
@@ -249,7 +232,7 @@ export class DashboardManager {
             duration: track.duration.label,
             volume: currentVolume,
             repeatMode: repeatModeLabel,
-            lng
+            lng,
         });
 
         // Add requester info
@@ -279,7 +262,7 @@ export class DashboardManager {
         const methods = [
             this.#bot.i18n.t('commands:REPEAT_MODE_OFF', { lng }),
             this.#bot.i18n.t('commands:REPEAT_MODE_SINGLE', { lng }),
-            this.#bot.i18n.t('commands:REPEAT_MODE_ALL', { lng })
+            this.#bot.i18n.t('commands:REPEAT_MODE_ALL', { lng }),
         ];
         return methods[repeatMode] || methods[0];
     }

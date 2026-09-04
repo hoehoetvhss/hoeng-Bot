@@ -4,7 +4,6 @@ import * as zlib from 'zlib';
 
 import { ShardingManager } from 'discord.js';
 
-
 /**
  * IPC message sent from shard processes to the main process.
  * The main process is the single writer for the log file.
@@ -23,7 +22,6 @@ function isLogIPCMessage(msg: unknown): msg is LogIPCMessage {
     );
 }
 
-
 export class Logger {
     public readonly logDir: string;
     public format: string;
@@ -40,7 +38,6 @@ export class Logger {
 
     // Common state
     #formatTokens: string[];
-
 
     /**
      * @param {string} format  - Time format string, e.g. `YYYY-MM-DD HH:mm:ss.l`
@@ -77,7 +74,6 @@ export class Logger {
             this.#cachedLogLines = this.#loadCachedLogLines();
         }
     }
-
 
     // -------------------------------------------------------------------------
     // Public logging methods (work in both main and shard processes)
@@ -138,7 +134,6 @@ export class Logger {
     public shard(message: string): void {
         this.#write(`${this.getFormatTime()} [shard] ${message}`);
     }
-
 
     // -------------------------------------------------------------------------
     // Public utility methods
@@ -234,19 +229,19 @@ export class Logger {
         const now = new Date();
 
         const timeValues: { [token: string]: string } = {
-            'YYYY': String(now.getFullYear()),
-            'MM': String(now.getMonth() + 1).padStart(2, '0'),
-            'DD': String(now.getDate()).padStart(2, '0'),
-            'HH': String(now.getHours()).padStart(2, '0'),
-            'hh': String(now.getHours() % 12 || 12).padStart(2, '0'),
-            'mm': String(now.getMinutes()).padStart(2, '0'),
-            'ss': String(now.getSeconds()).padStart(2, '0'),
-            'l': String(now.getMilliseconds()).padStart(3, '0'),
+            YYYY: String(now.getFullYear()),
+            MM: String(now.getMonth() + 1).padStart(2, '0'),
+            DD: String(now.getDate()).padStart(2, '0'),
+            HH: String(now.getHours()).padStart(2, '0'),
+            hh: String(now.getHours() % 12 || 12).padStart(2, '0'),
+            mm: String(now.getMinutes()).padStart(2, '0'),
+            ss: String(now.getSeconds()).padStart(2, '0'),
+            l: String(now.getMilliseconds()).padStart(3, '0'),
         };
 
         const formattedTime = this.#formatTokens.reduce(
             (result, token) => result.replace(token, timeValues[token]),
-            this.format
+            this.format,
         );
 
         if (this.#formatTokens.includes('hh')) {
@@ -256,7 +251,6 @@ export class Logger {
 
         return '[' + formattedTime + ']';
     }
-
 
     // -------------------------------------------------------------------------
     // Private helpers
@@ -278,9 +272,7 @@ export class Logger {
             process.send!(ipcMsg);
         } else {
             // Extract date from the timestamp in the message (e.g. '2026-01-01')
-            const date = message
-                .replace(/\r\n|\r|\n/g, ' ')
-                .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
+            const date = message.replace(/\r\n|\r|\n/g, ' ').replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
 
             this.#logQueue.push({ date, message });
             this.#processLogQueue();
@@ -293,9 +285,7 @@ export class Logger {
      * @private
      */
     #receiveShardLog(message: string): void {
-        const date = message
-            .replace(/\r\n|\r|\n/g, ' ')
-            .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
+        const date = message.replace(/\r\n|\r|\n/g, ' ').replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
 
         this.#logQueue.push({ date, message });
         this.#processLogQueue();
@@ -351,7 +341,7 @@ export class Logger {
                 console.log('Logger writing error', error);
             }
             this.#isWriting = false;
-            this.#processLogQueue();    // Continue processing the queue
+            this.#processLogQueue(); // Continue processing the queue
         });
     }
 
@@ -400,11 +390,8 @@ export class Logger {
         const logDateMatch = lastLine.match(/^\[(\d{4}-\d{2}-\d{2})[^]*?\]/);
 
         if (logDateMatch) {
-            const logDate = lastLine
-                .replace(/\r\n|\r|\n/g, ' ')
-                .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
-            const currentDate = this.getFormatTime()
-                .replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
+            const logDate = lastLine.replace(/\r\n|\r|\n/g, ' ').replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
+            const currentDate = this.getFormatTime().replace(/.*\[(\d{4}-\d{2}-\d{2}).*\].*/, '$1');
 
             if (logDate !== currentDate) {
                 this.#archiveLogFile(logDate);

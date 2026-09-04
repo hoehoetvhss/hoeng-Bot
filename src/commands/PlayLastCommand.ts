@@ -10,7 +10,6 @@ import type { Track } from 'lavashark';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 /**
  * PlayLast command - Replay the current or last played song
  */
@@ -25,7 +24,7 @@ export class PlayLastCommand extends BaseCommand {
             voiceChannel: false,
             showHelp: true,
             sendTyping: true,
-            options: []
+            options: [],
         };
     }
 
@@ -35,8 +34,8 @@ export class PlayLastCommand extends BaseCommand {
 
         // Check if user is in a voice channel
         const member = context.isMessage()
-            ? context.getMessage().member as GuildMember | null
-            : context.getInteraction().member as GuildMember | null;
+            ? (context.getMessage().member as GuildMember | null)
+            : (context.getInteraction().member as GuildMember | null);
 
         const voiceChannel = member?.voice.channel;
         if (!voiceChannel) {
@@ -72,14 +71,14 @@ export class PlayLastCommand extends BaseCommand {
             guildId: guildId,
             voiceChannelId: voiceChannel.id,
             textChannelId: context.channel!.id,
-            selfDeaf: true
+            selfDeaf: true,
         });
 
         if (!newPlayer.setting) {
             newPlayer.setting = {
                 queuePage: null,
                 volume: null,
-                fairQueueRotation: []
+                fairQueueRotation: [],
             };
         }
 
@@ -89,7 +88,7 @@ export class PlayLastCommand extends BaseCommand {
             await newPlayer.connect();
             newPlayer.metadata = metadata;
         } catch (error) {
-            bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
+            bot.logger.error(bot.shardId, 'Error joining channel: ' + error);
             await context.replyError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
             return;
         }
@@ -113,17 +112,17 @@ export class PlayLastCommand extends BaseCommand {
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume = newPlayer.setting.volume ?? bot.guildVolumeManager?.get(newPlayer.guildId) ?? bot.config.bot.volume.default;
+        const curVolume =
+            newPlayer.setting.volume ?? bot.guildVolumeManager?.get(newPlayer.guildId) ?? bot.config.bot.volume.default;
 
         newPlayer.addTracks(lastTrack, requester as any);
         newPlayer.filters.setVolume(curVolume);
 
-        await newPlayer.play()
-            .catch(async (error) => {
-                bot.logger.error( bot.shardId, 'Error playing track: ' + error);
-                await context.replyError(bot, context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
-                return newPlayer.destroy();
-            });
+        await newPlayer.play().catch(async (error) => {
+            bot.logger.error(bot.shardId, 'Error playing track: ' + error);
+            await context.replyError(bot, context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
+            return newPlayer.destroy();
+        });
 
         await this.#replyWithTrackEmbed(bot, client, context, lastTrack);
     }
@@ -135,11 +134,11 @@ export class PlayLastCommand extends BaseCommand {
     async #replyWithTrackEmbed(bot: Bot, client: Client, context: CommandContext, track: Track): Promise<void> {
         const subtitle = context.t('events:MESSAGE_NOW_PLAYING_SUBTITLE', {
             author: track.author,
-            label: track.duration.label
+            label: track.duration.label,
         });
 
         await context.reply({
-            embeds: [embeds.addTrack(bot, track.title, subtitle, track.uri, track.thumbnail!, context.language)]
+            embeds: [embeds.addTrack(bot, track.title, subtitle, track.uri, track.thumbnail!, context.language)],
         });
     }
 }

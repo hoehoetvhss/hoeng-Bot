@@ -21,7 +21,6 @@ import type { LocalNodeController } from '../localnode/LocalNodeController.js';
 import type { SessionManager } from '../session-manager/SessionManager.js';
 import type { RouterDependencies } from './routes/BaseRouter.js';
 
-
 /**
  * Main API server class.
  *
@@ -71,14 +70,14 @@ export class ApiServer {
     // Public methods
     // -------------------------------------------------------------------------
 
-    /** 
-     * Start listening on the configured port. 
+    /**
+     * Start listening on the configured port.
      * Returns a Promise that resolves once the server is ready.
      */
     public listen(): Promise<void> {
         return new Promise((resolve) => {
             this.#app.listen(this.#port, () => {
-                this.#bot.logger.api( `Server start listening port on ${this.#port}`);
+                this.#bot.logger.api(`Server start listening port on ${this.#port}`);
                 resolve();
             });
         });
@@ -88,7 +87,7 @@ export class ApiServer {
     // Private setup methods
     // -------------------------------------------------------------------------
 
-    /** 
+    /**
      * Register global Express middleware (body parsing, trust proxy, etc.).
      * @private
      */
@@ -100,7 +99,7 @@ export class ApiServer {
         this.#app.use(express.urlencoded({ extended: true, limit: '1mb' }));
     }
 
-    /** 
+    /**
      * Mount all API routers under /api.
      * @private
      */
@@ -146,7 +145,7 @@ export class ApiServer {
     #setupStaticFallback(): void {
         const distPath = ApiServer.DASHBOARD_DIST;
 
-        /** 
+        /**
          * Resolve the SPA entry file once at startup.
          * `nuxt generate` (ssr: false) produces 200.html as the catch-all;
          * `nuxt build` produces index.html. Support both.
@@ -160,7 +159,7 @@ export class ApiServer {
             return null;
         })();
 
-        /** 
+        /**
          * Rewrite non-API, non-asset page routes to the SPA entry file BEFORE
          * express.static runs. This allows express.static to serve the SPA shell
          * with correct ETag/304 handling for all client-side routes.

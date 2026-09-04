@@ -5,7 +5,6 @@ import { DashboardButtonId, QueueButtonId } from '../../@types/index.js';
 
 import type { Player } from 'lavashark';
 
-
 /**
  * Builder class for creating button components
  */
@@ -44,8 +43,13 @@ export class ButtonsBuilder {
             .setEmoji(cst.button.emoji.shuffle)
             .setStyle(ButtonStyle.Secondary);
 
-        return new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(playPauseButton, skipButton, stopButton, loopButton, shuffleButton);
+        return new ActionRowBuilder<ButtonBuilder>().addComponents(
+            playPauseButton,
+            skipButton,
+            stopButton,
+            loopButton,
+            shuffleButton,
+        );
     }
 
     /**
@@ -74,7 +78,6 @@ export class ButtonsBuilder {
             .setLabel(i18next.t(cst.button.label.clear, { lng }))
             .setStyle(ButtonStyle.Danger);
 
-        return new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(prevButton, nextButton, delButton, clsButton);
+        return new ActionRowBuilder<ButtonBuilder>().addComponents(prevButton, nextButton, delButton, clsButton);
     }
 }

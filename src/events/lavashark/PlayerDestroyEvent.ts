@@ -5,7 +5,6 @@ import type { Client } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * PlayerDestroy event handler
  * Logs when a player is destroyed and cleans up dashboard
@@ -26,7 +25,7 @@ export class PlayerDestroyEvent extends BaseLavaSharkEvent<'playerDestroy'> {
             player.leaveTimeout = undefined;
         }
 
-        bot.logger.lavashark( bot.shardId, `[playerDestroy] Player destroyed in guild "${player.guildId}"`);
+        bot.logger.lavashark(bot.shardId, `[playerDestroy] Player destroyed in guild "${player.guildId}"`);
 
         // Stop periodic queue persistence save
         if (bot.config.queuePersistence.enabled && client.queuePersistence) {

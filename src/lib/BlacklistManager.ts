@@ -1,6 +1,5 @@
 import type { BlacklistedUserTableRow, Bot } from '../@types/index.js';
 
-
 export class BlacklistManager {
     private readonly bot: Bot;
     private readonly blacklistedUsers: Set<string> = new Set();
@@ -17,16 +16,14 @@ export class BlacklistManager {
                 return;
             }
 
-            const rows = db
-                .prepare('SELECT user_id FROM blacklisted_users')
-                .all() as BlacklistedUserTableRow[];
+            const rows = db.prepare('SELECT user_id FROM blacklisted_users').all() as BlacklistedUserTableRow[];
             for (const row of rows) {
                 this.blacklistedUsers.add(row.user_id);
             }
 
             this.bot.logger.log(
                 this.bot.shardId,
-                `[BlacklistManager] Initialized with ${this.blacklistedUsers.size} blacklisted user(s)`
+                `[BlacklistManager] Initialized with ${this.blacklistedUsers.size} blacklisted user(s)`,
             );
         } catch (error) {
             this.bot.logger.error(this.bot.shardId, `[BlacklistManager] Failed to initialize: ${error}`);

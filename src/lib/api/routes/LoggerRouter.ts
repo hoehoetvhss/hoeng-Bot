@@ -6,7 +6,6 @@ import { BaseRouter } from './BaseRouter.js';
 
 import type { Request, Response } from 'express';
 
-
 /**
  * Handles bot logger routes:
  *   GET /api/logs/bot - Return a cursor-paginated slice of bot log lines

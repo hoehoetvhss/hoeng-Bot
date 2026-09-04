@@ -1,7 +1,6 @@
 import type { Client } from 'discord.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Set idle voice channel status (shown when bot is connected but not playing)
  * Does nothing if voiceStatusIdleText is empty
@@ -12,7 +11,6 @@ export async function setIdleVoiceStatus(bot: Bot, client: Client, voiceChannelI
     await setVoiceChannelStatus(bot, client, voiceChannelId, idleText);
 }
 
-
 /**
  * Set or clear voice channel status
  * Uses discord.js VoiceChannel.setStatus() if available, falls back to REST API
@@ -21,7 +19,7 @@ export async function setVoiceChannelStatus(
     bot: Bot,
     client: Client,
     voiceChannelId: string,
-    status: string | null
+    status: string | null,
 ): Promise<void> {
     try {
         const channel = client.channels.cache.get(voiceChannelId);
@@ -31,10 +29,10 @@ export async function setVoiceChannelStatus(
         } else {
             // Fallback to REST API
             await (client.rest as any).put(`/channels/${voiceChannelId}/voice-status`, {
-                body: { status: status ?? '' }
+                body: { status: status ?? '' },
             });
         }
     } catch (error) {
-        bot.logger.log( bot.shardId, `[VoiceStatus] Failed to set status: ${error}`);
+        bot.logger.log(bot.shardId, `[VoiceStatus] Failed to set status: ${error}`);
     }
 }

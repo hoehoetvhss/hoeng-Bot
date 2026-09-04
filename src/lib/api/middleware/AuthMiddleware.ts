@@ -5,7 +5,6 @@ import { problem } from '../http.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { SessionManager } from '../../session-manager/SessionManager.js';
 
-
 /**
  * Express middleware that guards API routes behind session authentication.
  *

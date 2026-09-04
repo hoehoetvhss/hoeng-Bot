@@ -10,7 +10,6 @@ import { buildSlashCommandsWithLocalizations } from '../../utils/buildSlashComma
 import type { Client } from 'discord.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * ClientReady event handler
  * Handles bot initialization after successful Discord connection
@@ -30,20 +29,23 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
             shark: `LavaShark:  ${cst.color.cyan}${bot.sysInfo.shark_version}${cst.color.white}`,
         };
 
-        bot.logger.log( bot.shardId, `+-----------------------+`);
-        bot.logger.log( bot.shardId, `| ${release.bot.padEnd(30, ' ')} |`);
-        bot.logger.log( bot.shardId, `| ${release.nodejs.padEnd(30, ' ')} |`);
-        bot.logger.log( bot.shardId, `| ${release.djs.padEnd(30, ' ')} |`);
-        bot.logger.log( bot.shardId, `| ${release.shark.padEnd(30, ' ')} |`);
-        bot.logger.log( bot.shardId, `+-----------------------+`);
+        bot.logger.log(bot.shardId, `+-----------------------+`);
+        bot.logger.log(bot.shardId, `| ${release.bot.padEnd(30, ' ')} |`);
+        bot.logger.log(bot.shardId, `| ${release.nodejs.padEnd(30, ' ')} |`);
+        bot.logger.log(bot.shardId, `| ${release.djs.padEnd(30, ' ')} |`);
+        bot.logger.log(bot.shardId, `| ${release.shark.padEnd(30, ' ')} |`);
+        bot.logger.log(bot.shardId, `+-----------------------+`);
 
         await this.#registerSlashCommands(bot, client);
         await this.#initializeLavalink(bot, client);
         this.#setupBotPresence(bot, client);
         await this.#validateConfiguration(bot, client);
 
-        bot.logger.discord( bot.shardId, `>>> Logged in as ${client.user?.username}`);
-        bot.logger.log( bot.shardId, `${cst.color.green}*** Launched shard ${bot.shardId + 1} / ${client.shard?.count} ***${cst.color.white}`);
+        bot.logger.discord(bot.shardId, `>>> Logged in as ${client.user?.username}`);
+        bot.logger.log(
+            bot.shardId,
+            `${cst.color.green}*** Launched shard ${bot.shardId + 1} / ${client.shard?.count} ***${cst.color.white}`,
+        );
     }
 
     /**
@@ -52,15 +54,14 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
      */
     async #registerSlashCommands(bot: Bot, client: Client): Promise<void> {
         if (bot.config.bot.slashCommand) {
-            bot.logger.log( bot.shardId, 'Enable slash command with i18n localizations.');
+            bot.logger.log(bot.shardId, 'Enable slash command with i18n localizations.');
 
             const commands = client.commands.getAll();
             const slashCommands = buildSlashCommandsWithLocalizations(commands, bot);
 
             await client.application?.commands.set(slashCommands);
-        }
-        else {
-            bot.logger.log( bot.shardId, 'Disable slash command.');
+        } else {
+            bot.logger.log(bot.shardId, 'Disable slash command.');
         }
     }
 
@@ -85,7 +86,7 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
                     if (!hasPersistedData) {
                         await this.#handleAutoJoin(bot, client);
                     } else {
-                        bot.logger.log( bot.shardId, 'Skipping auto-join: queue persistence restored for this channel.');
+                        bot.logger.log(bot.shardId, 'Skipping auto-join: queue persistence restored for this channel.');
                     }
                 }
             }
@@ -115,10 +116,10 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
             }
 
             if (queues.length > 0) {
-                bot.logger.log( bot.shardId, `Restored ${queues.length} persisted queue(s) on startup.`);
+                bot.logger.log(bot.shardId, `Restored ${queues.length} persisted queue(s) on startup.`);
             }
         } catch (error) {
-            bot.logger.error( bot.shardId, `Failed to restore persisted queues: ${error}`);
+            bot.logger.error(bot.shardId, `Failed to restore persisted queues: ${error}`);
         }
     }
 
@@ -130,8 +131,11 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
         const channel = await client.channels.fetch(bot.config.bot.specifyVoiceChannel ?? '0');
 
         if (!channel || channel.type !== ChannelType.GuildVoice) {
-            bot.logger.log( bot.shardId, `The specified voice channel not found, set to disabled. (${bot.config.bot.specifyVoiceChannel})`);
-            bot.logger.log( bot.shardId, `The specifyVoiceChannel value is incorrect, set startupAutoJoin to disabled.`);
+            bot.logger.log(
+                bot.shardId,
+                `The specified voice channel not found, set to disabled. (${bot.config.bot.specifyVoiceChannel})`,
+            );
+            bot.logger.log(bot.shardId, `The specifyVoiceChannel value is incorrect, set startupAutoJoin to disabled.`);
 
             bot.config.bot.specifyVoiceChannel = null;
             bot.config.bot.startupAutoJoin = false;
@@ -144,28 +148,31 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
             guildId: channel.guildId,
             voiceChannelId: channel.id,
             textChannelId: channel.id,
-            selfDeaf: true
+            selfDeaf: true,
         });
 
         if (!player.setting) {
             player.setting = {
                 queuePage: null,
                 volume: null,
-                fairQueueRotation: []
+                fairQueueRotation: [],
             };
         }
 
         try {
             // Connects to the voice channel
             await player.connect();
-            bot.logger.log( bot.shardId, `Auto join voice channel : ${(channel as any).name || 'Unknown channel'} (${bot.config.bot.specifyVoiceChannel})`);
+            bot.logger.log(
+                bot.shardId,
+                `Auto join voice channel : ${(channel as any).name || 'Unknown channel'} (${bot.config.bot.specifyVoiceChannel})`,
+            );
 
             // Set idle voice status after auto-join
             if (bot.config.bot.voiceStatusIdleText && bot.config.bot.voiceStatusEmojis.length > 0) {
                 await setIdleVoiceStatus(bot, client, channel.id);
             }
         } catch (error) {
-            bot.logger.error( bot.shardId, 'Error startup auto joining channel: ' + error);
+            bot.logger.error(bot.shardId, 'Error startup auto joining channel: ' + error);
         }
     }
 
@@ -179,18 +186,21 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
             name: bot.config.bot.activity.name,
             type: bot.config.bot.activity.type,
             state: bot.config.bot.activity.state,
-            url: bot.config.bot.activity.url
+            url: bot.config.bot.activity.url,
         });
 
         // Prevent the disappearance of the activity status
-        setInterval(() => {
-            client.user?.setActivity({
-                name: bot.config.bot.activity.name,
-                type: bot.config.bot.activity.type,
-                state: bot.config.bot.activity.state,
-                url: bot.config.bot.activity.url
-            });
-        }, 10 * 60 * 1000); // 10 minutes
+        setInterval(
+            () => {
+                client.user?.setActivity({
+                    name: bot.config.bot.activity.name,
+                    type: bot.config.bot.activity.type,
+                    state: bot.config.bot.activity.state,
+                    url: bot.config.bot.activity.url,
+                });
+            },
+            10 * 60 * 1000,
+        ); // 10 minutes
     }
 
     /**
@@ -203,11 +213,16 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
             const channel = await client.channels.fetch(bot.config.bot.specifyMessageChannel);
 
             if (!channel) {
-                bot.logger.log( bot.shardId, `The specified message channel not found, set to disabled. (${bot.config.bot.specifyMessageChannel})`);
+                bot.logger.log(
+                    bot.shardId,
+                    `The specified message channel not found, set to disabled. (${bot.config.bot.specifyMessageChannel})`,
+                );
                 bot.config.bot.specifyMessageChannel = null;
-            }
-            else {
-                bot.logger.log( bot.shardId, `Set specify message channel : ${(channel as any).name || 'Unknown channel'} (${bot.config.bot.specifyMessageChannel})`);
+            } else {
+                bot.logger.log(
+                    bot.shardId,
+                    `Set specify message channel : ${(channel as any).name || 'Unknown channel'} (${bot.config.bot.specifyMessageChannel})`,
+                );
             }
         }
 
@@ -216,24 +231,31 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
             const channel = await client.channels.fetch(bot.config.bot.specifyVoiceChannel);
 
             if (!channel) {
-                bot.logger.log( bot.shardId, `The specified voice channel not found, set to disabled. (${bot.config.bot.specifyVoiceChannel})`);
-                bot.logger.log( bot.shardId, `The specifyVoiceChannel value is incorrect, set startupAutoJoin to disabled.`);
+                bot.logger.log(
+                    bot.shardId,
+                    `The specified voice channel not found, set to disabled. (${bot.config.bot.specifyVoiceChannel})`,
+                );
+                bot.logger.log(
+                    bot.shardId,
+                    `The specifyVoiceChannel value is incorrect, set startupAutoJoin to disabled.`,
+                );
 
                 bot.config.bot.specifyVoiceChannel = null;
                 bot.config.bot.startupAutoJoin = false;
-            }
-            else {
-                bot.logger.log( bot.shardId, `Set specify voice channel : ${(channel as any).name || 'Unknown channel'} (${bot.config.bot.specifyVoiceChannel})`);
+            } else {
+                bot.logger.log(
+                    bot.shardId,
+                    `Set specify voice channel : ${(channel as any).name || 'Unknown channel'} (${bot.config.bot.specifyVoiceChannel})`,
+                );
 
                 if (bot.config.bot.startupAutoJoin) {
-                    bot.logger.log( bot.shardId, `Set startupAutoJoin Enabled.`);
-                }
-                else {
-                    bot.logger.log( bot.shardId, `Set startupAutoJoin to disabled.`);
+                    bot.logger.log(bot.shardId, `Set startupAutoJoin Enabled.`);
+                } else {
+                    bot.logger.log(bot.shardId, `Set startupAutoJoin to disabled.`);
                 }
             }
         }
 
-        bot.logger.log( bot.shardId, `Set admin as user ID : ${JSON.stringify(bot.config.bot.admin)}`);
+        bot.logger.log(bot.shardId, `Set admin as user ID : ${JSON.stringify(bot.config.bot.admin)}`);
     }
 }

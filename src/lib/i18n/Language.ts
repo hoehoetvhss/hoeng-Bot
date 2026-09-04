@@ -3,10 +3,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import i18next from 'i18next';
-import I18NexFsBackend from "i18next-fs-backend";
+import I18NexFsBackend from 'i18next-fs-backend';
 
 import type { Logger } from '../Logger.js';
-
 
 export class Language {
     public logger: Logger;
@@ -19,8 +18,12 @@ export class Language {
     #templateLocale: string;
     #defaultTemplate: Record<string, any>;
 
-
-    constructor(logger: Logger, localePath: string = '../../locales', defaultLocale: string = 'en-US', templateLocale: string = 'en-US') {
+    constructor(
+        logger: Logger,
+        localePath: string = '../../locales',
+        defaultLocale: string = 'en-US',
+        templateLocale: string = 'en-US',
+    ) {
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = path.dirname(__filename);
 
@@ -34,7 +37,6 @@ export class Language {
         this.#templateLocale = templateLocale;
         this.#defaultTemplate = {};
     }
-
 
     /**
      * Initialize the default template using the en-US locale
@@ -56,7 +58,11 @@ export class Language {
                 }
             }
         } catch (error) {
-            throw new Error(`Error loading default locale (${this.#templateLocale}) files from path "${templateLocalePath}": ` + JSON.stringify(error), { cause: error });
+            throw new Error(
+                `Error loading default locale (${this.#templateLocale}) files from path "${templateLocalePath}": ` +
+                    JSON.stringify(error),
+                { cause: error },
+            );
         }
     }
 
@@ -69,7 +75,7 @@ export class Language {
         for (const localeDir of localeDirs) {
             if (!localeDir.isDirectory()) {
                 if (localeDir.name !== 'README.md') {
-                    this.logger.i18n( `[warn] ${localeDir.name} is not a language directory`);
+                    this.logger.i18n(`[warn] ${localeDir.name} is not a language directory`);
                 }
 
                 continue;
@@ -77,7 +83,7 @@ export class Language {
 
             const language = localeDir.name;
             if (!/^[a-z]{2}-[A-Z]{2}$/.test(language)) {
-                this.logger.i18n( `[error] Invalid language directory format: ${language}`);
+                this.logger.i18n(`[error] Invalid language directory format: ${language}`);
                 continue;
             }
 
@@ -88,7 +94,7 @@ export class Language {
 
             for (const file of files) {
                 if (!file.isFile() || !file.name.endsWith('.json')) {
-                    this.logger.i18n( `[warn] wrong language file ${file.name}`);
+                    this.logger.i18n(`[warn] wrong language file ${file.name}`);
                     continue;
                 }
 
@@ -143,7 +149,9 @@ export class Language {
 
         for (const key in template) {
             if (!(key in content)) {
-                this.logger.i18n( `[warn] Local ${language} is missing the ${namespace}:${key} key, using default template key.`);
+                this.logger.i18n(
+                    `[warn] Local ${language} is missing the ${namespace}:${key} key, using default template key.`,
+                );
                 content[key] = template[key];
             }
         }

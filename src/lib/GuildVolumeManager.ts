@@ -1,6 +1,5 @@
 import type { Bot, GuildVolumeTableRow } from '../@types/index.js';
 
-
 export class GuildVolumeManager {
     private readonly bot: Bot;
     private readonly guildVolumes: Map<string, number> = new Map();
@@ -19,14 +18,15 @@ export class GuildVolumeManager {
                 return;
             }
 
-            const rows = db
-                .prepare('SELECT guild_id, volume FROM guild_volumes')
-                .all() as GuildVolumeTableRow[];
+            const rows = db.prepare('SELECT guild_id, volume FROM guild_volumes').all() as GuildVolumeTableRow[];
             for (const row of rows) {
                 this.guildVolumes.set(row.guild_id, row.volume);
             }
 
-            this.bot.logger.log(this.bot.shardId, `[GuildVolumeManager] Initialized with ${this.guildVolumes.size} guild-specific volume(s)`);
+            this.bot.logger.log(
+                this.bot.shardId,
+                `[GuildVolumeManager] Initialized with ${this.guildVolumes.size} guild-specific volume(s)`,
+            );
         } catch (error) {
             this.bot.logger.error(this.bot.shardId, `[GuildVolumeManager] Failed to initialize: ${error}`);
         }
@@ -43,14 +43,19 @@ export class GuildVolumeManager {
                 return;
             }
 
-            this.bot.databaseManager.executeTransaction((db, id: string, value: number) => {
-                db.prepare(
-                    'INSERT OR REPLACE INTO guild_volumes (guild_id, volume) VALUES (?, ?)'
-                ).run(id, value);
-            }, guildId, volume);
+            this.bot.databaseManager.executeTransaction(
+                (db, id: string, value: number) => {
+                    db.prepare('INSERT OR REPLACE INTO guild_volumes (guild_id, volume) VALUES (?, ?)').run(id, value);
+                },
+                guildId,
+                volume,
+            );
             this.guildVolumes.set(guildId, volume);
         } catch (error) {
-            this.bot.logger.error(this.bot.shardId, `[GuildVolumeManager] Failed to set volume for guild ${guildId}: ${error}`);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[GuildVolumeManager] Failed to set volume for guild ${guildId}: ${error}`,
+            );
         }
     }
 
@@ -58,4 +63,3 @@ export class GuildVolumeManager {
         this.guildVolumes.clear();
     }
 }
-

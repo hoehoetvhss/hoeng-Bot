@@ -4,7 +4,6 @@ import { problem } from '../http.js';
 
 import type { Request, Response } from 'express';
 
-
 /**
  * Validates `req.body` against the given Zod schema.
  *
@@ -17,11 +16,7 @@ import type { Request, Response } from 'express';
  * if (!body) return;
  * ```
  */
-function parseSchema<T>(
-    schema: z.ZodType<T>,
-    input: unknown,
-    res: Response,
-): T | null {
+function parseSchema<T>(schema: z.ZodType<T>, input: unknown, res: Response): T | null {
     const result = schema.safeParse(input);
 
     if (!result.success) {
@@ -38,34 +33,18 @@ function parseSchema<T>(
     return result.data;
 }
 
-export function validateBody<T>(
-    schema: z.ZodType<T>,
-    req: Request,
-    res: Response,
-): T | null {
+export function validateBody<T>(schema: z.ZodType<T>, req: Request, res: Response): T | null {
     return parseSchema(schema, req.body, res);
 }
 
-export function validateQuery<T>(
-    schema: z.ZodType<T>,
-    req: Request,
-    res: Response,
-): T | null {
+export function validateQuery<T>(schema: z.ZodType<T>, req: Request, res: Response): T | null {
     return parseSchema(schema, req.query, res);
 }
 
-export function validateParams<T>(
-    schema: z.ZodType<T>,
-    req: Request,
-    res: Response,
-): T | null {
+export function validateParams<T>(schema: z.ZodType<T>, req: Request, res: Response): T | null {
     return parseSchema(schema, req.params, res);
 }
 
-export function validate<T>(
-    schema: z.ZodType<T>,
-    req: Request,
-    res: Response,
-): T | null {
+export function validate<T>(schema: z.ZodType<T>, req: Request, res: Response): T | null {
     return validateBody(schema, req, res);
 }

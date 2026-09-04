@@ -34,10 +34,9 @@ import { RadioCommand } from './RadioCommand.js';
 import type { CommandRegistry } from './base/CommandRegistry.js';
 import type { Bot } from '../@types/index.js';
 
-
 /**
  * Register all commands to the registry
- * 
+ *
  * @param registry - Command registry instance
  * @param bot - Bot instance
  */

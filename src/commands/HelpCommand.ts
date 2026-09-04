@@ -3,7 +3,7 @@ import {
     ButtonInteraction,
     Collection,
     StringSelectMenuBuilder,
-    StringSelectMenuInteraction
+    StringSelectMenuInteraction,
 } from 'discord.js';
 import i18next from 'i18next';
 
@@ -14,7 +14,6 @@ import { embeds } from '../embeds/index.js';
 import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
-
 
 export class HelpCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
@@ -32,23 +31,20 @@ export class HelpCommand extends BaseCommand {
                     name: 'command',
                     description: i18next.t('commands:CONFIG_HELP_OPTION_DESCRIPTION', { lng }),
                     type: 3,
-                    required: false
-                }
-            ]
+                    required: false,
+                },
+            ],
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         // Get command parameter
-        const commandParam = context.isInteraction()
-            ? context.getStringOption('command')
-            : context.args.join(' ');
+        const commandParam = context.isInteraction() ? context.getStringOption('command') : context.args.join(' ');
 
         if (!commandParam) {
             // Show command list with select menus
             await this.#showCommandList(bot, client, context);
-        }
-        else {
+        } else {
             // Show specific command help
             await this.#showCommandHelp(bot, client, context, commandParam);
         }
@@ -61,11 +57,11 @@ export class HelpCommand extends BaseCommand {
     async #showCommandList(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         const commands = client.commands.getHelpCommands(bot, context.language);
 
-        const musicCommands = commands.filter(cmd => {
+        const musicCommands = commands.filter((cmd) => {
             const metadata = cmd.getMetadata(bot, context.language);
             return metadata.category === CommandCategory.MUSIC;
         });
-        const utilityCommands = commands.filter(cmd => {
+        const utilityCommands = commands.filter((cmd) => {
             const metadata = cmd.getMetadata(bot, context.language);
             return metadata.category === CommandCategory.UTILITY;
         });
@@ -74,28 +70,38 @@ export class HelpCommand extends BaseCommand {
         const musicSelect = new StringSelectMenuBuilder()
             .setCustomId(SelectButtonId.HelpMusic)
             .setPlaceholder(context.t('commands:HELP_SELECT_MUSIC_PLACEHOLDER'))
-            .setOptions(musicCommands.map(cmd => {
-                const metadata = cmd.getMetadata(bot, context.language);
-                const aliases = metadata.aliases && metadata.aliases.length > 0 ? metadata.aliases.join(', ') : context.t('commands:HELP_COMMAND_NONE');
-                return {
-                    label: metadata.name,
-                    description: context.t('commands:HELP_COMMAND_ALIASES', { aliases }),
-                    value: metadata.name
-                };
-            }));
+            .setOptions(
+                musicCommands.map((cmd) => {
+                    const metadata = cmd.getMetadata(bot, context.language);
+                    const aliases =
+                        metadata.aliases && metadata.aliases.length > 0
+                            ? metadata.aliases.join(', ')
+                            : context.t('commands:HELP_COMMAND_NONE');
+                    return {
+                        label: metadata.name,
+                        description: context.t('commands:HELP_COMMAND_ALIASES', { aliases }),
+                        value: metadata.name,
+                    };
+                }),
+            );
 
         const utilitySelect = new StringSelectMenuBuilder()
             .setCustomId(SelectButtonId.HelpUtility)
             .setPlaceholder(context.t('commands:HELP_SELECT_UTILITY_PLACEHOLDER'))
-            .setOptions(utilityCommands.map(cmd => {
-                const metadata = cmd.getMetadata(bot, context.language);
-                const aliases = metadata.aliases && metadata.aliases.length > 0 ? metadata.aliases.join(', ') : context.t('commands:HELP_COMMAND_NONE');
-                return {
-                    label: metadata.name,
-                    description: context.t('commands:HELP_COMMAND_ALIASES', { aliases }),
-                    value: metadata.name
-                };
-            }));
+            .setOptions(
+                utilityCommands.map((cmd) => {
+                    const metadata = cmd.getMetadata(bot, context.language);
+                    const aliases =
+                        metadata.aliases && metadata.aliases.length > 0
+                            ? metadata.aliases.join(', ')
+                            : context.t('commands:HELP_COMMAND_NONE');
+                    return {
+                        label: metadata.name,
+                        description: context.t('commands:HELP_COMMAND_ALIASES', { aliases }),
+                        value: metadata.name,
+                    };
+                }),
+            );
 
         const musicRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(musicSelect);
         const utilityRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(utilitySelect);
@@ -104,13 +110,13 @@ export class HelpCommand extends BaseCommand {
         const msg = await context.reply({
             embeds: [embeds.textMsg(bot, context.t('commands:MESSAGE_HELP_SELECT_LIST'))],
             components: [musicRow.toJSON(), utilityRow.toJSON()],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
 
         // Create collector
         const collector = msg.createMessageComponentCollector({
             time: 20000, // 20s
-            filter: i => i.user.id === context.user.id
+            filter: (i) => i.user.id === context.user.id,
         });
 
         collector.on('collect', async (i: StringSelectMenuInteraction) => {
@@ -123,22 +129,26 @@ export class HelpCommand extends BaseCommand {
             const usage = `${metadata.description}\n\`\`\`${bot.config.bot.prefix}${metadata.usage}\`\`\``;
 
             await i.deferUpdate();
-            await msg.edit({
-                embeds: [embeds.help(bot, metadata.name, usage, context.language)],
-                components: [],
-                allowedMentions: { repliedUser: false }
-            }).catch(() => bot.logger.discord( bot.shardId, 'Failed to edit deleted message.'));
+            await msg
+                .edit({
+                    embeds: [embeds.help(bot, metadata.name, usage, context.language)],
+                    components: [],
+                    allowedMentions: { repliedUser: false },
+                })
+                .catch(() => bot.logger.discord(bot.shardId, 'Failed to edit deleted message.'));
 
             collector.stop();
         });
 
         collector.on('end', async (collected: Collection<string, ButtonInteraction>, reason: string) => {
             if (reason === 'time' && collected.size === 0) {
-                await msg.edit({
-                    embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
-                    components: [],
-                    allowedMentions: { repliedUser: false }
-                }).catch(() => bot.logger.discord( bot.shardId, 'Failed to edit deleted message.'));
+                await msg
+                    .edit({
+                        embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
+                        components: [],
+                        allowedMentions: { repliedUser: false },
+                    })
+                    .catch(() => bot.logger.discord(bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }
@@ -159,7 +169,7 @@ export class HelpCommand extends BaseCommand {
 
                 await context.reply({
                     embeds: [embeds.help(bot, metadata.name, description, context.language)],
-                    allowedMentions: { repliedUser: false }
+                    allowedMentions: { repliedUser: false },
                 });
 
                 found = true;
@@ -170,7 +180,7 @@ export class HelpCommand extends BaseCommand {
         if (!found) {
             await context.reply({
                 embeds: [embeds.textErrorMsg(bot, context.t('commands:MESSAGE_HELP_NOT_FOUND'))],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: false },
             });
         }
     }

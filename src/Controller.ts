@@ -7,7 +7,6 @@ import { cst } from './utils/constants.js';
 
 import type { Bot, SystemInfo } from './@types/index.js';
 
-
 export class Controller {
     #bot: Bot;
     #shardManager: ShardingController;
@@ -25,11 +24,11 @@ export class Controller {
                 lastRefresh: null,
             },
             i18n: null,
-            lang: null
+            lang: null,
         } as unknown as Bot;
 
         setEnvironment(this.#bot.config);
-        this.#bot.logger.shard( 'Set environment variables.');
+        this.#bot.logger.shard('Set environment variables.');
 
         this.#shardManager = new ShardingController();
         // Register IPC listener so all shard log messages are routed through this Logger instance.
@@ -38,22 +37,28 @@ export class Controller {
         this.#localNodeController = new LocalNodeController(
             this.#bot.config.localNode.downloadLink!,
             this.#bot.logger,
-            this.#bot.config.localNode.autoRestart
+            this.#bot.config.localNode.autoRestart,
         );
     }
-
 
     public async init() {
         this.#bot.sysInfo = await getSysInfo();
 
         return Promise.resolve()
             .then(() => loadControllerI18Next(this.#bot))
-            .then(async () => { if (this.#bot.config.localNode.enabled) await loadLocalNode(this.#bot, this.#localNodeController); })
+            .then(async () => {
+                if (this.#bot.config.localNode.enabled) await loadLocalNode(this.#bot, this.#localNodeController);
+            })
             .then(() => this.#shardManager.spwan())
-            .then(async () => { if (this.#bot.config.webDashboard.enabled) await loadSite(this.#bot, this.#shardManager.manager, this.#localNodeController); })
+            .then(async () => {
+                if (this.#bot.config.webDashboard.enabled)
+                    await loadSite(this.#bot, this.#shardManager.manager, this.#localNodeController);
+            })
             .then(() => {
-                this.#bot.logger.shard( cst.color.green + '*** ShardingController initialization completed ***' + cst.color.white);
-                this.#bot.logger.shard( 'Launching sharding process...');
+                this.#bot.logger.shard(
+                    cst.color.green + '*** ShardingController initialization completed ***' + cst.color.white,
+                );
+                this.#bot.logger.shard('Launching sharding process...');
             });
     }
 }

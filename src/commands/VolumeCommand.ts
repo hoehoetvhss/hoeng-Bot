@@ -1,10 +1,4 @@
-import {
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    ButtonInteraction,
-    Collection
-} from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ButtonInteraction, Collection } from 'discord.js';
 import i18next from 'i18next';
 
 import { BaseCommand } from './base/BaseCommand.js';
@@ -16,7 +10,6 @@ import type { Client } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
-
 
 export class VolumeCommand extends BaseCommand {
     public getMetadata(bot: Bot, lng?: string): CommandMetadata {
@@ -32,13 +25,16 @@ export class VolumeCommand extends BaseCommand {
             options: [
                 {
                     name: 'volume',
-                    description: bot.i18n.t('commands:CONFIG_VOLUME_OPTION_DESCRIPTION', { maxVolume: bot.config.bot.volume.max, lng }),
+                    description: bot.i18n.t('commands:CONFIG_VOLUME_OPTION_DESCRIPTION', {
+                        maxVolume: bot.config.bot.volume.max,
+                        lng,
+                    }),
                     type: 4,
                     required: false,
                     min_value: 1,
-                    max_value: bot.config.bot.volume.max
-                }
-            ]
+                    max_value: bot.config.bot.volume.max,
+                },
+            ],
         };
     }
 
@@ -52,7 +48,9 @@ export class VolumeCommand extends BaseCommand {
 
         const maxVolume = bot.config.bot.volume.max;
         const volumeInput = context.isMessage()
-            ? (context.args[0] ? parseInt(context.args[0], 10) : null)
+            ? context.args[0]
+                ? parseInt(context.args[0], 10)
+                : null
             : context.getIntegerOption('volume');
 
         // Show volume buttons when no argument is provided
@@ -69,7 +67,13 @@ export class VolumeCommand extends BaseCommand {
      * Show interactive volume selection buttons
      * @private
      */
-    async #showVolumeButtons(bot: Bot, client: Client, context: CommandContext, player: any, maxVolume: number): Promise<void> {
+    async #showVolumeButtons(
+        bot: Bot,
+        client: Client,
+        context: CommandContext,
+        player: any,
+        maxVolume: number,
+    ): Promise<void> {
         const currentVolume = player.volume;
 
         const volume25Button = new ButtonBuilder()
@@ -92,17 +96,21 @@ export class VolumeCommand extends BaseCommand {
             .setLabel('100%')
             .setStyle(currentVolume === 100 ? ButtonStyle.Success : ButtonStyle.Secondary);
 
-        const row = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(volume25Button, volume50Button, volume75Button, volume100Button);
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            volume25Button,
+            volume50Button,
+            volume75Button,
+            volume100Button,
+        );
 
         const msg = await context.reply({
             embeds: [embeds.textMsg(bot, context.t('commands:MESSAGE_VOLUME_SELECT', { volume: currentVolume }))],
-            components: [row]
+            components: [row],
         });
 
         const collector = msg.createMessageComponentCollector({
             time: 20000, // 20s
-            filter: i => i.user.id === context.user.id
+            filter: (i) => i.user.id === context.user.id,
         });
 
         collector.on('collect', async (i: ButtonInteraction) => {
@@ -120,15 +128,17 @@ export class VolumeCommand extends BaseCommand {
             if (player.volume === newVolume) {
                 await i.update({
                     embeds: [embeds.textWarningMsg(bot, context.t('commands:MESSAGE_VOLUME_SAME'))],
-                    components: []
+                    components: [],
                 });
                 return collector.stop();
             }
 
             if (newVolume > maxVolume) {
                 await i.update({
-                    embeds: [embeds.textErrorMsg(bot, context.t('commands:MESSAGE_VOLUME_ARGS_ERROR_2', { maxVolume }))],
-                    components: []
+                    embeds: [
+                        embeds.textErrorMsg(bot, context.t('commands:MESSAGE_VOLUME_ARGS_ERROR_2', { maxVolume })),
+                    ],
+                    components: [],
                 });
                 return collector.stop();
             }
@@ -139,8 +149,13 @@ export class VolumeCommand extends BaseCommand {
             await client.dashboard.update(player, player.current!);
 
             await i.update({
-                embeds: [embeds.textSuccessMsg(bot, context.t('commands:MESSAGE_VOLUME_SUCCESS', { volume: newVolume, maxVolume }))],
-                components: []
+                embeds: [
+                    embeds.textSuccessMsg(
+                        bot,
+                        context.t('commands:MESSAGE_VOLUME_SUCCESS', { volume: newVolume, maxVolume }),
+                    ),
+                ],
+                components: [],
             });
 
             return collector.stop();
@@ -148,11 +163,12 @@ export class VolumeCommand extends BaseCommand {
 
         collector.on('end', async (collected: Collection<string, ButtonInteraction>, reason: string) => {
             if (reason === 'time' && collected.size === 0) {
-                await msg.edit({
-                    embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
-                    components: []
-                })
-                    .catch(() => bot.logger.discord( bot.shardId, 'Failed to edit deleted message.'));
+                await msg
+                    .edit({
+                        embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
+                        components: [],
+                    })
+                    .catch(() => bot.logger.discord(bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }
@@ -161,13 +177,23 @@ export class VolumeCommand extends BaseCommand {
      * Set volume directly
      * @private
      */
-    async #setVolume(bot: Bot, client: Client, context: CommandContext, player: Player, vol: number, maxVolume: number): Promise<void> {
+    async #setVolume(
+        bot: Bot,
+        client: Client,
+        context: CommandContext,
+        player: Player,
+        vol: number,
+        maxVolume: number,
+    ): Promise<void> {
         if (context.isMessage()) {
             await context.react('👍');
         }
 
         if (vol === null || vol === undefined || isNaN(vol)) {
-            await context.replyError(bot, context.t('commands:MESSAGE_VOLUME_ARGS_ERROR', { volume: player.volume, maxVolume }));
+            await context.replyError(
+                bot,
+                context.t('commands:MESSAGE_VOLUME_ARGS_ERROR', { volume: player.volume, maxVolume }),
+            );
             return;
         }
 

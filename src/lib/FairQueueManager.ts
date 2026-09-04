@@ -25,7 +25,7 @@ export class FairQueueManager {
 
         // Get present (non-bot) user IDs from voice channel
         const presentUserIds = voiceChannel
-            ? new Set(voiceChannel.members.filter(m => !m.user.bot).keys())
+            ? new Set(voiceChannel.members.filter((m) => !m.user.bot).keys())
             : new Set<string>();
 
         // Update persistent rotation order
@@ -45,8 +45,7 @@ export class FairQueueManager {
             if (presentUserIds.has(userId)) {
                 if (!tracksByUser.has(userId)) tracksByUser.set(userId, []);
                 tracksByUser.get(userId)!.push(track);
-            }
-            else {
+            } else {
                 absentTracks.push(track);
             }
         }
@@ -87,8 +86,9 @@ export class FairQueueManager {
         // Replace queue contents
         player.queue.tracks.splice(0, player.queue.tracks.length, ...interleaved);
 
-        bot.logger.log( bot.shardId,
-            `[FairQueue] Reordered: ${interleaved.length} tracks, rotation: [${rotation.join(', ')}], absent: ${absentTracks.length}`
+        bot.logger.log(
+            bot.shardId,
+            `[FairQueue] Reordered: ${interleaved.length} tracks, rotation: [${rotation.join(', ')}], absent: ${absentTracks.length}`,
         );
     }
 
@@ -102,7 +102,7 @@ export class FairQueueManager {
         const existing = player.setting?.fairQueueRotation || [];
 
         // Keep users who are still present (in original rotation order)
-        const kept = existing.filter(id => presentUserIds.has(id));
+        const kept = existing.filter((id) => presentUserIds.has(id));
         const keptSet = new Set(kept);
 
         // Append new users (present but not in existing rotation)

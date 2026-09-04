@@ -9,7 +9,6 @@ import type { Client, GuildMember } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 /**
  * Skip command - Skips current track
  */
@@ -24,7 +23,7 @@ export class SkipCommand extends BaseCommand {
             voiceChannel: true,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -49,8 +48,8 @@ export class SkipCommand extends BaseCommand {
 
             // Check if user is DJ and DJ bypass is enabled for skip
             const member = context.isMessage()
-                ? context.getMessage().member as GuildMember | null
-                : context.getInteraction().member as GuildMember | null;
+                ? (context.getMessage().member as GuildMember | null)
+                : (context.getInteraction().member as GuildMember | null);
             const isDJ = PermissionManager.hasDJCommandPermission(bot, userId, member, player);
             const canDJBypass = bot.config.command.requesterDjBypass.includes('skip') && isDJ;
 
@@ -73,18 +72,16 @@ export class SkipCommand extends BaseCommand {
             await context.react(success ? '👍' : '❌');
             if (!hasMoreTracks && context.channel && 'send' in context.channel) {
                 await (context.channel as any).send({
-                    content: context.t('commands:MESSAGE_SKIP_EMPTY_DISCONNECT')
+                    content: context.t('commands:MESSAGE_SKIP_EMPTY_DISCONNECT'),
                 });
             }
-        }
-        else {
+        } else {
             if (success) {
                 const message = hasMoreTracks
                     ? context.t('commands:MESSAGE_SKIP_SUCCESS')
                     : context.t('commands:MESSAGE_SKIP_EMPTY_DISCONNECT');
                 await context.replySuccess(bot, message);
-            }
-            else {
+            } else {
                 await context.replyError(bot, context.t('commands:MESSAGE_SKIP_FAIL'));
             }
         }

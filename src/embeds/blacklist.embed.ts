@@ -3,17 +3,12 @@ import { EmbedBuilder } from 'discord.js';
 import type { HexColorString } from 'discord.js';
 import type { Bot } from '../@types/index.js';
 
-
 interface BlacklistedUser {
     name: string;
     value: string;
 }
 
-const blacklist = (
-    bot: Bot,
-    userList: BlacklistedUser[],
-    lng?: string,
-): EmbedBuilder => {
+const blacklist = (bot: Bot, userList: BlacklistedUser[], lng?: string): EmbedBuilder => {
     return new EmbedBuilder()
         .setColor(bot.config.bot.embedsColors.message as HexColorString | number)
         .setTitle(bot.i18n.t('embeds:MESSAGE_BLACKLIST', { lng }))
@@ -22,11 +17,7 @@ const blacklist = (
         .setTimestamp();
 };
 
-const blacklistList = (
-    bot: Bot,
-    userIds: string[],
-    lng?: string,
-): EmbedBuilder => {
+const blacklistList = (bot: Bot, userIds: string[], lng?: string): EmbedBuilder => {
     return new EmbedBuilder()
         .setColor(bot.config.bot.embedsColors.message as HexColorString | number)
         .setTitle(bot.i18n.t('commands:MESSAGE_BLACKLIST_LIST_TITLE', { lng }))

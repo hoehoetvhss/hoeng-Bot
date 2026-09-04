@@ -8,7 +8,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 /**
  * Ping command - Shows bot latency
  */
@@ -23,7 +22,7 @@ export class PingCommand extends BaseCommand {
             voiceChannel: false,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -36,7 +35,7 @@ export class PingCommand extends BaseCommand {
 
         const startTime = Date.now();
         const sent = await context.reply({
-            embeds: [embeds.ping(bot, '...', apiPing, context.language)]
+            embeds: [embeds.ping(bot, '...', apiPing, context.language)],
         });
 
         const roundtrip = sent.createdTimestamp - context.createdTimestamp;
@@ -44,7 +43,7 @@ export class PingCommand extends BaseCommand {
         const botPing = `${latency}ms`;
 
         await sent.edit({
-            embeds: [embeds.ping(bot, botPing, apiPing, context.language)]
+            embeds: [embeds.ping(bot, botPing, apiPing, context.language)],
         });
     }
 }

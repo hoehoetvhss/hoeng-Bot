@@ -17,9 +17,9 @@ Apply these rules in the project unless that project's active TypeScript or ESLi
 - Put externally consumed data contracts in dedicated type files such as `Name.types.ts`; provide a central type-only barrel when it improves public consumption.
 - Use relative, extensionless paths for local imports.
 - Order imports in groups separated by blank lines:
-  1. External runtime imports.
-  2. Local runtime imports.
-  3. Type-only imports using `import type`.
+    1. External runtime imports.
+    2. Local runtime imports.
+    3. Type-only imports using `import type`.
 - Default-export the principal runtime class of a module. Use named exports for enums, constants, helper functions, secondary classes, and public API re-exports.
 - Export only symbols that are part of the intended module or package API.
 

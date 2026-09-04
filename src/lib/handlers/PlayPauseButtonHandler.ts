@@ -8,7 +8,6 @@ import type { Client, ButtonInteraction, GuildMember } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Handler for Dashboard PlayPause button
  */
@@ -17,14 +16,14 @@ export class PlayPauseButtonHandler extends DashboardButtonHandler {
         bot: Bot,
         client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         const playing = !player.paused;
         const lng = bot.guildLanguageManager?.get(interaction.guildId!);
 
         // Check permission for the relevant command
         const commandToCheck = playing ? 'pause' : 'resume';
-        if (!await this.checkPermission(bot, client, interaction, commandToCheck, player)) {
+        if (!(await this.checkPermission(bot, client, interaction, commandToCheck, player))) {
             return;
         }
 
@@ -40,7 +39,7 @@ export class PlayPauseButtonHandler extends DashboardButtonHandler {
             if (!isRequester && !isAdmin && !canDJBypass) {
                 await interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, bot.i18n.t('commands:ERROR_PAUSE_NOT_REQUESTER', { lng }))],
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }

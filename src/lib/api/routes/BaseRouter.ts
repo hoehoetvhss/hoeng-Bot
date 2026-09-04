@@ -7,7 +7,6 @@ import type { Bot } from '../../../@types/index.js';
 import type { LocalNodeController } from '../../localnode/LocalNodeController.js';
 import type { SessionManager } from '../../session-manager/SessionManager.js';
 
-
 /**
  * Shared dependencies injected into every router.
  */
@@ -17,7 +16,6 @@ export interface RouterDependencies {
     localNodeController: LocalNodeController;
     sessionManager: SessionManager;
 }
-
 
 /**
  * Abstract base class for all API routers.

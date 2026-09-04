@@ -1,9 +1,4 @@
-import type {
-    ActivityType,
-    ChatInputCommandInteraction,
-    ClientPresenceStatus,
-    Message
-} from 'discord.js';
+import type { ActivityType, ChatInputCommandInteraction, ClientPresenceStatus, Message } from 'discord.js';
 import type { i18n } from 'i18next';
 import type { LavaShark, Track } from 'lavashark';
 import type { NodeOptions } from 'lavashark/typings/src/@types/index.js';
@@ -24,11 +19,10 @@ export * from './ButtonIds.types.js';
 export * from './BaseCommand.types.js';
 export * from './Database.types.js';
 
-
 declare module 'discord.js' {
     export interface Client {
-        commands: CommandRegistry,
-        lavashark: LavaShark,
+        commands: CommandRegistry;
+        lavashark: LavaShark;
         i18n: i18n;
         dashboard: DashboardManager;
         lastPlayedTracks: Map<string, Track>;
@@ -38,12 +32,12 @@ declare module 'discord.js' {
 
 declare module 'lavashark' {
     export interface Player {
-        dashboardMsg: Message<boolean> | null;      // Dashboard message for this player
+        dashboardMsg: Message<boolean> | null; // Dashboard message for this player
         metadata: Message<boolean> | ChatInputCommandInteraction | null;
         setting: PlayerSetting;
-        djUsers?: Set<string>;              // Dynamic DJ users for this guild
-        leaveTimeout?: NodeJS.Timeout;      // Timeout for DJ leave channel
-        autoLeaveTimeout?: NodeJS.Timeout;  // Timeout for auto leave channel
+        djUsers?: Set<string>; // Dynamic DJ users for this guild
+        leaveTimeout?: NodeJS.Timeout; // Timeout for DJ leave channel
+        autoLeaveTimeout?: NodeJS.Timeout; // Timeout for auto leave channel
     }
 
     export interface Track {
@@ -84,14 +78,12 @@ export interface QueuePage {
     msg: Message<boolean> | null;
 }
 
-
 export enum LoginTypeEnum {
     USER = 'USER',
     OAUTH2 = 'OAUTH2',
 }
 
 export type LoginType = keyof typeof LoginTypeEnum;
-
 
 export type Bot = {
     shardId: number;
@@ -100,8 +92,8 @@ export type Bot = {
     sysInfo: SystemInfo;
     stats: {
         guildsCount: number[];
-        lastRefresh: number | null;     // Date.now()
-    },
+        lastRefresh: number | null; // Date.now()
+    };
     i18n: i18n;
     lang: Language;
     databaseManager?: DatabaseManager;
@@ -109,7 +101,7 @@ export type Bot = {
     guildLanguageManager?: GuildLanguageManager;
     guildVolumeManager?: GuildVolumeManager;
     playlistManager?: PlaylistManager;
-}
+};
 
 /**
  * Constants variables
@@ -150,7 +142,7 @@ export type BotConfig = {
         name: string;
         state?: string;
         url?: string;
-    }
+    };
     embedsColors: {
         message: string;
         success: string;
@@ -182,7 +174,7 @@ export type BotConfig = {
 export type SpotifyConfig = {
     clientId: string | null;
     clientSecret: string | null;
-}
+};
 
 export type WebDashboardConfig = {
     enabled: boolean;
@@ -230,7 +222,6 @@ export type QueuePersistenceConfig = {
     enabled: boolean;
 };
 
-
 export type SystemInfo = {
     startupTime: Date;
     os_version: string;
@@ -239,7 +230,7 @@ export type SystemInfo = {
     dc_version: string;
     shark_version: string;
     cpu: string;
-}
+};
 
 export type SystemStatus = {
     load: {
@@ -261,13 +252,12 @@ export type SystemStatus = {
     };
     serverCount: number;
     playing: number;
-}
-
+};
 
 export enum LoadType {
     TRACK = 'track',
     PLAYLIST = 'playlist',
     SEARCH = 'search',
     EMPTY = 'empty',
-    ERROR = 'error'
+    ERROR = 'error',
 }

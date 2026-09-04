@@ -8,7 +8,6 @@ import type { Client } from 'discord.js';
 import type { Player, Track } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * TrackEnd event handler
  * Handles fair queue rotation after a track ends
@@ -28,13 +27,13 @@ export class TrackEndEvent extends BaseLavaSharkEvent<'trackEnd'> {
             // Get voice channel
             const guild = client.guilds.cache.get(player.guildId);
             const voiceChannel = guild?.channels.cache.get(player.voiceChannelId || '');
-            
+
             // Apply fair queue rotation if enabled (only for guild voice channels)
             if (voiceChannel && voiceChannel.type === ChannelType.GuildVoice) {
                 FairQueueManager.reorderQueue(bot, player, voiceChannel);
             }
         } catch (error) {
-            bot.logger.error( bot.shardId, `[TrackEndEvent] Error: ${error}`);
+            bot.logger.error(bot.shardId, `[TrackEndEvent] Error: ${error}`);
         }
     }
 }

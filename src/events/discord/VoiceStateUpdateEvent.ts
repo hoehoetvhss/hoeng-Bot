@@ -8,7 +8,6 @@ import { DJModeEnum } from '../../@types/index.js';
 import type { Client, VoiceBasedChannel, VoiceState } from 'discord.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * VoiceStateUpdate event handler
  * Handles voice state changes for auto-leave and DJ management
@@ -28,12 +27,10 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
         if (newState.channelId === null) {
             // User left a voice channel
             await this.#handleUserLeave(bot, client, oldState, display, blacklist);
-        }
-        else if (oldState.channelId === null) {
+        } else if (oldState.channelId === null) {
             // User joined a voice channel
             await this.#handleUserJoin(bot, client, newState, display, blacklist);
-        }
-        else {
+        } else {
             // User moved between voice channels
             await this.#handleUserMove(bot, client, oldState, newState, display, blacklist);
         }
@@ -48,10 +45,13 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
         client: Client,
         oldState: VoiceState,
         display: boolean,
-        blacklist: string[]
+        blacklist: string[],
     ): Promise<void> {
         if (display) {
-            bot.logger.discord( bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${oldState.member?.guild.name}) ${oldState.member?.user.username} left channel${cst.color.white}`);
+            bot.logger.discord(
+                bot.shardId,
+                `[voiceStateUpdate]${cst.color.grey} (${oldState.member?.guild.name}) ${oldState.member?.user.username} left channel${cst.color.white}`,
+            );
         }
 
         // If the member who left is a bot, ignore
@@ -93,10 +93,13 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
         client: Client,
         newState: VoiceState,
         display: boolean,
-        blacklist: string[]
+        blacklist: string[],
     ): Promise<void> {
         if (display) {
-            bot.logger.discord( bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} joined channel ${newState.channel?.name}${cst.color.white}`);
+            bot.logger.discord(
+                bot.shardId,
+                `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} joined channel ${newState.channel?.name}${cst.color.white}`,
+            );
         }
 
         // If the member who joined is a bot, ignore
@@ -131,10 +134,13 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
         oldState: VoiceState,
         newState: VoiceState,
         display: boolean,
-        blacklist: string[]
+        blacklist: string[],
     ): Promise<void> {
         if (display) {
-            bot.logger.discord( bot.shardId, `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} moved channel ${oldState.channel?.name} to ${newState.channel?.name}${cst.color.white}`);
+            bot.logger.discord(
+                bot.shardId,
+                `[voiceStateUpdate]${cst.color.grey} (${newState.member?.guild.name}) ${newState.member?.user.username} moved channel ${oldState.channel?.name} to ${newState.channel?.name}${cst.color.white}`,
+            );
         }
 
         // If the member who moved is a bot, ignore
@@ -188,10 +194,10 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
      */
     #checkBlacklistUsers(bot: Bot, channel: VoiceBasedChannel | null, blacklist: string[]): boolean {
         if (!channel) return false;
-        const membersInChannel = channel.members.filter(member => !member.user.bot);
+        const membersInChannel = channel.members.filter((member) => !member.user.bot);
         if (membersInChannel.size === 0) return false;
-        return membersInChannel.every(member =>
-            blacklist.includes(member.user.id) || (bot.blacklistManager?.has(member.user.id) ?? false)
+        return membersInChannel.every(
+            (member) => blacklist.includes(member.user.id) || (bot.blacklistManager?.has(member.user.id) ?? false),
         );
     }
 
@@ -215,15 +221,16 @@ export class VoiceStateUpdateEvent extends BaseDiscordEvent<Events.VoiceStateUpd
                     if (activePlayer) {
                         activePlayer.destroy();
                     }
-                }
-                else {
+                } else {
                     player.queue.clear();
                     await player.skip();
                     await client.dashboard.destroy(player);
                 }
-            }
-            catch (error) {
-                bot.logger.error( bot.shardId, `[VoiceStateUpdate] Auto-leave timeout error for guild ${guildId}: ${error}`);
+            } catch (error) {
+                bot.logger.error(
+                    bot.shardId,
+                    `[VoiceStateUpdate] Auto-leave timeout error for guild ${guildId}: ${error}`,
+                );
             }
         }, bot.config.bot.autoLeave.cooldown);
     }

@@ -1,6 +1,5 @@
 import type { LavaShark, Track } from 'lavashark';
 
-
 const DEFAULT_RETRY_ATTEMPTS = 3;
 const DEFAULT_RETRY_DELAY_MS = 2000;
 
@@ -9,8 +8,7 @@ type SearchResult = Awaited<ReturnType<LavaShark['search']>>;
 /**
  * Wait for the given number of milliseconds
  */
-export const sleep = (ms: number): Promise<void> =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Search a track with retries.

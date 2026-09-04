@@ -7,7 +7,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class ResumeCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -19,7 +18,7 @@ export class ResumeCommand extends BaseCommand {
             voiceChannel: true,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -40,12 +39,10 @@ export class ResumeCommand extends BaseCommand {
 
         if (context.isMessage()) {
             await context.react(SUCCESS ? '▶️' : '❌');
-        }
-        else {
+        } else {
             if (SUCCESS) {
                 await context.replySuccess(bot, context.t('commands:MESSAGE_RESUME_SUCCESS'));
-            }
-            else {
+            } else {
                 await context.replyError(bot, context.t('commands:MESSAGE_RESUME_FAIL'));
             }
         }

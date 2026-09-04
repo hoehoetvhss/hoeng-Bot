@@ -17,7 +17,6 @@ import { save } from './save.embed.js';
 import { server } from './server.embed.js';
 import { botStatus, maintainNotice, nodeDisconnected, nodesStatus, nodeStatus, validNodeName } from './status.embed.js';
 
-
 const embeds = {
     addTrack,
     addPlaylist,
