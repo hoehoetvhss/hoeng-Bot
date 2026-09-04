@@ -28,7 +28,11 @@ export class StatusCommand extends BaseCommand {
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
-        const botPing = `${Math.abs(Date.now() - context.createdTimestamp)}ms`;
+        const pingStart = Date.now();
+        await client.user?.fetch().catch(() => null);
+        const restLatency = Math.max(1, Date.now() - pingStart);
+        const botPing = `${restLatency}ms`;
+        const apiPing = client.ws.ping > 0 ? Math.round(client.ws.ping) : 0;
         const sysload = await sysusage.cpu();
         const pingList = await client.lavashark.nodesPing();
 
@@ -86,7 +90,7 @@ export class StatusCommand extends BaseCommand {
             uptime: uptime(bot.sysInfo.startupTime),
             ping: {
                 bot: botPing,
-                api: client.ws.ping
+                api: apiPing
             },
             serverCount: totalServerCount,
             playing: totalPlaying

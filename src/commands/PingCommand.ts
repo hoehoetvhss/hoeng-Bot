@@ -22,18 +22,28 @@ export class PingCommand extends BaseCommand {
             category: CommandCategory.UTILITY,
             voiceChannel: false,
             showHelp: true,
-            sendTyping: true,
+            sendTyping: false,
             options: []
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
-        const botPing = `${Math.abs(Date.now() - context.createdTimestamp)}ms`;
-        const apiPing = client.ws.ping.toString();
+        const apiPing = client.ws.ping > 0 ? Math.round(client.ws.ping).toString() : '0';
 
-        await context.react('👍');
+        if (context.isMessage()) {
+            context.react('👍').catch(() => {});
+        }
 
-        await context.reply({
+        const startTime = Date.now();
+        const sent = await context.reply({
+            embeds: [embeds.ping(bot, '...', apiPing, context.language)]
+        });
+
+        const roundtrip = sent.createdTimestamp - context.createdTimestamp;
+        const latency = roundtrip > 0 ? roundtrip : Math.max(1, Date.now() - startTime);
+        const botPing = `${latency}ms`;
+
+        await sent.edit({
             embeds: [embeds.ping(bot, botPing, apiPing, context.language)]
         });
     }
