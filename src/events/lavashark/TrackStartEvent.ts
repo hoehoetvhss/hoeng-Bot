@@ -1,4 +1,5 @@
 import { BaseLavaSharkEvent } from './base/BaseLavaSharkEvent.js';
+import { TrackPrefetcher } from '../../lib/TrackPrefetcher.js';
 import { setVoiceChannelStatus } from '../../utils/functions/setVoiceStatus.js';
 
 import type { Client } from 'discord.js';
@@ -23,6 +24,7 @@ export class TrackStartEvent extends BaseLavaSharkEvent<'trackStart'> {
 
         const track = player.current;
         if (!track) return;
+        TrackPrefetcher.prefetchNext(bot, player);
         await client.dashboard.update(player, track);
 
         // Set voice channel status with track info

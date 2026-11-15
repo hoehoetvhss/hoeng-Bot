@@ -2,6 +2,7 @@ import { RepeatMode } from 'lavashark';
 
 import { BaseLavaSharkEvent } from './base/BaseLavaSharkEvent.js';
 import { embeds } from '../../embeds/index.js';
+import { TrackPrefetcher } from '../../lib/TrackPrefetcher.js';
 import { isRadioTrack } from '../../utils/functions/isRadioTrack.js';
 
 import type { Client, Message } from 'discord.js';
@@ -37,6 +38,8 @@ export class TrackAddEvent extends BaseLavaSharkEvent<'trackAdd'> {
             }
             await player.skip();
         }
+
+        TrackPrefetcher.prefetchNext(bot, player);
 
         // Save queue state to persistence
         if (bot.config.queuePersistence.enabled && client.queuePersistence) {
