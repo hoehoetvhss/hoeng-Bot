@@ -10,6 +10,7 @@ import {
     sleep,
 } from '../utils/functions/lavasharkRequest.js';
 import { isRadioTrack } from '../utils/functions/isRadioTrack.js';
+import { applyPlayerVolume, getEffectiveVolume } from '../utils/functions/playerVolume.js';
 
 /**
  * Persisted queue data structure
@@ -161,11 +162,7 @@ export class QueuePersistence {
                 if (s) serializedTracks.push(s);
             }
 
-            const currentVolume =
-                player.volume ??
-                (player.setting as any)?.volume ??
-                this.bot.guildVolumeManager?.get(player.guildId) ??
-                this.bot.config.bot.volume.default;
+            const currentVolume = getEffectiveVolume(this.bot, player);
 
             const queueData: PersistedQueue = {
                 guildId: player.guildId,
@@ -407,6 +404,8 @@ export class QueuePersistence {
             // Restore settings
             player.setRepeatMode(queueData.repeatMode);
 
+            applyPlayerVolume(this.bot, player, queueData.volume);
+
             // Connect and play
             await player.connect();
             if (!player.playing && !player.paused && player.queue.tracks.length > 0) {
@@ -417,13 +416,7 @@ export class QueuePersistence {
                 await player.pause();
             }
 
-            // Set volume after playback starts
-            if (!player.setting) {
-                player.setting = { queuePage: null, volume: queueData.volume, fairQueueRotation: [] };
-            } else {
-                player.setting.volume = queueData.volume;
-            }
-            player.filters.setVolume(queueData.volume);
+            applyPlayerVolume(this.bot, player, queueData.volume);
 
             // Seek to saved position after playback starts
             if (queueData.position > 0) {

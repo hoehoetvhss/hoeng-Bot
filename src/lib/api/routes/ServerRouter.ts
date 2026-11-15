@@ -192,7 +192,9 @@ export class ServerRouter extends BaseRouter {
                                 status: !player || !currentTrack ? 'idle' : player.paused ? 'paused' : 'playing',
                                 endpoint: player?.voiceState.event?.endpoint ?? null,
                                 volume: {
-                                    current: player ? player.volume : null,
+                                    current: player
+                                        ? (player.filters.active.volume ?? player.setting?.volume ?? player.volume)
+                                        : null,
                                     max: context.maxVolume as number,
                                 },
                                 repeatMode,

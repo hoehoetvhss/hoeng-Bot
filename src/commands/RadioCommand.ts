@@ -6,6 +6,7 @@ import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory, DJModeEnum } from '../@types/index.js';
 import { DJManager } from '../lib/DjManager.js';
 import { isRadioTrack } from '../utils/functions/isRadioTrack.js';
+import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
 import { decodeTrackWithRetry, searchWithRetry } from '../utils/functions/lavasharkRequest.js';
 
 import type { Client, GuildMember } from 'discord.js';
@@ -177,8 +178,6 @@ export class RadioCommand extends BaseCommand {
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume =
-            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
         await context.replySuccess(
             bot,
@@ -224,11 +223,16 @@ export class RadioCommand extends BaseCommand {
                     }
                     await player.skip();
                 } else {
-                    player.filters.setVolume(curVolume);
+                    const targetVolume = applyPlayerVolume(bot, player);
+                    let playSucceeded = true;
                     await player.play().catch(async (error) => {
+                        playSucceeded = false;
                         bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                         return player!.destroy();
                     });
+                    if (playSucceeded) {
+                        player.filters.setVolume(targetVolume);
+                    }
                 }
 
                 if (bot.config.queuePersistence.enabled && client.queuePersistence) {

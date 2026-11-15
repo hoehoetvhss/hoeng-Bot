@@ -13,6 +13,7 @@ import { CommandCategory, DJModeEnum, LoadType, SelectButtonId } from '../@types
 import { embeds } from '../embeds/index.js';
 import { isUserInBlacklist } from '../utils/functions/isUserInBlacklist.js';
 import { cleanSearchQuery } from '../utils/functions/cleanSearchQuery.js';
+import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
 import { DJManager } from '../lib/DjManager.js';
 import { QueueLimitManager } from '../lib/QueueLimitManager.js';
 
@@ -230,8 +231,6 @@ export class SearchCommand extends BaseCommand {
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume =
-            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
         // Add only allowed tracks
         const tracksToAdd =
@@ -239,8 +238,10 @@ export class SearchCommand extends BaseCommand {
         player.addTracks(tracksToAdd, requester as any);
 
         if (!player.playing) {
-            player.filters.setVolume(curVolume);
+            const targetVolume = applyPlayerVolume(bot, player);
+            let playSucceeded = true;
             await player.play().catch(async (error) => {
+                playSucceeded = false;
                 bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                 await context.replyError(
                     bot,
@@ -248,6 +249,9 @@ export class SearchCommand extends BaseCommand {
                 );
                 return player.destroy();
             });
+            if (playSucceeded) {
+                player.filters.setVolume(targetVolume);
+            }
         }
 
         // Show appropriate message
@@ -299,15 +303,15 @@ export class SearchCommand extends BaseCommand {
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume =
-            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
         const track = res.tracks[0];
 
         player.addTracks(track, requester as any);
 
         if (!player.playing) {
-            player.filters.setVolume(curVolume);
+            const targetVolume = applyPlayerVolume(bot, player);
+            let playSucceeded = true;
             await player.play().catch(async (error) => {
+                playSucceeded = false;
                 bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                 await context.replyError(
                     bot,
@@ -315,6 +319,9 @@ export class SearchCommand extends BaseCommand {
                 );
                 return player.destroy();
             });
+            if (playSucceeded) {
+                player.filters.setVolume(targetVolume);
+            }
         }
 
         await context.replySuccess(bot, context.t('commands:MESSAGE_PLAY_MUSIC_ADD'));
@@ -382,8 +389,6 @@ export class SearchCommand extends BaseCommand {
             }
 
             const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-            const curVolume =
-                player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
             const selectedIndex = parseInt(i.values[0], 10);
             const selectedTrack = candidateTracks[selectedIndex];
@@ -392,8 +397,10 @@ export class SearchCommand extends BaseCommand {
             player.addTracks(selectedTrack, requester as any);
 
             if (!player.playing) {
-                player.filters.setVolume(curVolume);
+                const targetVolume = applyPlayerVolume(bot, player);
+                let playSucceeded = true;
                 await player.play().catch(async (error) => {
+                    playSucceeded = false;
                     bot.logger.error(bot.shardId, 'Error playing track: ' + error);
 
                     await context.reply({
@@ -409,6 +416,9 @@ export class SearchCommand extends BaseCommand {
 
                     return player.destroy();
                 });
+                if (playSucceeded) {
+                    player.filters.setVolume(targetVolume);
+                }
             }
 
             await i.deferUpdate();

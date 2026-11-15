@@ -6,6 +6,7 @@ import { CommandCategory, DJModeEnum, LoadType } from '../@types/index.js';
 import { embeds } from '../embeds/index.js';
 import { isUserInBlacklist } from '../utils/functions/isUserInBlacklist.js';
 import { cleanSearchQuery } from '../utils/functions/cleanSearchQuery.js';
+import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
 import { DJManager } from '../lib/DjManager.js';
 import { QueueLimitManager } from '../lib/QueueLimitManager.js';
 
@@ -279,8 +280,6 @@ export class PlayCommand extends BaseCommand {
         tracksToAdd?: number,
     ): Promise<void> {
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume =
-            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
         if (res.loadType === LoadType.PLAYLIST) {
             // Add only the allowed number of tracks from playlist
@@ -292,8 +291,10 @@ export class PlayCommand extends BaseCommand {
         }
 
         if (!player.playing) {
-            player.filters.setVolume(curVolume);
+            const targetVolume = applyPlayerVolume(bot, player);
+            let playSucceeded = true;
             await player.play().catch(async (error) => {
+                playSucceeded = false;
                 bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                 await context.replyError(
                     bot,
@@ -301,6 +302,9 @@ export class PlayCommand extends BaseCommand {
                 );
                 return player.destroy();
             });
+            if (playSucceeded) {
+                player.filters.setVolume(targetVolume);
+            }
         }
     }
 }

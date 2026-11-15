@@ -11,6 +11,7 @@ import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory, SelectButtonId } from '../@types/index.js';
 import { embeds } from '../embeds/index.js';
 import { filtersConfig } from '../utils/constants.js';
+import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
 
 import type { Client } from 'discord.js';
 import type { Player } from 'lavashark';
@@ -102,6 +103,7 @@ export class FilterCommand extends BaseCommand {
 
             if (effectName === 'clear') {
                 player.filters.clear();
+                applyPlayerVolume(bot, player);
             } else {
                 if (!Object.keys(filtersConfig).includes(effectName)) {
                     await context.reply({
@@ -113,6 +115,7 @@ export class FilterCommand extends BaseCommand {
                 }
 
                 this.#setPlayerFilter(player, effectName as keyof typeof filtersConfig);
+                applyPlayerVolume(bot, player);
             }
 
             if (context.isMessage()) {
@@ -157,6 +160,7 @@ export class FilterCommand extends BaseCommand {
     ): Promise<void> {
         if (effectName === 'clear') {
             player.filters.clear();
+            applyPlayerVolume(bot, player);
         } else {
             if (!Object.keys(filtersConfig).includes(effectName)) {
                 await context.replyEphemeralError(bot, context.t('commands:MESSAGE_FILTER_NOT_FOUND'));
@@ -164,6 +168,7 @@ export class FilterCommand extends BaseCommand {
             }
 
             this.#setPlayerFilter(player, effectName as keyof typeof filtersConfig);
+            applyPlayerVolume(bot, player);
         }
 
         if (context.isMessage()) {

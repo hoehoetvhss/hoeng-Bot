@@ -4,6 +4,7 @@ import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory, DJModeEnum } from '../@types/index.js';
 import { embeds } from '../embeds/index.js';
 import { DJManager } from '../lib/DjManager.js';
+import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
 
 import type { Client, GuildMember } from 'discord.js';
 import type { Track } from 'lavashark';
@@ -112,17 +113,20 @@ export class PlayLastCommand extends BaseCommand {
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume =
-            newPlayer.setting.volume ?? bot.guildVolumeManager?.get(newPlayer.guildId) ?? bot.config.bot.volume.default;
 
         newPlayer.addTracks(lastTrack, requester as any);
-        newPlayer.filters.setVolume(curVolume);
+        const targetVolume = applyPlayerVolume(bot, newPlayer);
 
+        let playSucceeded = true;
         await newPlayer.play().catch(async (error) => {
+            playSucceeded = false;
             bot.logger.error(bot.shardId, 'Error playing track: ' + error);
             await context.replyError(bot, context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
             return newPlayer.destroy();
         });
+        if (playSucceeded) {
+            newPlayer.filters.setVolume(targetVolume);
+        }
 
         await this.#replyWithTrackEmbed(bot, client, context, lastTrack);
     }

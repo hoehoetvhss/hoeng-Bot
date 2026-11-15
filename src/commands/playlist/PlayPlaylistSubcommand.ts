@@ -6,6 +6,7 @@ import { DJManager } from '../../lib/DjManager.js';
 import { QueueLimitManager } from '../../lib/QueueLimitManager.js';
 import { isUserInBlacklist } from '../../utils/functions/isUserInBlacklist.js';
 import { isRadioTrack } from '../../utils/functions/isRadioTrack.js';
+import { applyPlayerVolume } from '../../utils/functions/playerVolume.js';
 import {
     decodeTracksWithRetry,
     decodeTrackWithRetry,
@@ -364,11 +365,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
      */
     private async startPlayback(context: PlaylistSubcommandContext, player: Player, stopRadio = false): Promise<void> {
         if (!player.playing) {
-            const volume =
-                player.setting.volume ??
-                context.bot.guildVolumeManager?.get(player.guildId) ??
-                context.bot.config.bot.volume.default;
-            player.filters.setVolume(volume);
+            const volume = applyPlayerVolume(context.bot, player);
 
             // Retry playback a few times so a transient rate limit (HTTP 429)
             // does not destroy the player right after loading a playlist
@@ -377,6 +374,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
             for (let attempt = 0; attempt < PLAY_RETRY_ATTEMPTS; attempt++) {
                 try {
                     await player.play();
+                    player.filters.setVolume(volume);
                     return;
                 } catch (error) {
                     if (attempt < PLAY_RETRY_ATTEMPTS - 1) {

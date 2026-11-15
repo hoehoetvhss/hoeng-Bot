@@ -3,6 +3,7 @@ import { ChannelType, Events } from 'discord.js';
 import { BaseDiscordEvent } from './base/BaseDiscordEvent.js';
 import { getSysInfo } from '../../utils/functions/getSysInfo.js';
 import { setIdleVoiceStatus } from '../../utils/functions/setVoiceStatus.js';
+import { applyPlayerVolume } from '../../utils/functions/playerVolume.js';
 import { cst } from '../../utils/constants.js';
 
 import { buildSlashCommandsWithLocalizations } from '../../utils/buildSlashCommandLocalizations.js';
@@ -162,6 +163,7 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
         try {
             // Connects to the voice channel
             await player.connect();
+            applyPlayerVolume(bot, player);
             bot.logger.log(
                 bot.shardId,
                 `Auto join voice channel : ${(channel as any).name || 'Unknown channel'} (${bot.config.bot.specifyVoiceChannel})`,

@@ -4,6 +4,7 @@ import { embeds } from '../embeds/index.js';
 import { DJManager } from './DjManager.js';
 import { DJModeEnum } from '../@types/index.js';
 import { ButtonsBuilder } from './builders/ButtonsBuilder.js';
+import { getEffectiveVolume } from '../utils/functions/playerVolume.js';
 
 import type { Player, Track } from 'lavashark';
 import type { Bot } from '../@types/index.js';
@@ -221,11 +222,7 @@ export class DashboardManager {
     async #buildSubtitle(player: Player, track: Track, lng?: string): Promise<string> {
         const repeatModeLabel = this.#getRepeatModeLabel(player.repeatMode, lng);
 
-        const currentVolume =
-            player.volume ??
-            player.setting?.volume ??
-            this.#bot.guildVolumeManager?.get(player.guildId) ??
-            this.#bot.config.bot.volume.default;
+        const currentVolume = getEffectiveVolume(this.#bot, player);
 
         let subtitle = this.#bot.i18n.t('embeds:DASHBOARD_SUBTITLE', {
             author: track.author,

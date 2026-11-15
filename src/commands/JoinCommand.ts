@@ -3,6 +3,7 @@ import i18next from 'i18next';
 import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory } from '../@types/index.js';
 import { setIdleVoiceStatus } from '../utils/functions/setVoiceStatus.js';
+import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
 
 import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
@@ -45,15 +46,12 @@ export class JoinCommand extends BaseCommand {
             };
         }
 
-        const curVolume =
-            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
-
         try {
             // Connect to voice channel
             await player.connect();
 
             player.metadata = context.isMessage() ? context.getMessage() : context.getInteraction();
-            player.filters.setVolume(curVolume);
+            applyPlayerVolume(bot, player);
 
             // Set idle voice status
             if (player.voiceChannelId) {

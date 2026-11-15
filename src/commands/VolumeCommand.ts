@@ -5,6 +5,7 @@ import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory } from '../@types/index.js';
 import { embeds } from '../embeds/index.js';
 import { VolumeButtonId } from '../@types/index.js';
+import { getEffectiveVolume } from '../utils/functions/playerVolume.js';
 
 import type { Client } from 'discord.js';
 import type { Player } from 'lavashark';
@@ -74,7 +75,7 @@ export class VolumeCommand extends BaseCommand {
         player: any,
         maxVolume: number,
     ): Promise<void> {
-        const currentVolume = player.volume;
+        const currentVolume = getEffectiveVolume(bot, player);
 
         const volume25Button = new ButtonBuilder()
             .setCustomId(VolumeButtonId.Volume25)
@@ -125,7 +126,7 @@ export class VolumeCommand extends BaseCommand {
             const newVolume = volumeMap[i.customId];
             if (!newVolume) return;
 
-            if (player.volume === newVolume) {
+            if (getEffectiveVolume(bot, player) === newVolume) {
                 await i.update({
                     embeds: [embeds.textWarningMsg(bot, context.t('commands:MESSAGE_VOLUME_SAME'))],
                     components: [],
@@ -192,12 +193,12 @@ export class VolumeCommand extends BaseCommand {
         if (vol === null || vol === undefined || isNaN(vol)) {
             await context.replyError(
                 bot,
-                context.t('commands:MESSAGE_VOLUME_ARGS_ERROR', { volume: player.volume, maxVolume }),
+                context.t('commands:MESSAGE_VOLUME_ARGS_ERROR', { volume: getEffectiveVolume(bot, player), maxVolume }),
             );
             return;
         }
 
-        if (player.volume === vol) {
+        if (getEffectiveVolume(bot, player) === vol) {
             await context.replyEphemeralError(bot, context.t('commands:MESSAGE_VOLUME_SAME'));
             return;
         }

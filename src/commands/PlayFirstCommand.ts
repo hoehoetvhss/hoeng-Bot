@@ -7,6 +7,7 @@ import { embeds } from '../embeds/index.js';
 import { isUserInBlacklist } from '../utils/functions/isUserInBlacklist.js';
 import { cleanSearchQuery } from '../utils/functions/cleanSearchQuery.js';
 import { isRadioTrack } from '../utils/functions/isRadioTrack.js';
+import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
 import { DJManager } from '../lib/DjManager.js';
 import { QueueLimitManager } from '../lib/QueueLimitManager.js';
 
@@ -280,8 +281,6 @@ export class PlayFirstCommand extends BaseCommand {
         tracksToAdd?: number,
     ): Promise<void> {
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume =
-            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
         const isRadioPlaying = isRadioTrack(player.current);
 
         if (player.repeatMode !== RepeatMode.OFF) {
@@ -297,8 +296,10 @@ export class PlayFirstCommand extends BaseCommand {
 
             if (!player.playing) {
                 player.addTracks(tracks, requester as any);
-                player.filters.setVolume(curVolume);
+                const targetVolume = applyPlayerVolume(bot, player);
+                let playSucceeded = true;
                 await player.play().catch(async (error) => {
+                    playSucceeded = false;
                     bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                     await context.replyError(
                         bot,
@@ -306,6 +307,9 @@ export class PlayFirstCommand extends BaseCommand {
                     );
                     return player.destroy();
                 });
+                if (playSucceeded) {
+                    player.filters.setVolume(targetVolume);
+                }
             } else {
                 const firstTrack = tracks[0];
                 const restTracks = tracks.slice(1);
@@ -314,7 +318,7 @@ export class PlayFirstCommand extends BaseCommand {
                     player.queue.tracks.unshift(...restTracks);
                 }
 
-                player.filters.setVolume(curVolume);
+                applyPlayerVolume(bot, player);
                 await player.prioritizePlay(firstTrack, requester as any).catch(async (error) => {
                     bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                     await context.replyError(
@@ -330,8 +334,10 @@ export class PlayFirstCommand extends BaseCommand {
 
             if (!player.playing) {
                 player.addTracks(track, requester as any);
-                player.filters.setVolume(curVolume);
+                const targetVolume = applyPlayerVolume(bot, player);
+                let playSucceeded = true;
                 await player.play().catch(async (error) => {
+                    playSucceeded = false;
                     bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                     await context.replyError(
                         bot,
@@ -339,8 +345,11 @@ export class PlayFirstCommand extends BaseCommand {
                     );
                     return player.destroy();
                 });
+                if (playSucceeded) {
+                    player.filters.setVolume(targetVolume);
+                }
             } else {
-                player.filters.setVolume(curVolume);
+                applyPlayerVolume(bot, player);
                 await player.prioritizePlay(track, requester as any).catch(async (error) => {
                     bot.logger.error(bot.shardId, 'Error playing track: ' + error);
                     await context.replyError(

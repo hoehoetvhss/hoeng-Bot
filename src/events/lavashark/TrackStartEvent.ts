@@ -1,6 +1,7 @@
 import { BaseLavaSharkEvent } from './base/BaseLavaSharkEvent.js';
 import { TrackPrefetcher } from '../../lib/TrackPrefetcher.js';
 import { setVoiceChannelStatus } from '../../utils/functions/setVoiceStatus.js';
+import { applyPlayerVolume, getTargetVolume } from '../../utils/functions/playerVolume.js';
 
 import type { Client } from 'discord.js';
 import type { Player } from 'lavashark';
@@ -24,6 +25,10 @@ export class TrackStartEvent extends BaseLavaSharkEvent<'trackStart'> {
 
         const track = player.current;
         if (!track) return;
+        const targetVolume = getTargetVolume(bot, player);
+        if (player.filters.active.volume !== targetVolume || player.setting?.volume !== targetVolume) {
+            applyPlayerVolume(bot, player, targetVolume);
+        }
         TrackPrefetcher.prefetchNext(bot, player);
         await client.dashboard.update(player, track);
 
