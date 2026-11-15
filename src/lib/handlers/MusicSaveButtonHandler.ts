@@ -4,7 +4,6 @@ import type { Client, ButtonInteraction, GuildMember } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Handler for music save button
  */
@@ -13,7 +12,7 @@ export class MusicSaveButtonHandler {
         bot: Bot,
         client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         const track = player.current;
         if (!track) return;
@@ -23,22 +22,29 @@ export class MusicSaveButtonHandler {
         const subtitle = bot.i18n.t('events:MESSAGE_NOW_PLAYING_SUBTITLE', {
             author: track.author,
             label: track.duration.label,
-            lng
+            lng,
         });
 
-        member.user.send({ embeds: [embeds.save(bot, track.title, subtitle, track.uri, track.thumbnail!)] })
+        member.user
+            .send({ embeds: [embeds.save(bot, track.title, subtitle, track.uri, track.thumbnail!)] })
             .then(() => {
-                interaction.reply({
-                    embeds: [embeds.textSuccessMsg(bot, bot.i18n.t('events:MESSAGE_SEND_PRIVATE_MESSAGE', { lng }))],
-                    flags: MessageFlags.Ephemeral
-                }).catch(() => { });
+                interaction
+                    .reply({
+                        embeds: [
+                            embeds.textSuccessMsg(bot, bot.i18n.t('events:MESSAGE_SEND_PRIVATE_MESSAGE', { lng })),
+                        ],
+                        flags: MessageFlags.Ephemeral,
+                    })
+                    .catch(() => {});
             })
             .catch((error) => {
-                bot.logger.error( bot.shardId, '[MusicSaveButtonHandler] Error sending DM: ' + error);
-                interaction.reply({
-                    embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_SEND_PRIVATE_MESSAGE', { lng }))],
-                    flags: MessageFlags.Ephemeral
-                }).catch(() => { });
+                bot.logger.error(bot.shardId, '[MusicSaveButtonHandler] Error sending DM: ' + error);
+                interaction
+                    .reply({
+                        embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_SEND_PRIVATE_MESSAGE', { lng }))],
+                        flags: MessageFlags.Ephemeral,
+                    })
+                    .catch(() => {});
             });
     }
 }

@@ -8,7 +8,6 @@ import type { Client, ButtonInteraction, GuildMember } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Handler for Dashboard Skip button
  */
@@ -17,10 +16,10 @@ export class SkipButtonHandler extends DashboardButtonHandler {
         bot: Bot,
         client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         // Check skip permission
-        if (!await this.checkPermission(bot, client, interaction, 'skip', player)) {
+        if (!(await this.checkPermission(bot, client, interaction, 'skip', player))) {
             return;
         }
 
@@ -46,7 +45,7 @@ export class SkipButtonHandler extends DashboardButtonHandler {
             if (!isRequester && !isAdmin && !canDJBypass) {
                 await interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, bot.i18n.t('commands:ERROR_SKIP_NOT_REQUESTER', { lng }))],
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
@@ -64,7 +63,7 @@ export class SkipButtonHandler extends DashboardButtonHandler {
             try {
                 await interaction.reply({
                     content: bot.i18n.t('commands:MESSAGE_SKIP_EMPTY_DISCONNECT', { lng }),
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             } catch (_) {}

@@ -13,10 +13,10 @@ export class StopButtonHandler extends DashboardButtonHandler {
         bot: Bot,
         client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         // Check leave permission
-        if (!await this.checkPermission(bot, client, interaction, 'leave', player)) {
+        if (!(await this.checkPermission(bot, client, interaction, 'leave', player))) {
             return;
         }
 
@@ -38,5 +38,3 @@ export class StopButtonHandler extends DashboardButtonHandler {
         await interaction.deferUpdate();
     }
 }
-
-

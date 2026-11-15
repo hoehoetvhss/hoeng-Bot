@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import { ShardingManager } from 'discord.js';
 import * as dotenv from 'dotenv';
 
-
 export class ShardingController {
     public readonly shardFilePath: string;
     public manager: ShardingManager;
@@ -22,10 +21,9 @@ export class ShardingController {
 
         this.manager = new ShardingManager(this.shardFilePath, {
             execArgv,
-            token: process.env.BOT_TOKEN
+            token: process.env.BOT_TOKEN,
         });
     }
-
 
     public async spwan() {
         await this.manager.spawn();

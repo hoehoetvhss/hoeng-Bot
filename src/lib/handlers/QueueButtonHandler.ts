@@ -7,7 +7,6 @@ import type { Client, ButtonInteraction, GuildMember } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Handler for queue-related button interactions
  */
@@ -17,7 +16,7 @@ export class QueueButtonHandler {
         const modes = [
             bot.i18n.t('commands:REPEAT_MODE_OFF', { lng }),
             bot.i18n.t('commands:REPEAT_MODE_SINGLE', { lng }),
-            bot.i18n.t('commands:REPEAT_MODE_ALL', { lng })
+            bot.i18n.t('commands:REPEAT_MODE_ALL', { lng }),
         ];
         return modes[repeatMode] || modes[0];
     }
@@ -29,7 +28,7 @@ export class QueueButtonHandler {
         bot: Bot,
         client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         if (!player.setting.queuePage) return;
 
@@ -51,7 +50,7 @@ export class QueueButtonHandler {
         bot: Bot,
         client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         if (!player.setting.queuePage) return;
 
@@ -73,10 +72,10 @@ export class QueueButtonHandler {
         _bot: Bot,
         _client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         if (player.setting.queuePage?.msg) {
-            await player.setting.queuePage.msg.delete().catch(() => { });
+            await player.setting.queuePage.msg.delete().catch(() => {});
             player.setting.queuePage = null;
         }
 
@@ -90,7 +89,7 @@ export class QueueButtonHandler {
         bot: Bot,
         client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         const lng = bot.guildLanguageManager?.get(interaction.guildId!);
 
@@ -100,12 +99,11 @@ export class QueueButtonHandler {
             if (!PermissionManager.isAdmin(bot, interaction.user.id, member)) {
                 await interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_REQUIRE_ADMIN', { lng }))],
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
         }
-
 
         // Check DJ permission
         if (bot.config.command.djCommand.includes('clear')) {
@@ -113,7 +111,7 @@ export class QueueButtonHandler {
             if (!PermissionManager.hasDJCommandPermission(bot, interaction.user.id, member, player)) {
                 await interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_REQUIRE_DJ', { lng }))],
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
@@ -139,12 +137,7 @@ export class QueueButtonHandler {
      * Update queue display embed
      * @private
      */
-    private static async updateQueueDisplay(
-        bot: Bot,
-        _client: Client,
-        player: Player,
-        lng?: string
-    ): Promise<void> {
+    private static async updateQueueDisplay(bot: Bot, _client: Client, player: Player, lng?: string): Promise<void> {
         if (!player.setting.queuePage) return;
 
         const page = player.setting.queuePage.curPage;
@@ -157,9 +150,10 @@ export class QueueButtonHandler {
 
         const buildDescription = (titleLength: number): string => {
             const nowPlayingTitle = player.current?.title || bot.i18n.t('commands:UNKNOWN_USER', { lng });
-            const truncatedNP = nowPlayingTitle.length > titleLength
-                ? nowPlayingTitle.substring(0, titleLength) + '...'
-                : nowPlayingTitle;
+            const truncatedNP =
+                nowPlayingTitle.length > titleLength
+                    ? nowPlayingTitle.substring(0, titleLength) + '...'
+                    : nowPlayingTitle;
 
             let desc = `${bot.i18n.t('embeds:QUEUE_NOW_PLAYING', { lng })}\n${truncatedNP}\n${'─'.repeat(20)}\n`;
 
@@ -175,7 +169,9 @@ export class QueueButtonHandler {
                         title = title.substring(0, titleLength) + '...';
                     }
                     const requesterId = track.requester?.id;
-                    const requesterMention = requesterId ? `<@${requesterId}>` : (track.requester?.username || bot.i18n.t('commands:UNKNOWN_USER', { lng }));
+                    const requesterMention = requesterId
+                        ? `<@${requesterId}>`
+                        : track.requester?.username || bot.i18n.t('commands:UNKNOWN_USER', { lng });
                     return `${startIdx + index + 1}. ${title} **${track.duration.label}** | ${requesterMention}`;
                 });
                 desc += entries.join('\n');
@@ -205,7 +201,7 @@ export class QueueButtonHandler {
         await player.setting.queuePage.msg?.edit({
             embeds: [embeds.queue(bot, description, this.getLoopModeLabel(bot, repeatMode, lng), lng)],
             components: [row],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
     }
 }

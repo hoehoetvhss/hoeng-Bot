@@ -1,13 +1,10 @@
 import { BasePlaylistSubcommand } from './BasePlaylistSubcommand.js';
+import { DJManager } from '../../lib/DjManager.js';
 import { PLAYLIST_TRACK_LIMIT } from '../../lib/PlaylistManager.js';
 
 import type { Player } from 'lavashark';
 import type { PlaylistTrack } from '../../lib/PlaylistManager.js';
-import type {
-    PlaylistSubcommandContext,
-    PlaylistSubcommandName,
-} from './BasePlaylistSubcommand.js';
-
+import type { PlaylistSubcommandContext, PlaylistSubcommandName } from './BasePlaylistSubcommand.js';
 
 type QueueTrack = Player['queue']['tracks'][number];
 type SavedPlaylistTrack = Omit<PlaylistTrack, 'position'>;
@@ -22,8 +19,16 @@ export class SavePlaylistSubcommand extends BasePlaylistSubcommand {
      * Serialize the active queue and persist it under the requested name
      */
     public async execute(context: PlaylistSubcommandContext): Promise<void> {
+        const userId = context.command.user.id;
+        const member = context.command.member;
         const guildId = context.command.guild!.id;
         const player = context.client.lavashark.getPlayer(guildId);
+
+        if (!DJManager.isDJ(context.bot, userId, member, player ?? undefined)) {
+            await context.command.replyEphemeralError(context.bot, context.command.t('events:ERROR_REQUIRE_DJ'));
+            return;
+        }
+
         if (!player?.current) {
             await context.command.replyEphemeralError(
                 context.bot,
@@ -57,25 +62,13 @@ export class SavePlaylistSubcommand extends BasePlaylistSubcommand {
         }
 
         // Require explicit confirmation before replacing stored data
-        const existingPlaylist = context.playlistManager.getPlaylist(
-            guildId,
-            name,
-        );
+        const existingPlaylist = context.playlistManager.getPlaylist(guildId, name);
         if (existingPlaylist) {
-            const confirmed = await this.confirmOverwrite(
-                context,
-                'save',
-                name,
-                existingPlaylist.tracks?.length ?? 0,
-            );
+            const confirmed = await this.confirmOverwrite(context, 'save', name, existingPlaylist.tracks?.length ?? 0);
             if (!confirmed) return;
         }
 
-        const saved = context.playlistManager.saveCurrentQueue(
-            guildId,
-            name,
-            tracks,
-        );
+        const saved = context.playlistManager.saveCurrentQueue(guildId, name, tracks);
         if (!saved) {
             await context.command.replyEphemeralError(
                 context.bot,

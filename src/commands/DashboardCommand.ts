@@ -6,7 +6,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class DashboardCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -18,7 +17,7 @@ export class DashboardCommand extends BaseCommand {
             voiceChannel: true,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -34,14 +33,13 @@ export class DashboardCommand extends BaseCommand {
         try {
             await player.dashboardMsg.delete();
         } catch (error) {
-            bot.logger.error( bot.shardId, 'Dashboard delete error:' + error);
+            bot.logger.error(bot.shardId, 'Dashboard delete error:' + error);
         }
 
         // Initialize new dashboard
         if (context.isMessage()) {
             await client.dashboard.initialize(context.getMessage(), player);
-        }
-        else {
+        } else {
             await client.dashboard.initialize(context.getInteraction(), player);
         }
 
@@ -52,8 +50,7 @@ export class DashboardCommand extends BaseCommand {
 
         if (context.isMessage()) {
             await context.react('👍');
-        }
-        else {
+        } else {
             await context.replySuccess(bot, context.t('commands:MESSAGE_DASHBOARD_SUCCESS'));
         }
     }

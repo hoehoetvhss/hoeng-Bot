@@ -8,7 +8,6 @@ import type { Client, GuildMember } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 /**
  * Pause command - Pauses music playback
  */
@@ -23,7 +22,7 @@ export class PauseCommand extends BaseCommand {
             voiceChannel: true,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -47,8 +46,8 @@ export class PauseCommand extends BaseCommand {
             const isRequester = currentTrack?.requester?.id === userId;
             const isAdmin = bot.config.bot.admin.includes(userId);
             const member = context.isMessage()
-                ? context.getMessage().member as GuildMember | null
-                : context.getInteraction().member as GuildMember | null;
+                ? (context.getMessage().member as GuildMember | null)
+                : (context.getInteraction().member as GuildMember | null);
             const isDJ = PermissionManager.hasDJCommandPermission(bot, userId, member, player);
             const canDJBypass = bot.config.command.requesterDjBypass.includes('pause') && isDJ;
             if (!isRequester && !isAdmin && !canDJBypass) {
@@ -61,12 +60,10 @@ export class PauseCommand extends BaseCommand {
 
         if (context.isMessage()) {
             await context.react(success ? '⏸️' : '❌');
-        }
-        else {
+        } else {
             if (success) {
                 await context.replySuccess(bot, context.t('commands:MESSAGE_PAUSE_SUCCESS'));
-            }
-            else {
+            } else {
                 await context.replyError(bot, context.t('commands:MESSAGE_PAUSE_FAIL'));
             }
         }

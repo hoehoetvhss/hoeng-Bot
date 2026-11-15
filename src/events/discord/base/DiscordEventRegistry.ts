@@ -1,7 +1,6 @@
 import { BaseDiscordEvent } from './BaseDiscordEvent.js';
 import type { Bot } from '../../../@types/index.js';
 
-
 /**
  * Discord event registry for managing all Discord events
  */

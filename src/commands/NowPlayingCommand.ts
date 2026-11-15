@@ -1,8 +1,4 @@
-import {
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle
-} from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import i18next from 'i18next';
 
 import { BaseCommand } from './base/BaseCommand.js';
@@ -12,7 +8,6 @@ import { embeds } from '../embeds/index.js';
 import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
-
 
 export class NowPlayingCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
@@ -25,7 +20,7 @@ export class NowPlayingCommand extends BaseCommand {
             voiceChannel: false,
             showHelp: true,
             sendTyping: true,
-            options: []
+            options: [],
         };
     }
 
@@ -40,22 +35,22 @@ export class NowPlayingCommand extends BaseCommand {
         const track = player.current;
         const requester = track?.requester;
         const requesterInfo = requester?.id ? ` | <@${requester.id}>` : '';
-        const subtitle = context.t('commands:MESSAGE_NOW_PLAYING_SUBTITLE', {
-            author: track?.author,
-            label: track?.duration.label
-        }) + requesterInfo;
+        const subtitle =
+            context.t('commands:MESSAGE_NOW_PLAYING_SUBTITLE', {
+                author: track?.author,
+                label: track?.duration.label,
+            }) + requesterInfo;
 
         const saveButton = new ButtonBuilder()
             .setCustomId(MusicButtonId.Save)
             .setLabel(context.t('commands:MESSAGE_NOW_PLAYING_SAVE_BUTTON'))
             .setStyle(ButtonStyle.Success);
-        const row = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(saveButton);
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(saveButton);
 
         await context.reply({
             embeds: [embeds.save(bot, track!.title, subtitle, track!.uri, track!.thumbnail!)],
             components: [row],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
     }
 }

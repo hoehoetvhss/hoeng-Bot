@@ -9,7 +9,6 @@ import type { Client, GuildMember } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class SeekCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -26,9 +25,9 @@ export class SeekCommand extends BaseCommand {
                     name: 'seek',
                     description: i18next.t('commands:CONFIG_SEEK_OPTION_DESCRIPTION', { lng }),
                     type: 3,
-                    required: true
-                }
-            ]
+                    required: true,
+                },
+            ],
         };
     }
 
@@ -49,8 +48,8 @@ export class SeekCommand extends BaseCommand {
             const isAdmin = bot.config.bot.admin.includes(userId);
 
             const member = context.isMessage()
-                ? context.getMessage().member as GuildMember | null
-                : context.getInteraction().member as GuildMember | null;
+                ? (context.getMessage().member as GuildMember | null)
+                : (context.getInteraction().member as GuildMember | null);
             const isDJ = PermissionManager.hasDJCommandPermission(bot, userId, member, player);
             const canDJBypass = bot.config.command.requesterDjBypass.includes('seek') && isDJ;
 
@@ -61,9 +60,7 @@ export class SeekCommand extends BaseCommand {
         }
 
         // Get seek time parameter
-        const str = context.isInteraction()
-            ? context.getStringOption('seek')!
-            : context.args.join(' ');
+        const str = context.isInteraction() ? context.getStringOption('seek')! : context.args.join(' ');
 
         const targetTime = timeToSeconds(str);
 
@@ -82,14 +79,19 @@ export class SeekCommand extends BaseCommand {
         await player.seek(targetTimeMs);
 
         if (targetTimeMs >= trackDuration.value) {
-            await context.replyWarning(bot, context.t('commands:MESSAGE_SEEK_SKIP', {
-                duration: trackDuration.label
-            }));
-        }
-        else {
-            await context.replySuccess(bot, context.t('commands:MESSAGE_SEEK_SUCCESS', {
-                duration: str
-            }));
+            await context.replyWarning(
+                bot,
+                context.t('commands:MESSAGE_SEEK_SKIP', {
+                    duration: trackDuration.label,
+                }),
+            );
+        } else {
+            await context.replySuccess(
+                bot,
+                context.t('commands:MESSAGE_SEEK_SUCCESS', {
+                    duration: str,
+                }),
+            );
         }
     }
 }

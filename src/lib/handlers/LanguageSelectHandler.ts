@@ -6,11 +6,7 @@ import type { Client, StringSelectMenuInteraction, GuildMember } from 'discord.j
 import type { Bot } from '../../@types/index.js';
 
 export class LanguageSelectHandler {
-    public static async handle(
-        bot: Bot,
-        _client: Client,
-        interaction: StringSelectMenuInteraction
-    ): Promise<void> {
+    public static async handle(bot: Bot, _client: Client, interaction: StringSelectMenuInteraction): Promise<void> {
         if (interaction.customId !== 'select_language') return;
 
         const lng = bot.guildLanguageManager?.get(interaction.guildId!);
@@ -20,22 +16,26 @@ export class LanguageSelectHandler {
             if (!PermissionManager.isAdmin(bot, interaction.user.id, member)) {
                 await interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_REQUIRE_ADMIN', { lng }))],
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
         }
 
-
         const selectedLocale = interaction.values[0];
 
         if (!bot.lang.languages.includes(selectedLocale)) {
             await interaction.reply({
-                embeds: [embeds.textErrorMsg(bot, bot.i18n.t('commands:MESSAGE_LANG_ARGS_ERROR', {
-                    lng,
-                    langList: bot.lang.languages.map(lang => `\`${lang}\``).join(', ')
-                }))],
-                flags: MessageFlags.Ephemeral
+                embeds: [
+                    embeds.textErrorMsg(
+                        bot,
+                        bot.i18n.t('commands:MESSAGE_LANG_ARGS_ERROR', {
+                            lng,
+                            langList: bot.lang.languages.map((lang) => `\`${lang}\``).join(', '),
+                        }),
+                    ),
+                ],
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -45,11 +45,16 @@ export class LanguageSelectHandler {
         }
 
         await interaction.reply({
-            embeds: [embeds.textSuccessMsg(bot, bot.i18n.t('commands:MESSAGE_LANG_SUCCESS', {
-                lng: selectedLocale,
-                locale: selectedLocale
-            }))],
-            flags: MessageFlags.Ephemeral
+            embeds: [
+                embeds.textSuccessMsg(
+                    bot,
+                    bot.i18n.t('commands:MESSAGE_LANG_SUCCESS', {
+                        lng: selectedLocale,
+                        locale: selectedLocale,
+                    }),
+                ),
+            ],
+            flags: MessageFlags.Ephemeral,
         });
     }
 }

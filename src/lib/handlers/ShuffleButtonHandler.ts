@@ -6,7 +6,6 @@ import type { Client, ButtonInteraction } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Handler for Dashboard Shuffle button
  */
@@ -15,10 +14,10 @@ export class ShuffleButtonHandler extends DashboardButtonHandler {
         bot: Bot,
         _client: Client,
         interaction: ButtonInteraction,
-        player: Player
+        player: Player,
     ): Promise<void> {
         // Check shuffle permission
-        if (!await this.checkPermission(bot, _client, interaction, 'shuffle', player)) {
+        if (!(await this.checkPermission(bot, _client, interaction, 'shuffle', player))) {
             return;
         }
 
@@ -32,7 +31,7 @@ export class ShuffleButtonHandler extends DashboardButtonHandler {
         await interaction.reply({
             embeds: [embeds.textSuccessMsg(bot, bot.i18n.t('events:MESSAGE_MUSIC_SHUFFLE', { lng }))],
             flags: MessageFlags.Ephemeral,
-            components: []
+            components: [],
         });
     }
 }

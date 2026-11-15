@@ -9,7 +9,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class QueueCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -21,7 +20,7 @@ export class QueueCommand extends BaseCommand {
             voiceChannel: true,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -37,14 +36,14 @@ export class QueueCommand extends BaseCommand {
         if (player.setting.queuePage && player.setting.queuePage.msg) {
             try {
                 await player.setting.queuePage.msg.delete();
-            } catch (_) { }
+            } catch (_) {}
         }
 
         // Initialize queue page (5 songs per page)
         player.setting.queuePage = {
             maxPage: Math.max(1, Math.ceil(player.queue.tracks.length / 5)),
             curPage: 1,
-            msg: null
+            msg: null,
         };
 
         const page = player.setting.queuePage.curPage;
@@ -52,12 +51,20 @@ export class QueueCommand extends BaseCommand {
         const endIdx = page * 5;
 
         const queueTracks = player.queue.tracks.slice(startIdx, endIdx);
-        const description = this.#buildQueueDescription(context, player, queueTracks, startIdx, page, player.setting.queuePage.maxPage, player.queue.tracks.length);
+        const description = this.#buildQueueDescription(
+            context,
+            player,
+            queueTracks,
+            startIdx,
+            page,
+            player.setting.queuePage.maxPage,
+            player.queue.tracks.length,
+        );
 
         const methods = [
             context.t('commands:REPEAT_MODE_OFF'),
             context.t('commands:REPEAT_MODE_SINGLE'),
-            context.t('commands:REPEAT_MODE_ALL')
+            context.t('commands:REPEAT_MODE_ALL'),
         ];
         const repeatMode = player.repeatMode;
         const row = ButtonsBuilder.createQueueButtons();
@@ -84,15 +91,16 @@ export class QueueCommand extends BaseCommand {
         startIdx: number,
         curPage: number,
         maxPage: number,
-        totalTracks: number
+        totalTracks: number,
     ): string {
         let maxTitleLength = 80;
 
         const buildDescription = (titleLength: number): string => {
             const nowPlayingTitle = player.current?.title || context.t('commands:UNKNOWN_USER');
-            const truncatedNP = nowPlayingTitle.length > titleLength
-                ? nowPlayingTitle.substring(0, titleLength) + '...'
-                : nowPlayingTitle;
+            const truncatedNP =
+                nowPlayingTitle.length > titleLength
+                    ? nowPlayingTitle.substring(0, titleLength) + '...'
+                    : nowPlayingTitle;
 
             let desc = `${context.t('embeds:QUEUE_NOW_PLAYING')}\n${truncatedNP}\n${'─'.repeat(20)}\n`;
 
@@ -106,7 +114,9 @@ export class QueueCommand extends BaseCommand {
                         title = title.substring(0, titleLength) + '...';
                     }
                     const requesterId = track.requester?.id;
-                    const requesterMention = requesterId ? `<@${requesterId}>` : (track.requester?.username || context.t('commands:UNKNOWN_USER'));
+                    const requesterMention = requesterId
+                        ? `<@${requesterId}>`
+                        : track.requester?.username || context.t('commands:UNKNOWN_USER');
                     return `${startIdx + index + 1}. ${title} **${track.duration.label}** | ${requesterMention}`;
                 });
                 desc += entries.join('\n');

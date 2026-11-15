@@ -5,7 +5,6 @@ import type { Client, ButtonInteraction, GuildMember } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Base class for dashboard button handlers
  * Provides common permission checking and error handling
@@ -26,7 +25,7 @@ export abstract class DashboardButtonHandler {
         client: Client,
         interaction: ButtonInteraction,
         commandName: string,
-        player: Player
+        player: Player,
     ): Promise<boolean> {
         const lng = bot.guildLanguageManager?.get(interaction.guildId!);
 
@@ -36,12 +35,11 @@ export abstract class DashboardButtonHandler {
             if (!PermissionManager.isAdmin(bot, interaction.user.id, member)) {
                 await interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_REQUIRE_ADMIN', { lng }))],
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return false;
             }
         }
-
 
         // Check DJ permission
         if (bot.config.command.djCommand.includes(commandName)) {
@@ -49,7 +47,7 @@ export abstract class DashboardButtonHandler {
             if (!PermissionManager.hasDJCommandPermission(bot, interaction.user.id, member, player)) {
                 await interaction.reply({
                     embeds: [embeds.textErrorMsg(bot, bot.i18n.t('events:ERROR_REQUIRE_DJ', { lng }))],
-                    flags: MessageFlags.Ephemeral
+                    flags: MessageFlags.Ephemeral,
                 });
                 return false;
             }
@@ -70,7 +68,7 @@ export abstract class DashboardButtonHandler {
         _bot: Bot,
         _client: Client,
         _interaction: ButtonInteraction,
-        _player: Player
+        _player: Player,
     ): Promise<void> {
         throw new Error('handle() method must be implemented by subclass');
     }

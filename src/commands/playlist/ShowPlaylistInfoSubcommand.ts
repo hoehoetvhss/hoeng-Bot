@@ -5,11 +5,7 @@ import { embeds } from '../../embeds/index.js';
 import { PLAYLIST_INFO_PAGE_SIZE } from '../../embeds/playlist.embed.js';
 import { BasePlaylistSubcommand } from './BasePlaylistSubcommand.js';
 
-import type {
-    PlaylistSubcommandContext,
-    PlaylistSubcommandName,
-} from './BasePlaylistSubcommand.js';
-
+import type { PlaylistSubcommandContext, PlaylistSubcommandName } from './BasePlaylistSubcommand.js';
 
 const PAGINATION_TIMEOUT_MS = 120_000;
 
@@ -32,10 +28,7 @@ export class ShowPlaylistInfoSubcommand extends BasePlaylistSubcommand {
             return;
         }
 
-        const playlist = context.playlistManager.getPlaylist(
-            context.command.guild!.id,
-            name,
-        );
+        const playlist = context.playlistManager.getPlaylist(context.command.guild!.id, name);
         const tracks = playlist?.tracks;
         if (!tracks?.length) {
             await context.command.replyEphemeralError(
@@ -49,16 +42,8 @@ export class ShowPlaylistInfoSubcommand extends BasePlaylistSubcommand {
         const totalPages = Math.ceil(tracks.length / PLAYLIST_INFO_PAGE_SIZE);
         let currentPage = 1;
         const message = await context.command.reply({
-            embeds: [embeds.playlistInfo(
-                context.bot,
-                name,
-                tracks,
-                currentPage,
-                context.command.language,
-            )],
-            components: totalPages > 1
-                ? [embeds.playlistInfoButtons(currentPage, totalPages)]
-                : [],
+            embeds: [embeds.playlistInfo(context.bot, name, tracks, currentPage, context.command.language)],
+            components: totalPages > 1 ? [embeds.playlistInfoButtons(currentPage, totalPages)] : [],
         });
         if (totalPages <= 1) return;
 
@@ -71,9 +56,7 @@ export class ShowPlaylistInfoSubcommand extends BasePlaylistSubcommand {
             // Restrict pagination controls to the command user
             if (interaction.user.id !== context.command.user.id) {
                 await interaction.reply({
-                    content: context.command.t(
-                        'commands:ERROR_ONLY_COMMAND_USER_PAGINATE',
-                    ),
+                    content: context.command.t('commands:ERROR_ONLY_COMMAND_USER_PAGINATE'),
                     flags: MessageFlags.Ephemeral,
                 });
                 return;
@@ -88,13 +71,7 @@ export class ShowPlaylistInfoSubcommand extends BasePlaylistSubcommand {
             }
 
             await interaction.update({
-                embeds: [embeds.playlistInfo(
-                    context.bot,
-                    name,
-                    tracks,
-                    currentPage,
-                    context.command.language,
-                )],
+                embeds: [embeds.playlistInfo(context.bot, name, tracks, currentPage, context.command.language)],
                 components: [embeds.playlistInfoButtons(currentPage, totalPages)],
             });
         });
@@ -103,11 +80,7 @@ export class ShowPlaylistInfoSubcommand extends BasePlaylistSubcommand {
             // Keep the final page visible while disabling expired controls
             try {
                 await message.edit({
-                    components: [embeds.playlistInfoButtons(
-                        currentPage,
-                        totalPages,
-                        true,
-                    )],
+                    components: [embeds.playlistInfoButtons(currentPage, totalPages, true)],
                 });
             } catch (error) {
                 context.bot.logger.error(

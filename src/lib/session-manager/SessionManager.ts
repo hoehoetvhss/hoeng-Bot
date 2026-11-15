@@ -2,11 +2,9 @@ import { IPBlocker } from './IPBlocker.js';
 
 import type { IPBlockerConfig, SessionManagerConfig } from '../../@types/SessionManager.types.js';
 
-
 export interface SessionData {
-    createdAt: number;      // milliseconds
+    createdAt: number; // milliseconds
 }
-
 
 /**
  * Manages user sessions and IP-based brute-force blocking.
@@ -23,7 +21,6 @@ export class SessionManager {
     readonly #validTime: number;
     readonly #cleanupInterval: number;
 
-
     /**
      * @param {SessionManagerConfig} config - Session manager configuration
      * @param {IPBlockerConfig} ipBlockerConfig - IP blocker configuration
@@ -32,8 +29,7 @@ export class SessionManager {
         if (config) {
             this.#validTime = config.validTime;
             this.#cleanupInterval = config.cleanupInterval;
-        }
-        else {
+        } else {
             this.#validTime = 10 * 60 * 1000;
             this.#cleanupInterval = 5 * 60 * 1000;
         }
@@ -43,7 +39,6 @@ export class SessionManager {
 
         this.#autoCheckExpires(this.#cleanupInterval);
     }
-
 
     // -------------------------------------------------------------------------
     // Session methods
@@ -123,7 +118,6 @@ export class SessionManager {
         return Array.from(this.#sessionMap.entries());
     }
 
-
     // -------------------------------------------------------------------------
     // IP blocking proxy methods (encapsulates IPBlocker)
     // -------------------------------------------------------------------------
@@ -152,7 +146,6 @@ export class SessionManager {
     public unblockIP(ip: string): void {
         this.#ipBlocker.delete(ip);
     }
-
 
     // -------------------------------------------------------------------------
     // Private helpers

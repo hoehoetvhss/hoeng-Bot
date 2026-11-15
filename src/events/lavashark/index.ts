@@ -12,10 +12,9 @@ import { TrackStartEvent } from './TrackStartEvent.js';
 import type { LavaSharkEventRegistry } from './base/LavaSharkEventRegistry.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Register all LavaShark events to the registry
- * 
+ *
  * @param registry - LavaShark event registry instance
  * @param bot - Bot instance
  */

@@ -3,7 +3,7 @@ import {
     ButtonInteraction,
     Collection,
     StringSelectMenuBuilder,
-    StringSelectMenuInteraction
+    StringSelectMenuInteraction,
 } from 'discord.js';
 import i18next from 'i18next';
 
@@ -13,9 +13,10 @@ import { embeds } from '../embeds/index.js';
 import { filtersConfig } from '../utils/constants.js';
 
 import type { Client } from 'discord.js';
+import type { Player } from 'lavashark';
+import type { FilterOptions } from 'lavashark/typings/src/@types/index.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
-
 
 export class FilterCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
@@ -35,14 +36,14 @@ export class FilterCommand extends BaseCommand {
                     type: 3,
                     required: true,
                     choices: [
-                        ...(Object.keys(filtersConfig).map((effectName) => ({
+                        ...Object.keys(filtersConfig).map((effectName) => ({
                             name: effectName,
-                            value: effectName
-                        }))),
-                        { name: 'clear', value: 'clear' }
-                    ]
-                }
-            ]
+                            value: effectName,
+                        })),
+                        { name: 'clear', value: 'clear' },
+                    ],
+                },
+            ],
         };
     }
 
@@ -55,15 +56,12 @@ export class FilterCommand extends BaseCommand {
         }
 
         // Get filter parameter
-        const filterParam = context.isInteraction()
-            ? context.getStringOption('filter')
-            : context.args.join(' ');
+        const filterParam = context.isInteraction() ? context.getStringOption('filter') : context.args.join(' ');
 
         if (!filterParam) {
             // Show interactive filter selection (only for text commands)
             await this.#showFilterSelection(bot, client, context, player);
-        }
-        else {
+        } else {
             // Apply filter directly
             await this.#applyFilter(bot, client, context, player, filterParam.toLowerCase());
         }
@@ -73,33 +71,28 @@ export class FilterCommand extends BaseCommand {
      * Show interactive filter selection menu
      * @private
      */
-    async #showFilterSelection(
-        bot: Bot,
-        client: Client,
-        context: CommandContext,
-        player: any
-    ): Promise<void> {
+    async #showFilterSelection(bot: Bot, client: Client, context: CommandContext, player: Player): Promise<void> {
         const select = new StringSelectMenuBuilder()
             .setCustomId(SelectButtonId.Filter)
             .setPlaceholder(context.t('commands:MESSAGE_FILTER_SELECT_MODE'))
             .setOptions([
-                ...(Object.keys(filtersConfig).map((effectName) => ({
+                ...Object.keys(filtersConfig).map((effectName) => ({
                     label: effectName,
-                    value: effectName
-                }))),
-                { label: context.t('commands:LABEL_FILTER_CLEAR'), value: 'clear' }
+                    value: effectName,
+                })),
+                { label: context.t('commands:LABEL_FILTER_CLEAR'), value: 'clear' },
             ]);
 
         const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select);
         const msg = await context.reply({
             embeds: [embeds.textMsg(bot, context.t('commands:MESSAGE_FILTER_SELECT_LIST'))],
             components: [row.toJSON()],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
 
         const collector = msg.createMessageComponentCollector({
             time: 20000, // 20s
-            filter: i => i.user.id === context.user.id
+            filter: (i) => i.user.id === context.user.id,
         });
 
         collector.on('collect', async (i: StringSelectMenuInteraction) => {
@@ -109,18 +102,17 @@ export class FilterCommand extends BaseCommand {
 
             if (effectName === 'clear') {
                 player.filters.clear();
-            }
-            else {
+            } else {
                 if (!Object.keys(filtersConfig).includes(effectName)) {
                     await context.reply({
                         embeds: [embeds.textErrorMsg(bot, context.t('commands:MESSAGE_FILTER_NOT_FOUND'))],
-                        allowedMentions: { repliedUser: false }
+                        allowedMentions: { repliedUser: false },
                     });
                     collector.stop();
                     return;
                 }
 
-                player.filters.set(filtersConfig[(effectName as keyof typeof filtersConfig)]);
+                this.#setPlayerFilter(player, effectName as keyof typeof filtersConfig);
             }
 
             if (context.isMessage()) {
@@ -128,26 +120,26 @@ export class FilterCommand extends BaseCommand {
             }
 
             await i.deferUpdate();
-            await msg.edit({
-                embeds: [embeds.filterMsg(bot, effectName, context.language)],
-                components: [],
-                allowedMentions: { repliedUser: false }
-            }).catch(() =>
-                bot.logger.discord( bot.shardId, 'Failed to edit deleted message.')
-            );
+            await msg
+                .edit({
+                    embeds: [embeds.filterMsg(bot, effectName, context.language)],
+                    components: [],
+                    allowedMentions: { repliedUser: false },
+                })
+                .catch(() => bot.logger.discord(bot.shardId, 'Failed to edit deleted message.'));
 
             collector.stop();
         });
 
         collector.on('end', async (collected: Collection<string, ButtonInteraction>, reason: string) => {
             if (reason === 'time' && collected.size === 0) {
-                await msg.edit({
-                    embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
-                    components: [],
-                    allowedMentions: { repliedUser: false }
-                }).catch(() =>
-                    bot.logger.discord( bot.shardId, 'Failed to edit deleted message.')
-                );
+                await msg
+                    .edit({
+                        embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
+                        components: [],
+                        allowedMentions: { repliedUser: false },
+                    })
+                    .catch(() => bot.logger.discord(bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }
@@ -160,31 +152,47 @@ export class FilterCommand extends BaseCommand {
         bot: Bot,
         client: Client,
         context: CommandContext,
-        player: any,
-        effectName: string
+        player: Player,
+        effectName: string,
     ): Promise<void> {
         if (effectName === 'clear') {
             player.filters.clear();
-        }
-        else {
+        } else {
             if (!Object.keys(filtersConfig).includes(effectName)) {
                 await context.replyEphemeralError(bot, context.t('commands:MESSAGE_FILTER_NOT_FOUND'));
                 return;
             }
 
-            player.filters.set(filtersConfig[(effectName as keyof typeof filtersConfig)]);
+            this.#setPlayerFilter(player, effectName as keyof typeof filtersConfig);
         }
 
         if (context.isMessage()) {
             await context.react('👍');
         }
 
-        await context.reply({
-            embeds: [embeds.filterMsg(bot, effectName, context.language)],
-            components: [],
-            allowedMentions: { repliedUser: false }
-        }).catch(() =>
-            bot.logger.discord( bot.shardId, 'Failed to edit message.')
-        );
+        await context
+            .reply({
+                embeds: [embeds.filterMsg(bot, effectName, context.language)],
+                components: [],
+                allowedMentions: { repliedUser: false },
+            })
+            .catch(() => bot.logger.discord(bot.shardId, 'Failed to edit message.'));
+    }
+
+    #setPlayerFilter(player: Player, effectName: keyof typeof filtersConfig): void {
+        const filterConfig: FilterOptions = filtersConfig[effectName];
+        player.filters.set(filterConfig);
+
+        if ('pluginFilters' in filterConfig && filterConfig.pluginFilters !== undefined) {
+            const activeFilters = player.filters.active as FilterOptions;
+            if (!activeFilters.pluginFilters) {
+                const payload: FilterOptions = {
+                    ...activeFilters,
+                    pluginFilters: filterConfig.pluginFilters,
+                };
+                delete payload.volume;
+                void player.node?.rest.updatePlayer(player.guildId, { filters: payload });
+            }
+        }
     }
 }

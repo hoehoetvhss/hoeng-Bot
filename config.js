@@ -8,157 +8,157 @@ const config = {
             id: 'Node 1',
             hostname: 'localhost',
             port: 2333,
-            password: 'youshallnotpass'
-        }
+            password: 'youshallnotpass',
+        },
     ],
 
     spotify: {
-        clientId: '',               // If you want to use Spotify to play songs, you need to set up Spotify credentials.
-        clientSecret: ''            // https://developer.spotify.com/documentation/web-api
+        clientId: '', // If you want to use Spotify to play songs, you need to set up Spotify credentials.
+        clientSecret: '', // https://developer.spotify.com/documentation/web-api
     },
 
     bot: {
-        textCommand             : true,                 // Whether to enable text command
-        slashCommand            : true,                 // Whether to enable slash command
+        textCommand: true, // Whether to enable text command
+        slashCommand: true, // Whether to enable slash command
 
         /**
          * DYNAMIC mode: Server Administrator or Manage Guild permissions are checked dynamically
          * STATIC mode: Admin is determined by the config file (admin array)
          */
-        adminMode               : 'DYNAMIC',            // Admin mode: 'STATIC' (config.js based) or 'DYNAMIC' (Discord Administrator/Manage Guild permission based)
+        adminMode: 'DYNAMIC', // Admin mode: 'STATIC' (config.js based) or 'DYNAMIC' (Discord Administrator/Manage Guild permission based)
         // OAUTH2 mode requires setting 'admin', 'clientSecret' value
-        admin                   : [],                   // Admin users, It must be the user ID (string[])
-
+        admin: [], // Admin users, It must be the user ID (string[])
 
         /**
          * DYNAMIC mode: The first user to execute a command becomes the DJ
          * STATIC mode: The DJ is determined by the config file
          */
-        djMode                  : 'DYNAMIC',            // DJ mode: 'STATIC' (config.js based) or 'DYNAMIC' (first user to execute command based)
-        dj                      : [],                   // DJ users, It must be the user ID (string[])
-        djRoleId                : '',                   // DJ role ID, members with this role have DJ permissions (string)
+        djMode: 'DYNAMIC', // DJ mode: 'STATIC' (config.js based) or 'DYNAMIC' (first user to execute command based)
+        dj: [], // DJ users, It must be the user ID (string[])
+        djRoleId: '', // DJ role ID, members with this role have DJ permissions (string)
         djLeave: {
-            mode: 'PLAY',       // 'PLAY' = next DJ on successful /play; 'COOLDOWN' = auto-assign after cooldown
-            cooldown: 5000,     // Cooldown in ms, only used in COOLDOWN mode (default: 5000ms)
+            mode: 'PLAY', // 'PLAY' = next DJ on successful /play; 'COOLDOWN' = auto-assign after cooldown
+            cooldown: 5000, // Cooldown in ms, only used in COOLDOWN mode (default: 5000ms)
         },
 
-        clientSecret            : '',
+        clientSecret: '',
 
-        name                    : 'Music Disc',
-        prefix                  : '+',                  // Text command prefix
-        status                  : 'online',             // 'online' | 'idle' | 'dnd'
+        name: 'Music Disc',
+        prefix: '+', // Text command prefix
+        status: 'online', // 'online' | 'idle' | 'dnd'
         activity: {
-            type                : 0,                    // https://discord.com/developers/docs/topics/gateway-events#activity-object-activity-types
-            name                : '+help | music',
+            type: 0, // https://discord.com/developers/docs/topics/gateway-events#activity-object-activity-types
+            name: '+help | music',
             // state               : '',
             // url                 : '',                // The streaming type currently only supports Twitch and YouTube. Only https://twitch.tv/ and https://youtube.com/ urls will work.
         },
         embedsColors: {
-            message             : '#FFFFFF',            // Message embed color
-            success             : '#FFFFFF',            // Success embed color
-            error               : '#FF0000',            // Error embed color
-            warning             : '#FFFF00',            // Warning embed color
+            message: '#FFFFFF', // Message embed color
+            success: '#FFFFFF', // Success embed color
+            error: '#FF0000', // Error embed color
+            warning: '#FFFF00', // Warning embed color
         },
         volume: {
-            default             : 50,
-            max                 : 100,
+            default: 50,
+            max: 100,
         },
         // Auto leave channel settings
         autoLeave: {
-            enabled             : true,
-            cooldown            : 5000,         // ms
+            enabled: true,
+            cooldown: 5000, // ms
         },
 
         // Show voice channel updates
-        displayVoiceState       : true,
+        displayVoiceState: true,
 
         // Specify the text channel for receiving commands.
         // If this value is set, text messages from other channels will not be processed.
-        specifyMessageChannel   : '',           // Text channel ID
+        specifyMessageChannel: '', // Text channel ID
 
         // Specify the voice channel to join.
         // If this value is set, other voice channels will not be joined.
-        specifyVoiceChannel     : '',           // Vioce channel ID
+        specifyVoiceChannel: '', // Vioce channel ID
 
         // After starting the Bot, it will automatically join the specified voice channel and wait.
         // The specifyVoiceChannel value needs to be set, otherwise it will be invalid.
-        startupAutoJoin         : false,
+        startupAutoJoin: false,
 
         // Language settings
         i18n: {
-            localePath          : '../../locales',
-            defaultLocale       : 'en-US'
+            localePath: '../../locales',
+            defaultLocale: 'en-US',
         },
 
         // Max queued songs per user settings
         maxQueuedSongs: {
-            enabled             : true,         // Enable/disable this feature
-            global              : 100,          // Global maximum queue size for the bot (absolute limit)
-            default             : 5,            // Default limit for users without special roles
-            djs                 : 10,           // Limit for DJ role users
-            roles: {                            // Custom limits per role ID
+            enabled: true, // Enable/disable this feature
+            global: 100, // Global maximum queue size for the bot (absolute limit)
+            default: 5, // Default limit for users without special roles
+            djs: 10, // Limit for DJ role users
+            roles: {
+                // Custom limits per role ID
                 // "123456789012345678": 10,
                 // "987654321098765432": 20,
-            }
+            },
         },
 
         // Fair queue rotation (round-robin)
-        fairQueue               : false,        // When enabled, rotates queue to play songs from different users in turn
+        fairQueue: false, // When enabled, rotates queue to play songs from different users in turn
 
         // Voice channel status emojis (standard or custom Discord emojis)
         // Set to [] to disable emoji. If multiple provided, a random one is picked each time.
         // Custom emojis: use format '<:name:id>' or '<a:name:id>' for animated
-        voiceStatusEmojis       : ['🎵'],
+        voiceStatusEmojis: ['🎵'],
 
         // Voice channel status idle text (shown when bot is in channel but nothing is playing)
         // Set to '' to disable idle status. Supports standard or custom Discord emojis in the text.
         // Example: '🎵 Use /play to jam!'
-        voiceStatusIdleText     : '🎵 Use /play to jam!'
+        voiceStatusIdleText: '🎵 Use /play to jam!',
     },
 
-    blacklist                   : [],           // It must be the user ID (string[])
+    blacklist: [], // It must be the user ID (string[])
 
     // Web dashboard settings
     webDashboard: {
-        enabled                 : true,
-        port                    : 33333,
-        loginType               : 'USER',       // 'USER' | 'OAUTH2'
+        enabled: true,
+        port: 33333,
+        loginType: 'USER', // 'USER' | 'OAUTH2'
 
         // USER mode settings
         user: {
-            username            : 'admin',
-            password            : 'password',
+            username: 'admin',
+            password: 'password',
         },
 
         // OAUTH2 mode settings
         oauth2: {
-            link                : '',
-            redirectUri         : 'http://localhost:33333/login',
+            link: '',
+            redirectUri: 'http://localhost:33333/login',
         },
 
         // SessionManager config
         sessionManager: {
-            validTime           : 10 * 60 * 1000,           // Session validity time (ms) (default: 10 minutes)
-            cleanupInterval     : 5 * 60 * 1000             // Timing cleaner time (ms) (default: 5 minutes)
+            validTime: 10 * 60 * 1000, // Session validity time (ms) (default: 10 minutes)
+            cleanupInterval: 5 * 60 * 1000, // Timing cleaner time (ms) (default: 5 minutes)
         },
         // IPBlocker config
         ipBlocker: {
-            retryLimit              : 5,                    // Maximum number of retries (default: 5)
-            unlockTimeoutDuration   : 5 * 60 * 1000,        // Blocking time (ms) (default: 5 minutes)
-            cleanupInterval         : 5 * 60 * 1000         // Timing cleaner time (ms) (default: 5 minutes)
-        }
+            retryLimit: 5, // Maximum number of retries (default: 5)
+            unlockTimeoutDuration: 5 * 60 * 1000, // Blocking time (ms) (default: 5 minutes)
+            cleanupInterval: 5 * 60 * 1000, // Timing cleaner time (ms) (default: 5 minutes)
+        },
     },
 
     // Local Lavalink node
     localNode: {
-        enabled             : false,
-        autoRestart         : true,
+        enabled: false,
+        autoRestart: true,
         // downloadLink        : 'https://github.com/lavalink-devs/Lavalink/releases/download/4.1.1/Lavalink.jar'
     },
 
     // Command permission settings
     command: {
-        disableCommand: [],                                 // Disabled commands, all enabled by default
+        disableCommand: [], // Disabled commands, all enabled by default
         adminCommand: ['blacklist', 'language', 'server', 'status', 'volume-default'], // Admin commands, only Admin role user can use
         djCommand: ['dj', 'filter', 'stop', 'pause', 'resume', 'skip', 'clear', 'leave', 'shuffle', 'loop', 'volume'], // DJ commands, only DJ role user can use
         // Supported commands: 'skip', 'seek', 'pause'
@@ -169,23 +169,23 @@ const config = {
         // DJs (both role-based and dynamic) can bypass 'requesterOnly' for commands listed here.
         // Only effective for commands that are also listed in requesterOnly.
         // Supported commands: 'skip', 'seek', 'pause'
-        requesterDjBypass: ['skip', 'seek', 'pause']
+        requesterDjBypass: ['skip', 'seek', 'pause'],
     },
 
     // Queue persistence settings
     queuePersistence: {
-        enabled             : false             // Enable/disable persistent queue storage
+        enabled: false, // Enable/disable persistent queue storage
     },
 
     // Playlist settings
     playlist: {
-        enabled             : true              // Enable/disable playlist feature
+        enabled: true, // Enable/disable playlist feature
     },
 
     // SQLite database settings
     database: {
-        path                : './data/database.db' // Path to SQLite database file
-    }
+        path: './data/database.db', // Path to SQLite database file
+    },
 };
 
 export { config };

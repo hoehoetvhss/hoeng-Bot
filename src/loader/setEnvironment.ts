@@ -6,10 +6,8 @@ import { DJModeEnum, AdminModeEnum } from './../@types/index.js';
 
 import type { Config } from './../@types/index.js';
 
-
 const configModuleUrl = pathToFileURL(path.resolve('config.js')).href;
-const { config } = await import(configModuleUrl) as { config: Config };
-
+const { config } = (await import(configModuleUrl)) as { config: Config };
 
 const setEnvironment = (defaultConfig: Config) => {
     defaultConfig.bot = {
@@ -20,24 +18,20 @@ const setEnvironment = (defaultConfig: Config) => {
             ? config.bot.adminMode
             : defaultConfig.bot.adminMode,
         // Admin of the bot (user_id[])
-        admin: (Array.isArray(config.bot.admin) && config.bot.admin.length > 0)
-            ? config.bot.admin
-            : defaultConfig.bot.admin,
+        admin:
+            Array.isArray(config.bot.admin) && config.bot.admin.length > 0 ? config.bot.admin : defaultConfig.bot.admin,
 
         // DJ of the bot (user_id[])
-        dj: (Array.isArray(config.bot.dj) && config.bot.dj.length > 0)
-            ? config.bot.dj
-            : defaultConfig.bot.dj,
-        djRoleId: (/^\d+$/).test(String(config.bot.djRoleId))
-            ? String(config.bot.djRoleId)
-            : defaultConfig.bot.djRoleId,
+        dj: Array.isArray(config.bot.dj) && config.bot.dj.length > 0 ? config.bot.dj : defaultConfig.bot.dj,
+        djRoleId: /^\d+$/.test(String(config.bot.djRoleId)) ? String(config.bot.djRoleId) : defaultConfig.bot.djRoleId,
         djMode: Object.values(DJModeEnum).includes(config.bot.djMode as any)
             ? config.bot.djMode
             : defaultConfig.bot.djMode,
         djLeave: {
-            mode: (config.bot.djLeave?.mode === 'PLAY' || config.bot.djLeave?.mode === 'COOLDOWN')
-                ? config.bot.djLeave.mode
-                : defaultConfig.bot.djLeave.mode,
+            mode:
+                config.bot.djLeave?.mode === 'PLAY' || config.bot.djLeave?.mode === 'COOLDOWN'
+                    ? config.bot.djLeave.mode
+                    : defaultConfig.bot.djLeave.mode,
             cooldown: isNumber(config.bot.djLeave?.cooldown)
                 ? config.bot.djLeave.cooldown
                 : defaultConfig.bot.djLeave.cooldown,
@@ -48,9 +42,7 @@ const setEnvironment = (defaultConfig: Config) => {
         // Bot settings
         name: config.bot.name || defaultConfig.bot.name,
         prefix: config.bot.prefix || defaultConfig.bot.prefix,
-        status: ['online', 'idle', 'dnd'].includes(config.bot.status)
-            ? config.bot.status
-            : defaultConfig.bot.status,
+        status: ['online', 'idle', 'dnd'].includes(config.bot.status) ? config.bot.status : defaultConfig.bot.status,
         activity: {
             name: config.bot.activity.name || defaultConfig.bot.activity.name,
             type: Object.values(ActivityType).includes(config.bot.activity.type)
@@ -63,17 +55,13 @@ const setEnvironment = (defaultConfig: Config) => {
             message: config.bot.embedsColors.message || defaultConfig.bot.embedsColors.message,
             success: config.bot.embedsColors.success || defaultConfig.bot.embedsColors.success,
             error: config.bot.embedsColors.error || defaultConfig.bot.embedsColors.error,
-            warning: config.bot.embedsColors.warning || defaultConfig.bot.embedsColors.warning
+            warning: config.bot.embedsColors.warning || defaultConfig.bot.embedsColors.warning,
         },
 
         // Volume settings
         volume: {
-            default: isNumber(config.bot.volume.default)
-                ? config.bot.volume.default
-                : defaultConfig.bot.volume.default,
-            max: isNumber(config.bot.volume.max)
-                ? config.bot.volume.max
-                : defaultConfig.bot.volume.max
+            default: isNumber(config.bot.volume.default) ? config.bot.volume.default : defaultConfig.bot.volume.default,
+            max: isNumber(config.bot.volume.max) ? config.bot.volume.max : defaultConfig.bot.volume.max,
         },
 
         // Auto leave channel settings
@@ -81,25 +69,25 @@ const setEnvironment = (defaultConfig: Config) => {
             enabled: config.bot.autoLeave.enabled ?? defaultConfig.bot.autoLeave.enabled,
             cooldown: isNumber(config.bot.autoLeave.cooldown)
                 ? config.bot.autoLeave.cooldown
-                : defaultConfig.bot.autoLeave.cooldown
+                : defaultConfig.bot.autoLeave.cooldown,
         },
 
         // Show voice channel updates
         displayVoiceState: config.bot.displayVoiceState ?? defaultConfig.bot.displayVoiceState,
 
-        specifyMessageChannel: (/^\d+$/).test(String(config.bot.specifyMessageChannel))
+        specifyMessageChannel: /^\d+$/.test(String(config.bot.specifyMessageChannel))
             ? String(config.bot.specifyMessageChannel)
             : defaultConfig.bot.specifyMessageChannel,
 
-        specifyVoiceChannel: (/^\d+$/).test(String(config.bot.specifyVoiceChannel))
+        specifyVoiceChannel: /^\d+$/.test(String(config.bot.specifyVoiceChannel))
             ? String(config.bot.specifyVoiceChannel)
             : defaultConfig.bot.specifyVoiceChannel,
 
-        startupAutoJoin: ((/^\d+$/).test(String(config.bot.specifyVoiceChannel)) && config.bot.startupAutoJoin),
+        startupAutoJoin: /^\d+$/.test(String(config.bot.specifyVoiceChannel)) && config.bot.startupAutoJoin,
 
         i18n: {
             localePath: config.bot.i18n.localePath || defaultConfig.bot.i18n.localePath,
-            defaultLocale: config.bot.i18n.defaultLocale || defaultConfig.bot.i18n.defaultLocale
+            defaultLocale: config.bot.i18n.defaultLocale || defaultConfig.bot.i18n.defaultLocale,
         },
 
         maxQueuedSongs: {
@@ -113,9 +101,10 @@ const setEnvironment = (defaultConfig: Config) => {
             djs: isNumber(config.bot.maxQueuedSongs?.djs)
                 ? config.bot.maxQueuedSongs.djs
                 : defaultConfig.bot.maxQueuedSongs.djs,
-            roles: (config.bot.maxQueuedSongs?.roles && typeof config.bot.maxQueuedSongs.roles === 'object')
-                ? config.bot.maxQueuedSongs.roles
-                : defaultConfig.bot.maxQueuedSongs.roles
+            roles:
+                config.bot.maxQueuedSongs?.roles && typeof config.bot.maxQueuedSongs.roles === 'object'
+                    ? config.bot.maxQueuedSongs.roles
+                    : defaultConfig.bot.maxQueuedSongs.roles,
         },
 
         fairQueue: config.bot.fairQueue ?? defaultConfig.bot.fairQueue,
@@ -124,61 +113,64 @@ const setEnvironment = (defaultConfig: Config) => {
             ? config.bot.voiceStatusEmojis
             : defaultConfig.bot.voiceStatusEmojis,
 
-        voiceStatusIdleText: (typeof config.bot.voiceStatusIdleText === 'string')
-            ? config.bot.voiceStatusIdleText
-            : defaultConfig.bot.voiceStatusIdleText
+        voiceStatusIdleText:
+            typeof config.bot.voiceStatusIdleText === 'string'
+                ? config.bot.voiceStatusIdleText
+                : defaultConfig.bot.voiceStatusIdleText,
     };
 
     // Lavalink node list
-    defaultConfig.nodeList = (Array.isArray(config.nodeList) && config.nodeList.length > 0)
-        ? config.nodeList
-        : defaultConfig.nodeList;
+    defaultConfig.nodeList =
+        Array.isArray(config.nodeList) && config.nodeList.length > 0 ? config.nodeList : defaultConfig.nodeList;
 
     // Spotify credentials
     defaultConfig.spotify = {
         clientId: config.spotify.clientId || defaultConfig.spotify.clientId,
-        clientSecret: config.spotify.clientSecret || defaultConfig.spotify.clientSecret
+        clientSecret: config.spotify.clientSecret || defaultConfig.spotify.clientSecret,
     };
 
-    defaultConfig.blacklist = (Array.isArray(config.blacklist) && config.blacklist.length > 0)
-        ? config.blacklist
-        : defaultConfig.blacklist;
+    defaultConfig.blacklist =
+        Array.isArray(config.blacklist) && config.blacklist.length > 0 ? config.blacklist : defaultConfig.blacklist;
 
     // Web dashboard settings
     defaultConfig.webDashboard = {
         enabled: config.webDashboard.enabled ?? defaultConfig.webDashboard.enabled,
-        port: isNumber(config.webDashboard.port)
-            ? config.webDashboard.port
-            : defaultConfig.webDashboard.port,
+        port: isNumber(config.webDashboard.port) ? config.webDashboard.port : defaultConfig.webDashboard.port,
         loginType: ['USER', 'OAUTH2'].includes(config.webDashboard.loginType)
             ? config.webDashboard.loginType
             : defaultConfig.webDashboard.loginType,
 
         user: {
             username: config.webDashboard.user.username || defaultConfig.webDashboard.user.username,
-            password: config.webDashboard.user.password || defaultConfig.webDashboard.user.password
+            password: config.webDashboard.user.password || defaultConfig.webDashboard.user.password,
         },
         oauth2: {
             link: config.webDashboard.oauth2.link || defaultConfig.webDashboard.oauth2.link,
-            redirectUri: config.webDashboard.oauth2.redirectUri || defaultConfig.webDashboard.oauth2.redirectUri
+            redirectUri: config.webDashboard.oauth2.redirectUri || defaultConfig.webDashboard.oauth2.redirectUri,
         },
 
         sessionManager: {
-            validTime: config.webDashboard.sessionManager.validTime ?? defaultConfig.webDashboard.sessionManager.validTime,
-            cleanupInterval: config.webDashboard.sessionManager.cleanupInterval ?? defaultConfig.webDashboard.sessionManager.cleanupInterval,
+            validTime:
+                config.webDashboard.sessionManager.validTime ?? defaultConfig.webDashboard.sessionManager.validTime,
+            cleanupInterval:
+                config.webDashboard.sessionManager.cleanupInterval ??
+                defaultConfig.webDashboard.sessionManager.cleanupInterval,
         },
         ipBlocker: {
             retryLimit: config.webDashboard.ipBlocker.retryLimit ?? defaultConfig.webDashboard.ipBlocker.retryLimit,
-            unlockTimeoutDuration: config.webDashboard.ipBlocker.unlockTimeoutDuration ?? defaultConfig.webDashboard.ipBlocker.unlockTimeoutDuration,
-            cleanupInterval: config.webDashboard.ipBlocker.cleanupInterval ?? defaultConfig.webDashboard.ipBlocker.cleanupInterval,
-        }
+            unlockTimeoutDuration:
+                config.webDashboard.ipBlocker.unlockTimeoutDuration ??
+                defaultConfig.webDashboard.ipBlocker.unlockTimeoutDuration,
+            cleanupInterval:
+                config.webDashboard.ipBlocker.cleanupInterval ?? defaultConfig.webDashboard.ipBlocker.cleanupInterval,
+        },
     };
 
     // Local Lavalink node
     defaultConfig.localNode = {
         enabled: config.localNode.enabled ?? defaultConfig.localNode.enabled,
         autoRestart: config.localNode.autoRestart ?? defaultConfig.localNode.autoRestart,
-        downloadLink: config.localNode.downloadLink || defaultConfig.localNode.downloadLink
+        downloadLink: config.localNode.downloadLink || defaultConfig.localNode.downloadLink,
     };
 
     defaultConfig.command = {
@@ -188,9 +180,7 @@ const setEnvironment = (defaultConfig: Config) => {
         adminCommand: Array.isArray(config.command.adminCommand)
             ? config.command.adminCommand
             : defaultConfig.command.adminCommand,
-        djCommand: Array.isArray(config.command.djCommand)
-            ? config.command.djCommand
-            : defaultConfig.command.djCommand,
+        djCommand: Array.isArray(config.command.djCommand) ? config.command.djCommand : defaultConfig.command.djCommand,
         requesterOnly: Array.isArray(config.command.requesterOnly)
             ? config.command.requesterOnly
             : defaultConfig.command.requesterOnly,
@@ -200,22 +190,20 @@ const setEnvironment = (defaultConfig: Config) => {
     };
 
     defaultConfig.database = {
-        path: config.database?.path || defaultConfig.database.path
+        path: config.database?.path || defaultConfig.database.path,
     };
 
     defaultConfig.queuePersistence = {
-        enabled: config.queuePersistence?.enabled ?? defaultConfig.queuePersistence.enabled
+        enabled: config.queuePersistence?.enabled ?? defaultConfig.queuePersistence.enabled,
     };
 
     defaultConfig.playlist = {
-        enabled: config.playlist?.enabled ?? defaultConfig.playlist.enabled
+        enabled: config.playlist?.enabled ?? defaultConfig.playlist.enabled,
     };
-
 };
 
 export { setEnvironment };
 
-
 const isNumber = (value: any): boolean => {
-    return (typeof (value) === 'number' && !isNaN(value));
+    return typeof value === 'number' && !isNaN(value);
 };

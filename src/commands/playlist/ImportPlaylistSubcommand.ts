@@ -8,11 +8,7 @@ import {
     SafeRemoteTextError,
 } from '../../utils/safeRemoteText.js';
 
-import type {
-    PlaylistSubcommandContext,
-    PlaylistSubcommandName,
-} from './BasePlaylistSubcommand.js';
-
+import type { PlaylistSubcommandContext, PlaylistSubcommandName } from './BasePlaylistSubcommand.js';
 
 /**
  * Import a remote M3U file as a guild playlist
@@ -46,10 +42,7 @@ export class ImportPlaylistSubcommand extends BasePlaylistSubcommand {
         }
 
         // Avoid replacing existing playlist data without user confirmation
-        const existingPlaylist = context.playlistManager.getPlaylist(
-            context.command.guild!.id,
-            args.name,
-        );
+        const existingPlaylist = context.playlistManager.getPlaylist(context.command.guild!.id, args.name);
         if (existingPlaylist) {
             const confirmed = await this.confirmOverwrite(
                 context,
@@ -66,19 +59,11 @@ export class ImportPlaylistSubcommand extends BasePlaylistSubcommand {
     /**
      * Download, parse, and persist the remote playlist
      */
-    private async import(
-        context: PlaylistSubcommandContext,
-        name: string,
-        url: string,
-    ): Promise<void> {
+    private async import(context: PlaylistSubcommandContext, name: string, url: string): Promise<void> {
         try {
             // Apply remote text security limits before parsing M3U content
             const m3uContent = await fetchSafeRemoteText(url);
-            const result = context.playlistManager.importFromM3u(
-                context.command.guild!.id,
-                name,
-                m3uContent,
-            );
+            const result = context.playlistManager.importFromM3u(context.command.guild!.id, name, m3uContent);
 
             if (result.success) {
                 await context.command.replySuccess(
@@ -113,23 +98,16 @@ export class ImportPlaylistSubcommand extends BasePlaylistSubcommand {
     /**
      * Map remote download and import failures to localized responses
      */
-    private async handleImportError(
-        context: PlaylistSubcommandContext,
-        error: unknown,
-    ): Promise<void> {
+    private async handleImportError(context: PlaylistSubcommandContext, error: unknown): Promise<void> {
         context.bot.logger.error(
             context.bot.shardId,
             `[PlaylistCommand] Error importing playlist from remote URL: ${error}`,
         );
 
-        if (error instanceof SafeRemoteTextError &&
-            error.code === 'HTTP_STATUS' && error.status !== undefined) {
+        if (error instanceof SafeRemoteTextError && error.code === 'HTTP_STATUS' && error.status !== undefined) {
             await context.command.replyEphemeralError(
                 context.bot,
-                context.command.t(
-                    'commands:ERROR_PLAYLIST_M3U_DOWNLOAD_FAILED',
-                    { status: error.status },
-                ),
+                context.command.t('commands:ERROR_PLAYLIST_M3U_DOWNLOAD_FAILED', { status: error.status }),
             );
             return;
         }
@@ -137,13 +115,10 @@ export class ImportPlaylistSubcommand extends BasePlaylistSubcommand {
         if (error instanceof SafeRemoteTextError) {
             await context.command.replyEphemeralError(
                 context.bot,
-                context.command.t(
-                    'commands:ERROR_PLAYLIST_M3U_DOWNLOAD_BLOCKED',
-                    {
-                        maxSizeMiB: DEFAULT_REMOTE_TEXT_MAX_BYTES / (1024 * 1024),
-                        timeoutSeconds: DEFAULT_REMOTE_TEXT_TIMEOUT_MS / 1000,
-                    },
-                ),
+                context.command.t('commands:ERROR_PLAYLIST_M3U_DOWNLOAD_BLOCKED', {
+                    maxSizeMiB: DEFAULT_REMOTE_TEXT_MAX_BYTES / (1024 * 1024),
+                    timeoutSeconds: DEFAULT_REMOTE_TEXT_TIMEOUT_MS / 1000,
+                }),
             );
             return;
         }

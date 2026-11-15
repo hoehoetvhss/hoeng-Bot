@@ -6,7 +6,7 @@
 export type SessionManagerConfig = {
     validTime: number;
     cleanupInterval: number;
-}
+};
 
 /**
  * IPBlocker config
@@ -18,4 +18,4 @@ export type IPBlockerConfig = {
     retryLimit: number;
     unlockTimeoutDuration: number;
     cleanupInterval: number;
-}
+};

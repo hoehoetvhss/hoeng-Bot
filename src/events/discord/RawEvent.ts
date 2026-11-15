@@ -6,7 +6,6 @@ import type { Client } from 'discord.js';
 import type { IncomingDiscordPayload } from 'lavashark/typings/src/@types/LavaShark.types.js';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * Raw event handler for voice updates
  * Forwards raw Discord packets to LavaShark for voice state management

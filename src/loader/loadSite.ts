@@ -5,9 +5,12 @@ import type { ShardingManager } from 'discord.js';
 import type { Bot } from './../@types/index.js';
 import type { LocalNodeController } from '../lib/localnode/LocalNodeController.js';
 
-
-const loadSite = async (bot: Bot, shardManager: ShardingManager, localNodeController: LocalNodeController): Promise<void> => {
-    bot.logger.api( `-> loading Web Framework ......`);
+const loadSite = async (
+    bot: Bot,
+    shardManager: ShardingManager,
+    localNodeController: LocalNodeController,
+): Promise<void> => {
+    bot.logger.api(`-> loading Web Framework ......`);
 
     const sessionManager = new SessionManager(
         bot.config.webDashboard.sessionManager,

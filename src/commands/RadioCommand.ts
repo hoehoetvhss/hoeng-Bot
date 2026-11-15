@@ -6,22 +6,16 @@ import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory, DJModeEnum } from '../@types/index.js';
 import { DJManager } from '../lib/DjManager.js';
 import { isRadioTrack } from '../utils/functions/isRadioTrack.js';
-import {
-    decodeTrackWithRetry,
-    searchWithRetry,
-} from '../utils/functions/lavasharkRequest.js';
+import { decodeTrackWithRetry, searchWithRetry } from '../utils/functions/lavasharkRequest.js';
 
 import type { Client, GuildMember } from 'discord.js';
 import type { Track } from 'lavashark';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 const DEFAULT_MAX_SAMPLES_COUNT = 10;
 
-const normalizeSearchTerm = (value: string): string =>
-    value.toLowerCase().replace(/['’`\s_-]/g, '');
-
+const normalizeSearchTerm = (value: string): string => value.toLowerCase().replace(/['’`\s_-]/g, '');
 
 export class RadioCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
@@ -39,24 +33,21 @@ export class RadioCommand extends BaseCommand {
                     name: 'playlist',
                     description: i18next.t('commands:CONFIG_RADIO_OPTION_PLAYLIST', { lng }),
                     type: ApplicationCommandOptionType.String,
-                    required: true
+                    required: true,
                 },
                 {
                     name: 'channel',
                     description: i18next.t('commands:CONFIG_RADIO_OPTION_CHANNEL', { lng }),
                     type: ApplicationCommandOptionType.String,
-                    required: true
-                }
-            ]
+                    required: true,
+                },
+            ],
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         if (!bot.config.playlist.enabled) {
-            await context.replyEphemeralError(
-                bot,
-                context.t('commands:ERROR_PLAYLIST_DISABLED'),
-            );
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAYLIST_DISABLED'));
             return;
         }
 
@@ -72,7 +63,10 @@ export class RadioCommand extends BaseCommand {
         if (context.isMessage()) {
             const args = context.args;
             if (args.length < 2) {
-                await context.replyEphemeralError(bot, context.t('commands:ERROR_RADIO_USAGE_EXAMPLE', { prefix: bot.config.bot.prefix }));
+                await context.replyEphemeralError(
+                    bot,
+                    context.t('commands:ERROR_RADIO_USAGE_EXAMPLE', { prefix: bot.config.bot.prefix }),
+                );
                 return;
             }
             playlistName = args[0];
@@ -89,40 +83,39 @@ export class RadioCommand extends BaseCommand {
 
         const playlist = bot.playlistManager!.getPlaylist(guildId, playlistName);
         if (!playlist || !playlist.tracks || playlist.tracks.length === 0) {
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAYLIST_NOT_FOUND', { name: playlistName }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_PLAYLIST_NOT_FOUND', { name: playlistName }),
+            );
             return;
         }
 
         const queryNormalized = normalizeSearchTerm(channelQuery);
         if (!queryNormalized) {
-            await context.replyEphemeralError(
-                bot,
-                context.t('commands:ERROR_RADIO_REQUIRED_ARGS'),
-            );
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_RADIO_REQUIRED_ARGS'));
             return;
         }
 
-        const exactMatch = playlist.tracks.find(
-            (track) => normalizeSearchTerm(track.title) === queryNormalized,
-        );
+        const exactMatch = playlist.tracks.find((track) => normalizeSearchTerm(track.title) === queryNormalized);
         const matchedTracks = exactMatch
             ? [exactMatch]
-            : playlist.tracks.filter(
-                (track) => normalizeSearchTerm(track.title).includes(queryNormalized),
-            );
+            : playlist.tracks.filter((track) => normalizeSearchTerm(track.title).includes(queryNormalized));
 
         if (matchedTracks.length === 0) {
-            const samples = playlist.tracks.slice(0, DEFAULT_MAX_SAMPLES_COUNT).map(t => `\`${t.title}\``).join(', ');
+            const samples = playlist.tracks
+                .slice(0, DEFAULT_MAX_SAMPLES_COUNT)
+                .map((t) => `\`${t.title}\``)
+                .join(', ');
             await context.replyEphemeralError(
                 bot,
-                context.t('commands:ERROR_RADIO_NO_MATCH_PLAYLIST', { playlistName, channelQuery, samples })
+                context.t('commands:ERROR_RADIO_NO_MATCH_PLAYLIST', { playlistName, channelQuery, samples }),
             );
             return;
         }
 
         const member = context.isMessage()
-            ? context.getMessage().member as GuildMember | null
-            : context.getInteraction().member as GuildMember | null;
+            ? (context.getMessage().member as GuildMember | null)
+            : (context.getInteraction().member as GuildMember | null);
 
         const voiceChannel = member?.voice.channel;
         if (!voiceChannel) {
@@ -138,7 +131,7 @@ export class RadioCommand extends BaseCommand {
                 guildId: guildId,
                 voiceChannelId: voiceChannel.id,
                 textChannelId: context.channel!.id,
-                selfDeaf: true
+                selfDeaf: true,
             });
         }
 
@@ -146,7 +139,7 @@ export class RadioCommand extends BaseCommand {
             player.setting = {
                 queuePage: null,
                 volume: null,
-                fairQueueRotation: []
+                fairQueueRotation: [],
             };
         }
 
@@ -184,28 +177,24 @@ export class RadioCommand extends BaseCommand {
         }
 
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
+        const curVolume =
+            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
-        await context.replySuccess(bot, context.t('commands:MESSAGE_RADIO_SEARCHING', { playlist: playlistName, title: targetTrack.title }));
+        await context.replySuccess(
+            bot,
+            context.t('commands:MESSAGE_RADIO_SEARCHING', { playlist: playlistName, title: targetTrack.title }),
+        );
 
         try {
             let radioTrack: Track | null = null;
             if (targetTrack.encoded) {
-                radioTrack = await decodeTrackWithRetry(
-                    client.lavashark,
-                    targetTrack.encoded,
-                );
+                radioTrack = await decodeTrackWithRetry(client.lavashark, targetTrack.encoded);
             }
 
             if (!radioTrack && targetTrack.url) {
-                const result = await searchWithRetry(
-                    client.lavashark,
-                    targetTrack.url,
-                );
+                const result = await searchWithRetry(client.lavashark, targetTrack.url);
                 const resolvedTrack = result?.tracks[0];
-                radioTrack = resolvedTrack && 'encoded' in resolvedTrack
-                    ? resolvedTrack
-                    : null;
+                radioTrack = resolvedTrack && 'encoded' in resolvedTrack ? resolvedTrack : null;
             }
 
             if (!radioTrack && targetTrack.title) {
@@ -213,25 +202,19 @@ export class RadioCommand extends BaseCommand {
                     const result = await client.lavashark.search(`ytsearch:${targetTrack.title}`);
                     if (result && Array.isArray(result.tracks) && result.tracks.length > 0) {
                         const fallbackTrack = result.tracks[0];
-                        radioTrack = fallbackTrack && 'encoded' in fallbackTrack
-                            ? (fallbackTrack as Track)
-                            : null;
+                        radioTrack = fallbackTrack && 'encoded' in fallbackTrack ? (fallbackTrack as Track) : null;
                     }
                 } catch (_) {}
             }
 
             if (radioTrack) {
                 const track = radioTrack;
-                track.setRequester(
-                    requester as unknown as Parameters<Track['setRequester']>[0],
-                );
+                track.setRequester(requester as unknown as Parameters<Track['setRequester']>[0]);
 
                 const isAlreadyPlaying = player.playing;
 
                 // Radio request replaces existing queue/radio & plays as playfirst
-                player.queue.tracks = player.queue.tracks.filter(
-                    (queuedTrack) => !isRadioTrack(queuedTrack),
-                );
+                player.queue.tracks = player.queue.tracks.filter((queuedTrack) => !isRadioTrack(queuedTrack));
                 player.queue.tracks.unshift(track);
                 track.isRadio = true;
 
@@ -254,15 +237,26 @@ export class RadioCommand extends BaseCommand {
 
                 if (context.channel && 'send' in context.channel) {
                     await (context.channel as any).send({
-                        content: context.t('commands:MESSAGE_RADIO_PLAYING', { playlist: playlistName, title: targetTrack.title })
+                        content: context.t('commands:MESSAGE_RADIO_PLAYING', {
+                            playlist: playlistName,
+                            title: targetTrack.title,
+                        }),
                     });
                 }
             } else {
-                await context.replyEphemeralError(bot, context.t('commands:ERROR_RADIO_STREAM_FAILED', { title: targetTrack.title }));
+                await context.replyEphemeralError(
+                    bot,
+                    context.t('commands:ERROR_RADIO_STREAM_FAILED', { title: targetTrack.title }),
+                );
             }
         } catch (err) {
             bot.logger.error(bot.shardId, `Error loading radio track ${targetTrack.title}: ${err}`);
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_RADIO_LOAD_FAILED', { error: err instanceof Error ? err.message : String(err) }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_RADIO_LOAD_FAILED', {
+                    error: err instanceof Error ? err.message : String(err),
+                }),
+            );
         }
     }
 }

@@ -57,12 +57,9 @@ export function paginateLogLines(
                 message: lines[cursor - lineOffset - 1] ?? '',
             });
         }
-    }
-    else {
+    } else {
         // lines[] starts at real cursor lineOffset+1; iterate newest-first.
-        const startCursor = query.before !== undefined
-            ? Math.min(query.before - 1, totalItems)
-            : totalItems;
+        const startCursor = query.before !== undefined ? Math.min(query.before - 1, totalItems) : totalItems;
 
         for (let cursor = startCursor; cursor > lineOffset && items.length < query.limit; cursor -= 1) {
             items.push({

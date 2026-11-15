@@ -8,7 +8,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class LoopCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -29,19 +28,19 @@ export class LoopCommand extends BaseCommand {
                     choices: [
                         {
                             name: i18next.t('commands:LOOP_CHOICE_OFF'),
-                            value: 'off'
+                            value: 'off',
                         },
                         {
                             name: i18next.t('commands:LOOP_CHOICE_ONE'),
-                            value: 'one'
+                            value: 'one',
                         },
                         {
                             name: i18next.t('commands:LOOP_CHOICE_ALL'),
-                            value: 'all'
-                        }
-                    ]
-                }
-            ]
+                            value: 'all',
+                        },
+                    ],
+                },
+            ],
         };
     }
 
@@ -55,14 +54,15 @@ export class LoopCommand extends BaseCommand {
         }
 
         // Get mode parameter
-        const modeParam = context.isInteraction()
-            ? context.getStringOption('mode')
-            : context.args.join(' ');
+        const modeParam = context.isInteraction() ? context.getStringOption('mode') : context.args.join(' ');
 
         if (!modeParam) {
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_LOOP_COMMAND', {
-                command: `${bot.config.bot.prefix}${metadata.usage}`
-            }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_LOOP_COMMAND', {
+                    command: `${bot.config.bot.prefix}${metadata.usage}`,
+                }),
+            );
             return;
         }
 
@@ -70,7 +70,7 @@ export class LoopCommand extends BaseCommand {
         const methods = [
             context.t('commands:REPEAT_MODE_OFF'),
             context.t('commands:REPEAT_MODE_SINGLE'),
-            context.t('commands:REPEAT_MODE_ALL')
+            context.t('commands:REPEAT_MODE_ALL'),
         ];
 
         switch (modeParam.toLowerCase()) {
@@ -92,9 +92,12 @@ export class LoopCommand extends BaseCommand {
                 break;
             }
             default: {
-                await context.replyEphemeralError(bot, context.t('commands:ERROR_LOOP_COMMAND', {
-                    command: `${bot.config.bot.prefix}${metadata.usage}`
-                }));
+                await context.replyEphemeralError(
+                    bot,
+                    context.t('commands:ERROR_LOOP_COMMAND', {
+                        command: `${bot.config.bot.prefix}${metadata.usage}`,
+                    }),
+                );
                 return;
             }
         }
@@ -103,8 +106,11 @@ export class LoopCommand extends BaseCommand {
             await context.react('👍');
         }
 
-        await context.replySuccess(bot, context.t('commands:MESSAGE_LOOP_MODE', {
-            mode: methods[mode]
-        }));
+        await context.replySuccess(
+            bot,
+            context.t('commands:MESSAGE_LOOP_MODE', {
+                mode: methods[mode],
+            }),
+        );
     }
 }

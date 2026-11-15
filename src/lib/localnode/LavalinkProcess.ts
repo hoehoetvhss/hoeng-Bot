@@ -1,7 +1,6 @@
 import child_process from 'child_process';
 import path from 'path';
 
-
 class LavalinkProcess {
     public pid!: number;
     public lavalinkJarPath: string;
@@ -14,7 +13,6 @@ class LavalinkProcess {
         this.outputLog = true;
         this.#startLavalink(this.lavalinkJarPath);
     }
-
 
     #startLavalink(lavalinkJarPath: string) {
         const lavalinkDir = path.dirname(lavalinkJarPath);
@@ -30,7 +28,8 @@ class LavalinkProcess {
             '-Dfile.encoding=UTF-8',
             '-Dstdout.encoding=UTF-8',
             '-Dstderr.encoding=UTF-8',
-            '-jar', lavalinkJar,
+            '-jar',
+            lavalinkJar,
         ]);
         this.pid = this.#lavalinkProcess.pid!;
 
@@ -45,7 +44,6 @@ class LavalinkProcess {
             process.exit(exitCode);
         });
 
-
         this.#lavalinkProcess.stdout.on('data', (data) => {
             if (this.outputLog) console.log(`[localNode][out] ${data}`);
 
@@ -58,8 +56,7 @@ class LavalinkProcess {
 
                 this.#sendStatusCode('LAVALINK_READY');
                 this.#sendStatusCode(`LAVALINK_PID_${this.pid}`);
-            }
-            else if (data.includes('Undertow started on port')) {
+            } else if (data.includes('Undertow started on port')) {
                 const match = data.match(/port (\d+)/);
                 const port = match && match[1];
 
@@ -76,7 +73,6 @@ class LavalinkProcess {
         });
     }
 
-
     /**
      * Send status code
      */
@@ -92,10 +88,9 @@ class LavalinkProcess {
     }
 }
 
-
 /**
- * Because the working directory of the lavalink process 
- * is different from the main process, 
+ * Because the working directory of the lavalink process
+ * is different from the main process,
  * another child process is opened to run.
  */
 

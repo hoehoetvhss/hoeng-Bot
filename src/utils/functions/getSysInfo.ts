@@ -6,7 +6,6 @@ import { VERSION as sharkVersion } from 'lavashark';
 
 import { getOSVersion } from './getOSVersion.js';
 
-
 const DEFAULT_BOT_VERSION = '0.0.0';
 
 const getBotVersion = async () => {
@@ -27,7 +26,7 @@ const getSysInfo = async () => {
         node_version: process.version,
         dc_version: `v${dcVersion}`,
         shark_version: `v${sharkVersion}`,
-        cpu: `${os.cpus()[0].model}`
+        cpu: `${os.cpus()[0].model}`,
     };
 };
 

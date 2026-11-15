@@ -1,7 +1,6 @@
 import type { BaseLavaSharkEvent } from './BaseLavaSharkEvent.js';
 import type { LavaSharkEvents } from 'lavashark/typings/src/@types/LavaShark.types.js';
 
-
 /**
  * Registry for managing LavaShark event instances
  * Provides centralized storage and retrieval of event handlers

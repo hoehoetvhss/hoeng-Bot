@@ -9,7 +9,7 @@ const formatBytes = (bytes: number) => {
         i18next.t('commands:UNIT_KB'),
         i18next.t('commands:UNIT_MB'),
         i18next.t('commands:UNIT_GB'),
-        i18next.t('commands:UNIT_TB')
+        i18next.t('commands:UNIT_TB'),
     ];
 
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -25,14 +25,11 @@ const msToTime = (ms: number) => {
 
     if (days > 0) {
         return `${days}${i18next.t('commands:UNIT_DAYS')} ${hours % 24}${i18next.t('commands:UNIT_HOURS')}`;
-    }
-    else if (hours > 0) {
+    } else if (hours > 0) {
         return `${hours}${i18next.t('commands:UNIT_HOURS')} ${minutes % 60}${i18next.t('commands:UNIT_MINUTES')}`;
-    }
-    else if (minutes > 0) {
+    } else if (minutes > 0) {
         return `${minutes}${i18next.t('commands:UNIT_MINUTES')} ${seconds % 60}${i18next.t('commands:UNIT_SECONDS')}`;
-    }
-    else {
+    } else {
         return `${seconds % 60}${i18next.t('commands:UNIT_SECONDS')}`;
     }
 };
@@ -70,7 +67,7 @@ const timeToSeconds = (time: string) => {
 
     // Check if the timeString is in the format "m:s" or "h:m:s"
     else if (/^\d+:\d+(\:\d+)?$/.test(timeString)) {
-        const timeParts = timeString.split(":");
+        const timeParts = timeString.split(':');
         const numParts = timeParts.length;
 
         if (numParts === 2) {
@@ -101,16 +98,13 @@ const timeToSeconds = (time: string) => {
             if (unit === 'd' || unit === '일' || unit === unitDays) {
                 hours += value * 24;
                 valid = true;
-            }
-            else if (unit === 'h' || unit === '시간' || unit === unitHours) {
+            } else if (unit === 'h' || unit === '시간' || unit === unitHours) {
                 hours += value;
                 valid = true;
-            }
-            else if (unit === 'm' || unit === '분' || unit === unitMinutes) {
+            } else if (unit === 'm' || unit === '분' || unit === unitMinutes) {
                 minutes += value;
                 valid = true;
-            }
-            else if (unit === 's' || unit === '초' || unit === unitSeconds) {
+            } else if (unit === 's' || unit === '초' || unit === unitSeconds) {
                 seconds += value;
                 valid = true;
             }
@@ -125,6 +119,5 @@ const timeToSeconds = (time: string) => {
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
     return totalSeconds;
 };
-
 
 export { formatBytes, msToTime, timestampToTime, timeToSeconds };

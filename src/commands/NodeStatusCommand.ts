@@ -10,12 +10,11 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class NodeStatusCommand extends BaseCommand {
     public getMetadata(bot: Bot, lng?: string): CommandMetadata {
-        const choices = (bot.config.nodeList || []).slice(0, 25).map(node => ({
+        const choices = (bot.config.nodeList || []).slice(0, 25).map((node) => ({
             name: node.id,
-            value: node.id
+            value: node.id,
         }));
 
         return {
@@ -33,22 +32,19 @@ export class NodeStatusCommand extends BaseCommand {
                     description: i18next.t('commands:CONFIG_NODE_OPTION_DESCRIPTION', { lng }),
                     type: 3,
                     required: false,
-                    choices: choices.length > 0 ? choices : undefined
-                }
-            ]
+                    choices: choices.length > 0 ? choices : undefined,
+                },
+            ],
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
-        const nodeName = context.isInteraction()
-            ? context.getStringOption('nodename')
-            : context.args.join(' ');
+        const nodeName = context.isInteraction() ? context.getStringOption('nodename') : context.args.join(' ');
 
         if (!nodeName) {
             // Show all nodes status
             await this.#showAllNodesStatus(bot, client, context);
-        }
-        else {
+        } else {
             // Show specific node status
             await this.#showNodeStatus(bot, client, context, nodeName);
         }
@@ -70,14 +66,19 @@ export class NodeStatusCommand extends BaseCommand {
 
             if (ping === -1) {
                 unhealthValue++;
-                nodesStatus.push({ name: `❌ ${node.identifier}`, value: `**${context.t('embeds:NODE_DISCONNECTED')}**` });
-            }
-            else {
-                nodesStatus.push({ name: `✅ ${node.identifier}`, value: `${context.t('embeds:NODE_STATUS_PING')}: **${ping}ms**` });
+                nodesStatus.push({
+                    name: `❌ ${node.identifier}`,
+                    value: `**${context.t('embeds:NODE_DISCONNECTED')}**`,
+                });
+            } else {
+                nodesStatus.push({
+                    name: `✅ ${node.identifier}`,
+                    value: `${context.t('embeds:NODE_STATUS_PING')}: **${ping}ms**`,
+                });
             }
         }
 
-        bot.logger.log( bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
+        bot.logger.log(bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
 
         const components = [];
         if (nodes.length > 0) {
@@ -90,7 +91,7 @@ export class NodeStatusCommand extends BaseCommand {
                     description: isConnected
                         ? `${context.t('embeds:NODE_STATUS_PING')}: ${ping}ms`
                         : context.t('embeds:NODE_DISCONNECTED').replace(/\*/g, ''),
-                    emoji: isConnected ? '✅' : '❌'
+                    emoji: isConnected ? '✅' : '❌',
                 };
             });
 
@@ -105,7 +106,7 @@ export class NodeStatusCommand extends BaseCommand {
         await context.reply({
             embeds: [embeds.nodesStatus(bot, unhealthValue, nodesStatus, context.language)],
             components,
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
     }
 
@@ -121,7 +122,7 @@ export class NodeStatusCommand extends BaseCommand {
                 if (node.state !== NodeState.CONNECTED) {
                     await context.reply({
                         embeds: [embeds.nodeDisconnected(bot, nodeName, context.language)],
-                        allowedMentions: { repliedUser: false }
+                        allowedMentions: { repliedUser: false },
                     });
                     return;
                 }
@@ -132,13 +133,13 @@ export class NodeStatusCommand extends BaseCommand {
                 const [nodeInfo, nodeStats, pingList] = await Promise.all([
                     nodeInfoPromise,
                     nodeStatsPromise,
-                    nodesPingPromise
+                    nodesPingPromise,
                 ]);
                 const nodePing = pingList[nodes.indexOf(node)] ?? -1;
 
-                bot.logger.log( bot.shardId, 'nodeInfo: ' + JSON.stringify(nodeInfo));
-                bot.logger.log( bot.shardId, 'nodeStats: ' + JSON.stringify(nodeStats));
-                bot.logger.log( bot.shardId, 'nodePing: ' + nodePing + 'ms');
+                bot.logger.log(bot.shardId, 'nodeInfo: ' + JSON.stringify(nodeInfo));
+                bot.logger.log(bot.shardId, 'nodeStats: ' + JSON.stringify(nodeStats));
+                bot.logger.log(bot.shardId, 'nodePing: ' + nodePing + 'ms');
 
                 const components = [];
                 if (nodes.length > 0) {
@@ -152,7 +153,7 @@ export class NodeStatusCommand extends BaseCommand {
                             description: isConnected
                                 ? `${context.t('embeds:NODE_STATUS_PING')}: ${ping}ms`
                                 : context.t('embeds:NODE_DISCONNECTED').replace(/\*/g, ''),
-                            emoji: isConnected ? '✅' : '❌'
+                            emoji: isConnected ? '✅' : '❌',
                         };
                     });
 
@@ -167,7 +168,7 @@ export class NodeStatusCommand extends BaseCommand {
                 await context.reply({
                     embeds: [embeds.nodeStatus(bot, nodeName, nodeInfo, nodeStats, nodePing, context.language)],
                     components,
-                    allowedMentions: { repliedUser: false }
+                    allowedMentions: { repliedUser: false },
                 });
                 return;
             }
@@ -181,7 +182,7 @@ export class NodeStatusCommand extends BaseCommand {
 
         await context.reply({
             embeds: [embeds.validNodeName(bot, nodesName, context.language)],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
     }
 }

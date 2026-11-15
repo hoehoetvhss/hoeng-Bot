@@ -7,20 +7,15 @@ import { BaseRouter } from './BaseRouter.js';
 
 import type { Request, Response } from 'express';
 
-
 // String union of all valid Gateway Intent names, derived from the discord.js enum.
 type IntentName = keyof typeof GatewayIntentBits;
 
 // Privileged intents as defined by the Discord API.
-const PRIVILEGED_INTENTS = new Set<string>(
-    ['GuildPresences', 'GuildMembers', 'MessageContent'] satisfies IntentName[],
-);
+const PRIVILEGED_INTENTS = new Set<string>(['GuildPresences', 'GuildMembers', 'MessageContent'] satisfies IntentName[]);
 
 // The privileged intents that Music Disc may use.
 // Any enabled privileged intent outside this set triggers a warning.
-const BOT_PRIVILEGED_INTENTS = new Set<string>(
-    ['MessageContent'] satisfies IntentName[],
-);
+const BOT_PRIVILEGED_INTENTS = new Set<string>(['MessageContent'] satisfies IntentName[]);
 
 /**
  * Handles bot information routes:
@@ -49,8 +44,7 @@ export class BotInfoRouter extends BaseRouter {
      */
     async #summary(_req: Request, res: Response): Promise<Response> {
         const needsRefresh =
-            !this.bot.stats.lastRefresh ||
-            (Date.now() - this.bot.stats.lastRefresh) > cst.cacheExpiration;
+            !this.bot.stats.lastRefresh || Date.now() - this.bot.stats.lastRefresh > cst.cacheExpiration;
 
         if (needsRefresh) {
             // Coalesce concurrent requests onto the same pending fetch
@@ -102,9 +96,8 @@ export class BotInfoRouter extends BaseRouter {
 
             this.bot.stats.guildsCount = results as number[];
             this.bot.stats.lastRefresh = Date.now();
-        }
-        catch (error) {
-            this.bot.logger.api( `Failed to get shard info: ${error}`);
+        } catch (error) {
+            this.bot.logger.api(`Failed to get shard info: ${error}`);
             // Advance lastRefresh so the next retry is delayed by BACKOFF_MS
             this.bot.stats.lastRefresh = Date.now() - cst.cacheExpiration + BACKOFF_MS;
         }
@@ -156,8 +149,7 @@ export class BotInfoRouter extends BaseRouter {
                 return client.options.intents.toArray() as string[];
             });
             configuredIntents = (results[0] ?? []) as string[];
-        }
-        catch (error) {
+        } catch (error) {
             this.bot.logger.api(`Failed to fetch intents from shard: ${error}`);
             return problem(res, {
                 status: 503,

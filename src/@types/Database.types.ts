@@ -24,4 +24,3 @@ export interface GuildLanguageTableRow {
 export interface BlacklistedUserTableRow {
     user_id: string;
 }
-

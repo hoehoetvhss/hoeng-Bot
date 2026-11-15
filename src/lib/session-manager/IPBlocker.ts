@@ -1,13 +1,11 @@
 import type { IPBlockerConfig } from '../../@types/SessionManager.types.js';
 
-
 export interface IPInfo {
-    retry: number;                      // Retry count
-    block: boolean;                     // Whether blocked
-    createdAt: number;                  // Create time (ms)
-    unlockTimeout?: NodeJS.Timeout;     // Auto-unlock block timer
+    retry: number; // Retry count
+    block: boolean; // Whether blocked
+    createdAt: number; // Create time (ms)
+    unlockTimeout?: NodeJS.Timeout; // Auto-unlock block timer
 }
-
 
 export class IPBlocker {
     #ipPool: Map<string, IPInfo>;
@@ -27,17 +25,14 @@ export class IPBlocker {
             this.#retryLimit = config.retryLimit;
             this.#unlockTimeoutDuration = config.unlockTimeoutDuration;
             this.#cleanupInterval = config.cleanupInterval;
-        }
-        else {
+        } else {
             this.#retryLimit = 5;
             this.#unlockTimeoutDuration = 5 * 60 * 1000;
             this.#cleanupInterval = 5 * 60 * 1000;
         }
 
-
         this.#autoCleanup(this.#cleanupInterval);
     }
-
 
     /**
      * 添加 IP 進入封鎖池
@@ -50,7 +45,6 @@ export class IPBlocker {
         if (existingInfo) {
             if (existingInfo.block) return;
 
-
             if (existingInfo.retry >= this.#retryLimit - 1) {
                 existingInfo.block = true;
 
@@ -58,8 +52,7 @@ export class IPBlocker {
                 existingInfo.unlockTimeout = setTimeout(() => {
                     this.delete(ip);
                 }, this.#unlockTimeoutDuration);
-            }
-            else {
+            } else {
                 existingInfo.retry++;
                 existingInfo.createdAt = Date.now();
             }
@@ -110,7 +103,6 @@ export class IPBlocker {
     public getAll(): [string, IPInfo][] {
         return Array.from(this.#ipPool.entries());
     }
-
 
     /**
      * 自動清理封鎖池過期 IP

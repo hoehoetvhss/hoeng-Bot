@@ -22,18 +22,24 @@ export class PermissionManager {
 
         // In DYNAMIC mode, check server Administrator or ManageGuild permissions
         if (bot.config.bot.adminMode === AdminModeEnum.DYNAMIC && member && member.permissions) {
-            return member.permissions.has(PermissionFlagsBits.Administrator) ||
-                   member.permissions.has(PermissionFlagsBits.ManageGuild);
+            return (
+                member.permissions.has(PermissionFlagsBits.Administrator) ||
+                member.permissions.has(PermissionFlagsBits.ManageGuild)
+            );
         }
 
         return false;
     }
 
-
     /**
      * Check if user has DJ command permission using the new DJ system
      */
-    public static hasDJCommandPermission(bot: Bot, userId: string, member: GuildMember | null, player?: Player): boolean {
+    public static hasDJCommandPermission(
+        bot: Bot,
+        userId: string,
+        member: GuildMember | null,
+        player?: Player,
+    ): boolean {
         if (this.isAdmin(bot, userId, member)) {
             return true;
         }
@@ -57,4 +63,3 @@ export class PermissionManager {
         }
     }
 }
-

@@ -1,11 +1,10 @@
-import {lookup} from 'node:dns/promises';
-import {BlockList, isIP} from 'node:net';
+import { lookup } from 'node:dns/promises';
+import { BlockList, isIP } from 'node:net';
 
-import {Agent, fetch} from 'undici';
+import { Agent, fetch } from 'undici';
 
-import type {LookupAddress} from 'node:dns';
-import type {LookupFunction} from 'node:net';
-
+import type { LookupAddress } from 'node:dns';
+import type { LookupFunction } from 'node:net';
 
 export const DEFAULT_REMOTE_TEXT_MAX_BYTES = 1024 * 1024;
 export const DEFAULT_REMOTE_TEXT_MAX_REDIRECTS = 3;
@@ -29,7 +28,7 @@ const blockedIpv4Subnets = [
     ['198.51.100.0', 24],
     ['203.0.113.0', 24],
     ['224.0.0.0', 4],
-    ['240.0.0.0', 4]
+    ['240.0.0.0', 4],
 ] as const;
 
 for (const [network, prefix] of blockedIpv4Subnets) {
@@ -93,8 +92,10 @@ export function isPublicNetworkAddress(address: string): boolean {
     }
 
     if (family === 6) {
-        return allowedIpv6Addresses.check(normalizedAddress, 'ipv6') &&
-            !blockedIpv6Addresses.check(normalizedAddress, 'ipv6');
+        return (
+            allowedIpv6Addresses.check(normalizedAddress, 'ipv6') &&
+            !blockedIpv6Addresses.check(normalizedAddress, 'ipv6')
+        );
     }
 
     return false;
@@ -124,7 +125,7 @@ export function validateRemoteTextUrl(rawUrl: string): URL {
 /** Reads a response stream without allowing it to exceed the byte limit. */
 export async function readTextBodyWithLimit(
     body: ReadableStream<Uint8Array> | null,
-    maxBytes: number
+    maxBytes: number,
 ): Promise<string> {
     if (!body) {
         return '';
@@ -137,7 +138,7 @@ export async function readTextBodyWithLimit(
 
     try {
         while (true) {
-            const {done, value} = await reader.read();
+            const { done, value } = await reader.read();
             if (done) {
                 break;
             }
@@ -148,7 +149,7 @@ export async function readTextBodyWithLimit(
                 throw new SafeRemoteTextError('TOO_LARGE', 'The remote file exceeds the allowed size.');
             }
 
-            text += decoder.decode(value, {stream: true});
+            text += decoder.decode(value, { stream: true });
         }
 
         return text + decoder.decode();
@@ -158,10 +159,7 @@ export async function readTextBodyWithLimit(
 }
 
 /** Downloads a small text file while preventing SSRF and unbounded reads. */
-export async function fetchSafeRemoteText(
-    rawUrl: string,
-    options: SafeRemoteTextOptions = {}
-): Promise<string> {
+export async function fetchSafeRemoteText(rawUrl: string, options: SafeRemoteTextOptions = {}): Promise<string> {
     const limits = getRemoteTextLimits(options);
     const signal = AbortSignal.timeout(limits.timeoutMs);
     let currentUrl = validateRemoteTextUrl(rawUrl);
@@ -175,20 +173,17 @@ export async function fetchSafeRemoteText(
                 dispatcher,
                 headers: {
                     accept: 'application/vnd.apple.mpegurl, audio/mpegurl, text/plain, */*',
-                    'user-agent': 'Music-Disc playlist importer'
+                    'user-agent': 'Music-Disc playlist importer',
                 },
                 redirect: 'manual',
-                signal
+                signal,
             });
 
             if (REDIRECT_STATUSES.has(response.status)) {
                 await response.body?.cancel();
 
                 if (redirectCount >= limits.maxRedirects) {
-                    throw new SafeRemoteTextError(
-                        'TOO_MANY_REDIRECTS',
-                        'The remote file exceeded the redirect limit.'
-                    );
+                    throw new SafeRemoteTextError('TOO_MANY_REDIRECTS', 'The remote file exceeded the redirect limit.');
                 }
 
                 const location = response.headers.get('location');
@@ -205,7 +200,7 @@ export async function fetchSafeRemoteText(
                 throw new SafeRemoteTextError(
                     'HTTP_STATUS',
                     `The remote server returned HTTP ${response.status}.`,
-                    response.status
+                    response.status,
                 );
             }
 
@@ -237,9 +232,7 @@ export async function fetchSafeRemoteText(
 }
 
 function normalizeIpAddress(address: string): string {
-    const withoutBrackets = address.startsWith('[') && address.endsWith(']')
-        ? address.slice(1, -1)
-        : address;
+    const withoutBrackets = address.startsWith('[') && address.endsWith(']') ? address.slice(1, -1) : address;
     return withoutBrackets.split('%')[0];
 }
 
@@ -247,7 +240,7 @@ function getRemoteTextLimits(options: SafeRemoteTextOptions): RemoteTextLimits {
     return {
         maxBytes: getPositiveInteger(options.maxBytes, DEFAULT_REMOTE_TEXT_MAX_BYTES),
         maxRedirects: getNonNegativeInteger(options.maxRedirects, DEFAULT_REMOTE_TEXT_MAX_REDIRECTS),
-        timeoutMs: getPositiveInteger(options.timeoutMs, DEFAULT_REMOTE_TEXT_TIMEOUT_MS)
+        timeoutMs: getPositiveInteger(options.timeoutMs, DEFAULT_REMOTE_TEXT_TIMEOUT_MS),
     };
 }
 
@@ -264,8 +257,8 @@ async function resolvePublicAddresses(hostname: string): Promise<ResolvedAddress
 
     try {
         const records = isIP(normalizedHostname)
-            ? [{address: normalizedHostname, family: isIP(normalizedHostname)}]
-            : await lookup(normalizedHostname, {all: true, order: 'verbatim'});
+            ? [{ address: normalizedHostname, family: isIP(normalizedHostname) }]
+            : await lookup(normalizedHostname, { all: true, order: 'verbatim' });
 
         if (records.length === 0) {
             throw new SafeRemoteTextError('DNS_LOOKUP_FAILED', 'The import hostname did not resolve.');
@@ -273,7 +266,7 @@ async function resolvePublicAddresses(hostname: string): Promise<ResolvedAddress
 
         const addresses = records.map((record) => ({
             address: normalizeIpAddress(record.address),
-            family: record.family as 4 | 6
+            family: record.family as 4 | 6,
         }));
 
         if (addresses.some((record) => !isPublicNetworkAddress(record.address))) {
@@ -293,9 +286,8 @@ async function resolvePublicAddresses(hostname: string): Promise<ResolvedAddress
 function createPinnedDispatcher(addresses: readonly ResolvedAddress[], limits: RemoteTextLimits): Agent {
     const pinnedLookup: LookupFunction = (_hostname, options, callback) => {
         const requestedFamily = options.family ?? 0;
-        const candidates = requestedFamily === 0
-            ? addresses
-            : addresses.filter((address) => address.family === requestedFamily);
+        const candidates =
+            requestedFamily === 0 ? addresses : addresses.filter((address) => address.family === requestedFamily);
 
         if (candidates.length === 0) {
             const error = new Error('No validated address matches the requested IP family.') as NodeJS.ErrnoException;
@@ -315,10 +307,10 @@ function createPinnedDispatcher(addresses: readonly ResolvedAddress[], limits: R
 
     return new Agent({
         bodyTimeout: limits.timeoutMs,
-        connect: {lookup: pinnedLookup},
+        connect: { lookup: pinnedLookup },
         connectTimeout: limits.timeoutMs,
         headersTimeout: limits.timeoutMs,
-        maxResponseSize: limits.maxBytes + 1
+        maxResponseSize: limits.maxBytes + 1,
     });
 }
 
@@ -331,7 +323,6 @@ function isResponseSizeError(error: unknown): boolean {
         return false;
     }
 
-    const errorWithCause = error as Error & {cause?: {code?: string}; code?: string};
-    return errorWithCause.code === 'UND_ERR_RES_EXCEEDED' ||
-        errorWithCause.cause?.code === 'UND_ERR_RES_EXCEEDED';
+    const errorWithCause = error as Error & { cause?: { code?: string }; code?: string };
+    return errorWithCause.code === 'UND_ERR_RES_EXCEEDED' || errorWithCause.cause?.code === 'UND_ERR_RES_EXCEEDED';
 }

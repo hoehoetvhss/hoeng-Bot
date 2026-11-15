@@ -1,9 +1,4 @@
-import {
-    assertIsError,
-    buildImage,
-    DEFAULT_VERSION_TAG,
-    getImageReference,
-} from './docker.js';
+import { assertIsError, buildImage, DEFAULT_VERSION_TAG, getImageReference } from './docker.js';
 
 function printUsage(): void {
     console.log('Usage: npm run docker:build -- [version-tag]');

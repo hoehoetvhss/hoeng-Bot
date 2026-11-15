@@ -9,7 +9,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class ClearCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -21,7 +20,7 @@ export class ClearCommand extends BaseCommand {
             voiceChannel: true,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -51,11 +50,13 @@ export class ClearCommand extends BaseCommand {
 
         if (context.isMessage()) {
             await context.react('👍');
-        }
-        else {
-            await context.replySuccess(bot, isRadioPlaying
-                ? context.t('commands:MESSAGE_CLEAR_RADIO_SUCCESS')
-                : context.t('commands:MESSAGE_CLEAR_SUCCESS'));
+        } else {
+            await context.replySuccess(
+                bot,
+                isRadioPlaying
+                    ? context.t('commands:MESSAGE_CLEAR_RADIO_SUCCESS')
+                    : context.t('commands:MESSAGE_CLEAR_SUCCESS'),
+            );
         }
     }
 }

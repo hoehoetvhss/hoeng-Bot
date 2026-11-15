@@ -5,7 +5,6 @@ import type { Client } from 'discord.js';
 import type { Player } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * QueueEnd event handler
  * Handles auto-leave, dashboard cleanup, and queue persistence when queue ends

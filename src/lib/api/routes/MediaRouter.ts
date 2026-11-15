@@ -3,7 +3,6 @@ import { BaseRouter } from './BaseRouter.js';
 
 import type { Request, Response } from 'express';
 
-
 /**
  * Handles media utility routes:
  *   GET /api/media/thumbnails/:source/:id - Returns the thumbnail URL for a given source

@@ -39,8 +39,8 @@ export class QueueLimitManager {
 
         // Check custom role limits (use highest limit if user has multiple roles)
         if (member && Object.keys(config.roles).length > 0) {
-            const userRoles = member.roles.cache.map(r => r.id);
-            
+            const userRoles = member.roles.cache.map((r) => r.id);
+
             for (const roleId of userRoles) {
                 if (config.roles[roleId] !== undefined) {
                     const roleLimit = config.roles[roleId];
@@ -49,7 +49,7 @@ export class QueueLimitManager {
                     }
                 }
             }
-            
+
             // If user had a custom role limit, return it (don't check DJ)
             if (maxLimit !== config.default) {
                 return maxLimit;
@@ -76,7 +76,7 @@ export class QueueLimitManager {
 
         // Count songs in the queue
         if (player.queue && player.queue.tracks) {
-            count = player.queue.tracks.filter(track => track.requester?.id === userId).length;
+            count = player.queue.tracks.filter((track) => track.requester?.id === userId).length;
         }
 
         // Check if current track is also from this user
@@ -122,14 +122,14 @@ export class QueueLimitManager {
         player: Player,
         userId: string,
         member: GuildMember | null,
-        songsToAdd: number = 1
+        songsToAdd: number = 1,
     ): { canAdd: boolean; currentCount: number; limit: number; availableSlots: number; globalLimitReached?: boolean } {
         const config = bot.config.bot.maxQueuedSongs;
         const limit = this.getUserLimit(bot, userId, member, player);
         const currentCount = this.countUserSongsInQueue(player, userId);
         let availableSlots = limit === Infinity ? Infinity : Math.max(0, limit - currentCount);
         let globalLimitReached = false;
-        
+
         // Apply the global limit to the same effective slot count returned to
         // playlist callers. Previously, the global capacity was only exposed
         // after a request had already exceeded it, so partial playlist loads
@@ -149,7 +149,7 @@ export class QueueLimitManager {
             currentCount,
             limit,
             availableSlots,
-            globalLimitReached
+            globalLimitReached,
         };
     }
 
@@ -167,7 +167,7 @@ export class QueueLimitManager {
         player: Player,
         userId: string,
         member: GuildMember | null,
-        playlistSize: number
+        playlistSize: number,
     ): { canAddCount: number; willSkipCount: number; limitReached: boolean } {
         const { availableSlots } = this.canAddSongs(bot, player, userId, member, 0);
 
@@ -175,7 +175,7 @@ export class QueueLimitManager {
             return {
                 canAddCount: playlistSize,
                 willSkipCount: 0,
-                limitReached: false
+                limitReached: false,
             };
         }
 
@@ -186,7 +186,7 @@ export class QueueLimitManager {
         return {
             canAddCount,
             willSkipCount,
-            limitReached
+            limitReached,
         };
     }
 }

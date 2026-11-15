@@ -8,7 +8,6 @@ import type { Client, Message, ReadonlyCollection } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class RemoveCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -25,15 +24,15 @@ export class RemoveCommand extends BaseCommand {
                     name: 'index',
                     description: i18next.t('commands:CONFIG_REMOVE_OPTION_DESCRIPTION', { lng }),
                     type: 10,
-                    required: false
+                    required: false,
                 },
                 {
                     name: 'index2',
                     description: i18next.t('commands:CONFIG_REMOVE_OPTION_DESCRIPTION_2', { lng }),
                     type: 10,
-                    required: false
-                }
-            ]
+                    required: false,
+                },
+            ],
         };
     }
 
@@ -53,16 +52,24 @@ export class RemoveCommand extends BaseCommand {
         }
 
         // Get index parameters
-        const index1 = context.isInteraction()
+        const rawIndex1 = context.isInteraction()
             ? context.getInteraction().options.getNumber('index')
-            : (context.args[0] ? parseInt(context.args[0]) : null);
-        const index2 = context.isInteraction()
+            : context.args[0] !== undefined
+              ? parseInt(context.args[0], 10)
+              : null;
+        const rawIndex2 = context.isInteraction()
             ? context.getInteraction().options.getNumber('index2')
-            : (context.args[1] ? parseInt(context.args[1]) : null);
+            : context.args[1] !== undefined
+              ? parseInt(context.args[1], 10)
+              : null;
+
+        const index1 = rawIndex1 !== null && !isNaN(rawIndex1) ? rawIndex1 : null;
+        const index2 = rawIndex2 !== null && !isNaN(rawIndex2) ? rawIndex2 : null;
 
         // Case 1: Single index removal (text: +rm 1, slash: /rm index:1)
         if ((index1 !== null && index2 === null) || (index1 === null && index2 !== null)) {
-            await this.#removeSingleTrack(bot, client, context, player, tracks, index1 || index2!);
+            const targetIndex = index1 ?? index2!;
+            await this.#removeSingleTrack(bot, client, context, player, tracks, targetIndex);
         }
         // Case 2: Range removal (text: +rm 3 4, slash: /rm index:3 index2:4)
         else if (index1 !== null && index2 !== null) {
@@ -84,8 +91,17 @@ export class RemoveCommand extends BaseCommand {
         context: CommandContext,
         player: any,
         tracks: string[],
-        index: number
+        index: number,
     ): Promise<void> {
+        if (index < 1 || index > tracks.length) {
+            if (context.isMessage()) {
+                await context.react('❌');
+            } else {
+                await context.replyError(bot, context.t('commands:MESSAGE_REMOVE_FAIL'));
+            }
+            return;
+        }
+
         const SUCCESS = player.queue.remove(index - 1);
 
         if (SUCCESS && bot.config.queuePersistence.enabled && client.queuePersistence) {
@@ -95,8 +111,7 @@ export class RemoveCommand extends BaseCommand {
         if (!SUCCESS) {
             if (context.isMessage()) {
                 await context.react('❌');
-            }
-            else {
+            } else {
                 await context.replyError(bot, context.t('commands:MESSAGE_REMOVE_FAIL'));
             }
             return;
@@ -108,7 +123,7 @@ export class RemoveCommand extends BaseCommand {
 
         await context.reply({
             embeds: [embeds.removeTrack(bot, tracks[index - 1], context.language)],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
     }
 
@@ -123,9 +138,22 @@ export class RemoveCommand extends BaseCommand {
         player: any,
         tracks: string[],
         index1: number,
-        index2: number
+        index2: number,
     ): Promise<void> {
-        const SUCCESS = player.queue.remove(index1 - 1, index2 - index1 + 1);
+        const start = Math.min(index1, index2);
+        const end = Math.max(index1, index2);
+
+        if (start < 1 || end > tracks.length) {
+            if (context.isMessage()) {
+                await context.react('❌');
+            } else {
+                await context.replyError(bot, context.t('commands:MESSAGE_REMOVE_FAIL'));
+            }
+            return;
+        }
+
+        const count = end - start + 1;
+        const SUCCESS = player.queue.remove(start - 1, count);
 
         if (SUCCESS && bot.config.queuePersistence.enabled && client.queuePersistence) {
             await client.queuePersistence.saveQueue(player);
@@ -134,14 +162,13 @@ export class RemoveCommand extends BaseCommand {
         if (!SUCCESS) {
             if (context.isMessage()) {
                 await context.react('❌');
-            }
-            else {
+            } else {
                 await context.replyError(bot, context.t('commands:MESSAGE_REMOVE_FAIL'));
             }
             return;
         }
 
-        const musicTitle = tracks.slice(index1 - 1, index2).join('\n');
+        const musicTitle = tracks.slice(start - 1, end).join('\n');
 
         if (context.isMessage()) {
             await context.react('👍');
@@ -149,7 +176,7 @@ export class RemoveCommand extends BaseCommand {
 
         await context.reply({
             embeds: [embeds.removeTrack(bot, musicTitle, context.language)],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
     }
 
@@ -162,34 +189,32 @@ export class RemoveCommand extends BaseCommand {
         client: Client,
         context: CommandContext,
         player: any,
-        tracks: string[]
+        tracks: string[],
     ): Promise<void> {
         const nowplaying = context.t('commands:MESSAGE_NOW_PLAYING_TITLE', {
-            title: player.current?.title
+            title: player.current?.title,
         });
 
         let tracksQueue: string;
         if (tracks.length < 1) {
             tracksQueue = '------------------------------';
-        }
-        else if (tracks.length > 9) {
+        } else if (tracks.length > 9) {
             tracksQueue = tracks.slice(0, 10).join('\n');
             tracksQueue += context.t('commands:MESSAGE_NOW_PLAYING_BUTTOMTITLE', {
-                length: tracks.length - 10
+                length: tracks.length - 10,
             });
-        }
-        else {
+        } else {
             tracksQueue = tracks.join('\n');
         }
 
         const methods = [
             context.t('commands:REPEAT_MODE_OFF'),
             context.t('commands:REPEAT_MODE_SINGLE'),
-            context.t('commands:REPEAT_MODE_ALL')
+            context.t('commands:REPEAT_MODE_ALL'),
         ];
         const repeatMode = player.repeatMode;
         const instruction = context.t('commands:MESSAGE_REMOVE_INSTRUCTION', {
-            length: tracks.length
+            length: tracks.length,
         });
 
         if (context.isMessage()) {
@@ -199,13 +224,13 @@ export class RemoveCommand extends BaseCommand {
         const msg = await context.reply({
             content: instruction,
             embeds: [embeds.removeList(bot, nowplaying, tracksQueue, methods[repeatMode], context.language)],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
 
         // Create message collector
         const collector = (context.channel as any).createMessageCollector({
             time: 10000, // 10s
-            filter: (m: any) => m.author.id === context.user.id
+            filter: (m: any) => m.author.id === context.user.id,
         });
 
         collector.on('collect', async (query: Message<boolean>) => {
@@ -217,13 +242,12 @@ export class RemoveCommand extends BaseCommand {
                 if (context.isMessage()) {
                     await context.reply({
                         embeds: [embeds.textWarningMsg(bot, context.t('commands:MESSAGE_REMOVE_CANCEL'))],
-                        allowedMentions: { repliedUser: false }
+                        allowedMentions: { repliedUser: false },
                     });
-                }
-                else {
+                } else {
                     await context.reply({
                         embeds: [embeds.textWarningMsg(bot, context.t('commands:MESSAGE_REMOVE_CANCEL'))],
-                        allowedMentions: { repliedUser: false }
+                        allowedMentions: { repliedUser: false },
                     });
                 }
                 return;
@@ -238,22 +262,20 @@ export class RemoveCommand extends BaseCommand {
 
             await query.reply({
                 embeds: [embeds.removeTrack(bot, tracks[index - 1], context.language)],
-                allowedMentions: { repliedUser: false }
+                allowedMentions: { repliedUser: false },
             });
 
-            msg.delete().catch(() =>
-                bot.logger.discord( bot.shardId, 'Failed to delete message.')
-            );
+            msg.delete().catch(() => bot.logger.discord(bot.shardId, 'Failed to delete message.'));
         });
 
         collector.on('end', async (collected: ReadonlyCollection<string, Message<boolean>>, reason: string) => {
             if (reason === 'time' && collected.size === 0) {
-                await msg.edit({
-                    embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
-                    allowedMentions: { repliedUser: false }
-                }).catch(() =>
-                    bot.logger.discord( bot.shardId, 'Failed to edit deleted message.')
-                );
+                await msg
+                    .edit({
+                        embeds: [embeds.textErrorMsg(bot, context.t('commands:ERROR_TIME_EXPIRED'))],
+                        allowedMentions: { repliedUser: false },
+                    })
+                    .catch(() => bot.logger.discord(bot.shardId, 'Failed to edit deleted message.'));
             }
         });
     }

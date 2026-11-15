@@ -1,15 +1,8 @@
 import { ChatInputCommandInteraction, Message, MessageFlags } from 'discord.js';
 import { embeds } from '../../embeds/index.js';
 
-import type {
-    EmbedBuilder,
-    Guild,
-    GuildMember,
-    TextBasedChannel,
-    User
-} from 'discord.js';
+import type { EmbedBuilder, Guild, GuildMember, TextBasedChannel, User } from 'discord.js';
 import type { Bot } from '../../@types/index.js';
-
 
 /**
  * Unified command context that abstracts Message and Interaction differences
@@ -76,9 +69,7 @@ export class CommandContext {
      * Get the user who invoked the command
      */
     public get user(): User {
-        return this.#source instanceof Message
-            ? this.#source.author
-            : this.#source.user;
+        return this.#source instanceof Message ? this.#source.author : this.#source.user;
     }
 
     /**
@@ -155,16 +146,15 @@ export class CommandContext {
     }): Promise<Message> {
         const replyOptions = {
             ...options,
-            allowedMentions: options.allowedMentions ?? { repliedUser: false }
+            allowedMentions: options.allowedMentions ?? { repliedUser: false },
         };
 
         const source = this.#source;
 
         if (source instanceof Message) {
             return await (source as Message).reply(replyOptions);
-        }
-        else {
-            return await (source as ChatInputCommandInteraction).editReply(replyOptions) as Message;
+        } else {
+            return (await (source as ChatInputCommandInteraction).editReply(replyOptions)) as Message;
         }
     }
 
@@ -173,7 +163,7 @@ export class CommandContext {
      */
     public async replySuccess(bot: Bot, message: string): Promise<Message> {
         return await this.reply({
-            embeds: [embeds.textSuccessMsg(bot, message)]
+            embeds: [embeds.textSuccessMsg(bot, message)],
         });
     }
 
@@ -182,7 +172,7 @@ export class CommandContext {
      */
     public async replyError(bot: Bot, message: string): Promise<Message> {
         return await this.reply({
-            embeds: [embeds.textErrorMsg(bot, message)]
+            embeds: [embeds.textErrorMsg(bot, message)],
         });
     }
 
@@ -193,10 +183,14 @@ export class CommandContext {
     public async replyEphemeralError(bot: Bot, message: string): Promise<void> {
         if (this.isInteraction()) {
             const interaction = this.getInteraction();
-            try { await interaction.deleteReply(); } catch (_) { /* ignore */ }
+            try {
+                await interaction.deleteReply();
+            } catch (_) {
+                /* ignore */
+            }
             await interaction.followUp({
                 flags: MessageFlags.Ephemeral,
-                embeds: [embeds.textErrorMsg(bot, message)]
+                embeds: [embeds.textErrorMsg(bot, message)],
             });
         } else {
             await this.replyError(bot, message);
@@ -208,7 +202,7 @@ export class CommandContext {
      */
     public async replyWarning(bot: Bot, message: string): Promise<Message> {
         return await this.reply({
-            embeds: [embeds.textWarningMsg(bot, message)]
+            embeds: [embeds.textWarningMsg(bot, message)],
         });
     }
 
@@ -217,7 +211,7 @@ export class CommandContext {
      */
     public async replyText(bot: Bot, message: string): Promise<Message> {
         return await this.reply({
-            embeds: [embeds.textMsg(bot, message)]
+            embeds: [embeds.textMsg(bot, message)],
         });
     }
 

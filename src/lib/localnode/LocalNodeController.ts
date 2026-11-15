@@ -9,7 +9,6 @@ import { formatBytes } from '../../utils/functions/unitConverter.js';
 
 import type { Logger } from '../Logger.js';
 
-
 export class LocalNodeController {
     static readonly MAX_LOG_LINES = 5_000;
 
@@ -50,26 +49,25 @@ export class LocalNodeController {
         this.port = null;
 
         this.#lavalinkProcessController = null;
-        this.#lavalinkProcessFileName = (path.extname(__filename) === '.ts') ? 'LavalinkProcess.ts' : 'LavalinkProcess.js';
+        this.#lavalinkProcessFileName =
+            path.extname(__filename) === '.ts' ? 'LavalinkProcess.ts' : 'LavalinkProcess.js';
         this.#isStarting = false;
         this.#logGeneration = 0;
         this.#manualRestart = false;
         this.#startupPromise = null;
     }
 
-
     public async checkJavaVersion(output: boolean = false) {
         return new Promise<boolean>((resolve, _reject) => {
             child_process.exec('java -version', (error, stdout, stderr) => {
                 if (output) {
-                    this.logger.localNode( stdout);
-                    this.logger.localNode( stderr);
+                    this.logger.localNode(stdout);
+                    this.logger.localNode(stderr);
                 }
 
                 if (error) {
                     resolve(false);
-                }
-                else {
+                } else {
                     resolve(true);
                 }
             });
@@ -95,7 +93,7 @@ export class LocalNodeController {
         return new Promise<boolean>((resolve, _reject) => {
             if (this.#lavalinkProcessController) {
                 this.#lavalinkProcessController.once('exit', async (_code, _signal) => {
-                    this.logger.localNode( 'Local Lavalink node stopped.');
+                    this.logger.localNode('Local Lavalink node stopped.');
 
                     this.#lavalinkProcessController = null;
                     this.#isStarting = false;
@@ -111,9 +109,8 @@ export class LocalNodeController {
 
                 this.#manualRestart = true;
                 this.#lavalinkProcessController.kill('SIGINT');
-            }
-            else {
-                this.logger.localNode( 'Local Lavalink node does not exist.');
+            } else {
+                this.logger.localNode('Local Lavalink node does not exist.');
                 return resolve(false);
             }
         });
@@ -132,8 +129,7 @@ export class LocalNodeController {
 
         try {
             await this.#startupPromise;
-        }
-        finally {
+        } finally {
             if (this.#lavalinkProcessController === null) {
                 this.#isStarting = false;
                 this.#manualRestart = false;
@@ -197,7 +193,9 @@ export class LocalNodeController {
                 reject(error);
             };
 
-            this.#lavalinkProcessController = child_process.fork(path.resolve(__dirname, this.#lavalinkProcessFileName));
+            this.#lavalinkProcessController = child_process.fork(
+                path.resolve(__dirname, this.#lavalinkProcessFileName),
+            );
             this.#lavalinkProcessController.once('error', (error) => {
                 this.#lavalinkProcessController = null;
                 settleReject(error instanceof Error ? error : new Error(String(error)));
@@ -210,23 +208,20 @@ export class LocalNodeController {
             this.#lavalinkProcessController.on('message', (message: string) => {
                 if (message.includes('LAVALINK_')) {
                     if (message === 'LAVALINK_STARTED') {
-                        this.logger.localNode( 'The local node is starting ...');
-                    }
-                    else if (message === 'LAVALINK_READY') {
-                        this.logger.localNode( 'The local node started successfully.');
+                        this.logger.localNode('The local node is starting ...');
+                    } else if (message === 'LAVALINK_READY') {
+                        this.logger.localNode('The local node started successfully.');
                         this.#manualRestart = false;
                         ready = true;
                         maybeResolve();
                         return;
-                    }
-                    else if ((/^LAVALINK_PORT_(\d+)$/).test(message)) {
+                    } else if (/^LAVALINK_PORT_(\d+)$/.test(message)) {
                         const portRegex = /^LAVALINK_PORT_(\d+)$/;
                         const portMatch = message.match(portRegex);
                         this.port = Number(portMatch![1]);
 
-                        this.logger.localNode( `The local node listening on port ${this.port}`);
-                    }
-                    else if (/^LAVALINK_PID_(\d+)$/.test(message)) {
+                        this.logger.localNode(`The local node listening on port ${this.port}`);
+                    } else if (/^LAVALINK_PID_(\d+)$/.test(message)) {
                         const pidRegex = /^LAVALINK_PID_(\d+)$/;
                         const pidMatch = message.match(pidRegex);
 
@@ -242,7 +237,9 @@ export class LocalNodeController {
             });
 
             this.#lavalinkProcessController.on('exit', async (code, signal) => {
-                this.logger.localNode( cst.color.yellow + `Local Lavalink node exited with code ${code ?? signal}` + cst.color.white);
+                this.logger.localNode(
+                    cst.color.yellow + `Local Lavalink node exited with code ${code ?? signal}` + cst.color.white,
+                );
 
                 this.#lavalinkProcessController = null;
 
@@ -258,9 +255,9 @@ export class LocalNodeController {
                 }
 
                 if (this.autoRestart && !this.#manualRestart) {
-                    this.logger.localNode( 'Try to restart automatically.');
+                    this.logger.localNode('Try to restart automatically.');
                     void this.initialize().catch((error) => {
-                        this.logger.localNode( `Automatic restart failed: ${error}`);
+                        this.logger.localNode(`Automatic restart failed: ${error}`);
                     });
                 }
             });
@@ -280,7 +277,6 @@ export class LocalNodeController {
             throw new Error(`[localNode] Failed to fetch the file: ${response.statusText}`);
         }
 
-
         const contentLength = Number(response.headers.get('content-length'));
         const tragetSize = formatBytes(contentLength);
 
@@ -288,21 +284,19 @@ export class LocalNodeController {
             const existingFileSize = fs.statSync(destination).size;
 
             if (existingFileSize === contentLength) {
-                this.logger.localNode( 'File already exists. Skipping download.');
+                this.logger.localNode('File already exists. Skipping download.');
                 return;
-            }
-            else {
+            } else {
                 fs.unlinkSync(destination);
             }
         }
-
 
         const fileStream = fs.createWriteStream(destination, { flags: 'wx' });
         const reader = response.body!.getReader();
         let downloadedBytes = 0;
 
-        this.logger.localNode( `Download Lavalink from: ${this.downloadLink}`);
-        this.logger.localNode( 'Start downloading file ...');
+        this.logger.localNode(`Download Lavalink from: ${this.downloadLink}`);
+        this.logger.localNode('Start downloading file ...');
 
         while (true) {
             const { done, value } = await reader.read();
@@ -322,7 +316,9 @@ export class LocalNodeController {
                 const progress = (downloadedBytes / contentLength) * 100;
                 readline.clearLine(process.stdout, 0);
                 readline.cursorTo(process.stdout, 0);
-                process.stdout.write(`Download Progress: ${~~progress} % (${formatBytes(downloadedBytes)} / ${tragetSize})`);
+                process.stdout.write(
+                    `Download Progress: ${~~progress} % (${formatBytes(downloadedBytes)} / ${tragetSize})`,
+                );
             }
         }
 
@@ -332,7 +328,7 @@ export class LocalNodeController {
             fileStream.end();
         });
 
-        this.logger.localNode( 'File downloaded successfully.');
+        this.logger.localNode('File downloaded successfully.');
     }
 
     #appendLog(message: string): void {
@@ -351,12 +347,12 @@ export class LocalNodeController {
         return new Promise((resolve, _reject) => {
             child_process.exec(`netstat -ano | findstr :${port}`, (error, stdout, stderr) => {
                 if (error) {
-                    this.logger.localNode( `[error] winGetPid error executing command: ${error.message}`);
+                    this.logger.localNode(`[error] winGetPid error executing command: ${error.message}`);
                     return resolve([]);
                 }
 
                 if (stderr) {
-                    this.logger.localNode( `[error] winGetPid stderr: ${stderr}`);
+                    this.logger.localNode(`[error] winGetPid stderr: ${stderr}`);
                     return resolve([]);
                 }
 
@@ -388,12 +384,12 @@ export class LocalNodeController {
     async #killProcess(pid: number) {
         try {
             /**
-             * In Windows, you can terminate a child process and release the port directly 
+             * In Windows, you can terminate a child process and release the port directly
              * by using `ChildProcess.kill('SIGINT')`, without the need for `process.kill(pid)`.
-             * 
+             *
              * OpenJDK normal.
-             * However, Oracle JDK will open two processes, 
-             * making it impossible to completely shut down the child process. 
+             * However, Oracle JDK will open two processes,
+             * making it impossible to completely shut down the child process.
              * It is necessary to scan all pid occupying the port to forcefully terminate all pid.
              */
             if (process.platform === 'win32') {
@@ -409,7 +405,6 @@ export class LocalNodeController {
 
                 return true;
             }
-
 
             /**
              * MacOS, Linux need to kill pid to release port

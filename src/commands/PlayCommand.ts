@@ -14,7 +14,6 @@ import type { Player } from 'lavashark';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class PlayCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -31,17 +30,15 @@ export class PlayCommand extends BaseCommand {
                     name: 'play',
                     description: i18next.t('commands:CONFIG_PLAY_OPTION_DESCRIPTION', { lng }),
                     type: 3,
-                    required: true
-                }
-            ]
+                    required: true,
+                },
+            ],
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         // Get search query
-        const rawStr = context.isMessage()
-            ? context.args.join(' ')
-            : context.getStringOption('play');
+        const rawStr = context.isMessage() ? context.args.join(' ') : context.getStringOption('play');
 
         const str = cleanSearchQuery(rawStr || '');
 
@@ -62,22 +59,27 @@ export class PlayCommand extends BaseCommand {
             res = await client.lavashark.search(str);
         } catch (error) {
             console.error(error);
-            bot.logger.error( bot.shardId, `Search Error: ${error}`);
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_SEARCH', {
-                reason: error instanceof Error ? error.message : String(error)
-            }));
+            bot.logger.error(bot.shardId, `Search Error: ${error}`);
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_PLAY_SEARCH', {
+                    reason: error instanceof Error ? error.message : String(error),
+                }),
+            );
             return;
         }
 
         // Handle search results
         if (res.loadType === LoadType.ERROR) {
-            bot.logger.error( bot.shardId, `Search Error: ${JSON.stringify(res)}`);
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_SEARCH', {
-                reason: (res as any).data?.message
-            }));
+            bot.logger.error(bot.shardId, `Search Error: ${JSON.stringify(res)}`);
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_PLAY_SEARCH', {
+                    reason: (res as any).data?.message,
+                }),
+            );
             return;
-        }
-        else if (res.loadType === LoadType.EMPTY) {
+        } else if (res.loadType === LoadType.EMPTY) {
             await context.replyEphemeralError(bot, context.t('commands:MESSAGE_PLAY_SEARCH_NO_MATCH'));
             return;
         }
@@ -90,7 +92,7 @@ export class PlayCommand extends BaseCommand {
         const validBlackist = isUserInBlacklist(voiceChannel, bot.config.blacklist, bot.blacklistManager);
         if (validBlackist.length > 0) {
             await context.reply({
-                embeds: [embeds.blacklist(bot, validBlackist, context.language)]
+                embeds: [embeds.blacklist(bot, validBlackist, context.language)],
             });
             return;
         }
@@ -113,8 +115,7 @@ export class PlayCommand extends BaseCommand {
         // React to indicate success (text commands only)
         if (context.isMessage()) {
             await context.react('👍');
-        }
-        else {
+        } else {
             await context.replySuccess(bot, context.t('commands:MESSAGE_PLAY_MUSIC_ADD'));
         }
     }
@@ -136,7 +137,7 @@ export class PlayCommand extends BaseCommand {
                 guildId: guildId,
                 voiceChannelId: voiceChannelId,
                 textChannelId: context.channel!.id,
-                selfDeaf: true
+                selfDeaf: true,
             });
         } else {
             player.voiceChannelId = voiceChannelId;
@@ -147,7 +148,7 @@ export class PlayCommand extends BaseCommand {
             player.setting = {
                 queuePage: null,
                 volume: null,
-                fairQueueRotation: []
+                fairQueueRotation: [],
             };
         }
 
@@ -158,7 +159,7 @@ export class PlayCommand extends BaseCommand {
             try {
                 await player.connect();
             } catch (error) {
-                bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
+                bot.logger.error(bot.shardId, 'Error joining channel: ' + error);
                 await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
                 await player.destroy();
                 return null;
@@ -176,8 +177,8 @@ export class PlayCommand extends BaseCommand {
         // Set first user as DJ in dynamic mode (skip admins and if DJ-role user is in channel)
         if (bot.config.bot.djMode === DJModeEnum.DYNAMIC && !DJManager.hasDJSet(player)) {
             const djMember = context.isMessage()
-                ? context.getMessage().member as GuildMember | null
-                : context.getInteraction().member as GuildMember | null;
+                ? (context.getMessage().member as GuildMember | null)
+                : (context.getInteraction().member as GuildMember | null);
             const vc = djMember?.voice.channel;
             const isAdmin = bot.config.bot.admin.includes(context.user.id);
             const hasDJRoleUser = vc?.isVoiceBased() ? DJManager.hasDJRoleInChannel(bot, vc) : false;
@@ -200,7 +201,7 @@ export class PlayCommand extends BaseCommand {
         context: CommandContext,
         player: Player,
         res: any,
-        member: GuildMember | null | undefined
+        member: GuildMember | null | undefined,
     ): Promise<{ canAdd: boolean; tracksToAdd: number; isPartial: boolean }> {
         const userId = context.user.id;
         const guildMember = member as GuildMember | null;
@@ -208,12 +209,15 @@ export class PlayCommand extends BaseCommand {
         // For single track
         if (res.loadType !== LoadType.PLAYLIST) {
             const checkResult = QueueLimitManager.canAddSongs(bot, player, userId, guildMember, 1);
-            
+
             if (!checkResult.canAdd) {
-                await context.replyEphemeralError(bot, context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
-                    current: checkResult.currentCount,
-                    limit: checkResult.limit
-                }));
+                await context.replyEphemeralError(
+                    bot,
+                    context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
+                        current: checkResult.currentCount,
+                        limit: checkResult.limit,
+                    }),
+                );
                 return { canAdd: false, tracksToAdd: 0, isPartial: false };
             }
 
@@ -222,13 +226,22 @@ export class PlayCommand extends BaseCommand {
 
         // For playlist
         const playlistSize = res.tracks.length;
-        const playlistCheck = QueueLimitManager.calculatePlaylistAddition(bot, player, userId, guildMember, playlistSize);
+        const playlistCheck = QueueLimitManager.calculatePlaylistAddition(
+            bot,
+            player,
+            userId,
+            guildMember,
+            playlistSize,
+        );
 
         if (playlistCheck.limitReached) {
-            await context.replyEphemeralError(bot, context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
-                current: QueueLimitManager.countUserSongsInQueue(player, userId),
-                limit: QueueLimitManager.getUserLimit(bot, userId, guildMember, player)
-            }));
+            await context.replyEphemeralError(
+                bot,
+                context.t('commands:ERROR_QUEUE_LIMIT_REACHED', {
+                    current: QueueLimitManager.countUserSongsInQueue(player, userId),
+                    limit: QueueLimitManager.getUserLimit(bot, userId, guildMember, player),
+                }),
+            );
             return { canAdd: false, tracksToAdd: 0, isPartial: false };
         }
 
@@ -236,14 +249,17 @@ export class PlayCommand extends BaseCommand {
         if (playlistCheck.willSkipCount > 0) {
             const currentCount = QueueLimitManager.countUserSongsInQueue(player, userId);
             const limit = QueueLimitManager.getUserLimit(bot, userId, guildMember, player);
-            
-            await context.replyWarning(bot, context.t('commands:MESSAGE_PLAYLIST_PARTIAL', {
-                added: playlistCheck.canAddCount,
-                skipped: playlistCheck.willSkipCount,
-                current: currentCount + playlistCheck.canAddCount,
-                limit: limit
-            }));
-            
+
+            await context.replyWarning(
+                bot,
+                context.t('commands:MESSAGE_PLAYLIST_PARTIAL', {
+                    added: playlistCheck.canAddCount,
+                    skipped: playlistCheck.willSkipCount,
+                    current: currentCount + playlistCheck.canAddCount,
+                    limit: limit,
+                }),
+            );
+
             return { canAdd: true, tracksToAdd: playlistCheck.canAddCount, isPartial: true };
         }
 
@@ -254,29 +270,37 @@ export class PlayCommand extends BaseCommand {
      * Add tracks to queue and start playing if needed
      * @private
      */
-    async #addTracksToQueue(bot: Bot, client: Client, context: CommandContext, player: Player, res: any, tracksToAdd?: number): Promise<void> {
+    async #addTracksToQueue(
+        bot: Bot,
+        client: Client,
+        context: CommandContext,
+        player: Player,
+        res: any,
+        tracksToAdd?: number,
+    ): Promise<void> {
         const requester = context.isMessage() ? context.getMessage().author : context.getInteraction().user;
-        const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
+        const curVolume =
+            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
         if (res.loadType === LoadType.PLAYLIST) {
             // Add only the allowed number of tracks from playlist
             const tracks = tracksToAdd !== undefined ? res.tracks.slice(0, tracksToAdd) : res.tracks;
             player.addTracks(tracks, requester as any);
-        }
-        else {
+        } else {
             const track = res.tracks[0];
             player.addTracks(track, requester as any);
         }
 
         if (!player.playing) {
             player.filters.setVolume(curVolume);
-            await player.play()
-                .catch(async (error) => {
-                    bot.logger.error( bot.shardId, 'Error playing track: ' + error);
-                    await context.replyError(bot, context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }));
-                    return player.destroy();
-                });
+            await player.play().catch(async (error) => {
+                bot.logger.error(bot.shardId, 'Error playing track: ' + error);
+                await context.replyError(
+                    bot,
+                    context.t('commands:ERROR_PLAY_MUSIC', { reason: JSON.stringify(error) }),
+                );
+                return player.destroy();
+            });
         }
     }
 }
-

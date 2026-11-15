@@ -1,8 +1,6 @@
 import { EmbedBuilder, HexColorString } from 'discord.js';
 import type { Bot } from '../@types/index.js';
 
-
-
 const server = (bot: Bot, serverlist: string, djRole?: string, admins?: string, djUsers?: string, lng?: string) => {
     const embed_ = new EmbedBuilder()
         .setColor(bot.config.bot.embedsColors.message as HexColorString | number)

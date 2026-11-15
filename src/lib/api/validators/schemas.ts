@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-
 // -------------------------------------------------------------------------
 // Auth schemas
 // -------------------------------------------------------------------------
@@ -13,25 +12,23 @@ export const loginSchema = z.object({
 
 export type LoginBody = z.infer<typeof loginSchema>;
 
-
 // -------------------------------------------------------------------------
 // Shared schemas
 // -------------------------------------------------------------------------
 
 export const snowflakeSchema = z.string().regex(/^\d{17,19}$/);
 
-const booleanQuerySchema = z
-    .union([z.literal('true'), z.literal('false')])
-    .transform((value) => value === 'true');
+const booleanQuerySchema = z.union([z.literal('true'), z.literal('false')]).transform((value) => value === 'true');
 
-export const paginatedLogsQuerySchema = z.object({
-    limit: z.coerce.number().int().min(1).max(200).default(100),
-    before: z.coerce.number().int().min(0).optional(),
-    after: z.coerce.number().int().min(0).optional(),
-}).refine(
-    ({ before, after }) => !(before !== undefined && after !== undefined),
-    { message: 'Only one cursor direction can be requested at a time.' }
-);
+export const paginatedLogsQuerySchema = z
+    .object({
+        limit: z.coerce.number().int().min(1).max(200).default(100),
+        before: z.coerce.number().int().min(0).optional(),
+        after: z.coerce.number().int().min(0).optional(),
+    })
+    .refine(({ before, after }) => !(before !== undefined && after !== undefined), {
+        message: 'Only one cursor direction can be requested at a time.',
+    });
 
 export type PaginatedLogsQuery = z.infer<typeof paginatedLogsQuerySchema>;
 
@@ -49,7 +46,6 @@ export const serverListQuerySchema = z.object({
 });
 
 export type ServerListQuery = z.infer<typeof serverListQuerySchema>;
-
 
 // -------------------------------------------------------------------------
 // Local node schemas

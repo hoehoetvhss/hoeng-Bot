@@ -8,7 +8,6 @@ import type { Client, Message } from 'discord.js';
 import type { Player, Track } from 'lavashark';
 import type { Bot } from '../../@types/index.js';
 
-
 /**
  * TrackAdd event handler
  * Handles notification when tracks are added to queue
@@ -47,7 +46,7 @@ export class TrackAddEvent extends BaseLavaSharkEvent<'trackAdd'> {
         // Refresh dashboard
         if (player.current) {
             if (!player.dashboardMsg) {
-                await client.dashboard.initialize((player.metadata as Message), player);
+                await client.dashboard.initialize(player.metadata as Message, player);
             }
             await client.dashboard.update(player, player.current);
         }
@@ -66,12 +65,17 @@ export class TrackAddEvent extends BaseLavaSharkEvent<'trackAdd'> {
         const subtitle = bot.i18n.t('events:MESSAGE_NOW_PLAYING_SUBTITLE', {
             author: firstTrack.author,
             label: firstTrack.duration.label,
-            lng
+            lng,
         });
 
-        await (player.metadata?.channel as any).send({
-            embeds: [embeds.addPlaylist(bot, firstTrack.title, subtitle, firstTrack.uri, firstTrack.thumbnail!, lng)]
-        });
+        const channel = player.metadata?.channel;
+        if (channel) {
+            await (channel as any).send({
+                embeds: [
+                    embeds.addPlaylist(bot, firstTrack.title, subtitle, firstTrack.uri, firstTrack.thumbnail!, lng),
+                ],
+            });
+        }
     }
 
     /**
@@ -83,11 +87,14 @@ export class TrackAddEvent extends BaseLavaSharkEvent<'trackAdd'> {
         const subtitle = bot.i18n.t('events:MESSAGE_NOW_PLAYING_SUBTITLE', {
             author: track.author,
             label: track.duration.label,
-            lng
+            lng,
         });
 
-        await (player.metadata?.channel as any).send({
-            embeds: [embeds.addTrack(bot, track.title, subtitle, track.uri, track.thumbnail!, lng)]
-        });
+        const channel = player.metadata?.channel;
+        if (channel) {
+            await (channel as any).send({
+                embeds: [embeds.addTrack(bot, track.title, subtitle, track.uri, track.thumbnail!, lng)],
+            });
+        }
     }
 }

@@ -3,7 +3,7 @@
  */
 export enum CommandCategory {
     MUSIC = 'Music',
-    UTILITY = 'Utility'
+    UTILITY = 'Utility',
 }
 
 /**

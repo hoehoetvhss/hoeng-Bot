@@ -11,7 +11,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata, SystemStatus } from '../@types/index.js';
 
-
 export class StatusCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -23,12 +22,16 @@ export class StatusCommand extends BaseCommand {
             voiceChannel: false,
             showHelp: true,
             sendTyping: true,
-            options: []
+            options: [],
         };
     }
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
-        const botPing = `${Math.abs(Date.now() - context.createdTimestamp)}ms`;
+        const pingStart = Date.now();
+        await client.user?.fetch().catch(() => null);
+        const restLatency = Math.max(1, Date.now() - pingStart);
+        const botPing = `${restLatency}ms`;
+        const apiPing = client.ws.ping > 0 ? Math.round(client.ws.ping) : 0;
         const sysload = await sysusage.cpu();
         const pingList = await client.lavashark.nodesPing();
 
@@ -44,35 +47,37 @@ export class StatusCommand extends BaseCommand {
             if (ping === -1) {
                 unhealthValue++;
                 nodesStatus.push({ name: `❌ ${node.identifier}`, value: context.t('embeds:NODE_DISCONNECTED') });
-            }
-            else {
-                nodesStatus.push({ name: `✅ ${node.identifier}`, value: context.t('embeds:NODE_CONNECTED', { ping: ping }) });
+            } else {
+                nodesStatus.push({
+                    name: `✅ ${node.identifier}`,
+                    value: context.t('embeds:NODE_CONNECTED', { ping: ping }),
+                });
             }
         }
 
         // Get playing count from all shards
         const playingResults = await client.shard!.broadcastEval(async (client) => {
             return {
-                playing: client.lavashark.players.size
+                playing: client.lavashark.players.size,
             };
         });
 
         // Refresh stats if needed
-        if (!bot.stats.lastRefresh || ((Date.now() - bot.stats.lastRefresh) > cst.cacheExpiration)) {
+        if (!bot.stats.lastRefresh || Date.now() - bot.stats.lastRefresh > cst.cacheExpiration) {
             try {
                 const statsResults = await client.shard!.broadcastEval(async (client) => {
                     await client.guilds.fetch();
 
                     return {
                         serverCount: client.guilds.cache.size,
-                        totalMembers: client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0)
+                        totalMembers: client.guilds.cache.reduce((acc, guild) => acc + guild.memberCount, 0),
                     };
                 });
 
                 bot.stats.guildsCount = statsResults.map((shard) => shard.serverCount) || bot.stats.guildsCount;
                 bot.stats.lastRefresh = Date.now();
             } catch (error) {
-                bot.logger.api( `[${bot.shardId}] Failed to get shard info: ${error}`);
+                bot.logger.api(`[${bot.shardId}] Failed to get shard info: ${error}`);
             }
         }
 
@@ -86,20 +91,20 @@ export class StatusCommand extends BaseCommand {
             uptime: uptime(bot.sysInfo.startupTime),
             ping: {
                 bot: botPing,
-                api: client.ws.ping
+                api: apiPing,
             },
             serverCount: totalServerCount,
-            playing: totalPlaying
+            playing: totalPlaying,
         };
 
-        bot.logger.log( bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
+        bot.logger.log(bot.shardId, 'nodesStatus: ' + JSON.stringify(nodesStatus));
 
         await context.reply({
             embeds: [
                 embeds.botStatus(bot, systemStatus, context.language),
-                embeds.nodesStatus(bot, unhealthValue, nodesStatus, context.language)
+                embeds.nodesStatus(bot, unhealthValue, nodesStatus, context.language),
             ],
-            allowedMentions: { repliedUser: false }
+            allowedMentions: { repliedUser: false },
         });
     }
 }

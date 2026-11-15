@@ -8,7 +8,6 @@ import type { Client } from 'discord.js';
 import type { CommandContext } from './base/CommandContext.js';
 import type { Bot, CommandMetadata } from '../@types/index.js';
 
-
 export class JoinCommand extends BaseCommand {
     public getMetadata(_bot: Bot, lng?: string): CommandMetadata {
         return {
@@ -20,7 +19,7 @@ export class JoinCommand extends BaseCommand {
             voiceChannel: true,
             showHelp: true,
             sendTyping: false,
-            options: []
+            options: [],
         };
     }
 
@@ -35,18 +34,19 @@ export class JoinCommand extends BaseCommand {
             guildId: String(context.guild?.id),
             voiceChannelId: String(voiceChannelId),
             textChannelId: String(context.channel!.id),
-            selfDeaf: true
+            selfDeaf: true,
         });
 
         if (!player.setting) {
             player.setting = {
                 queuePage: null,
                 volume: null,
-                fairQueueRotation: []
+                fairQueueRotation: [],
             };
         }
 
-        const curVolume = player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
+        const curVolume =
+            player.setting.volume ?? bot.guildVolumeManager?.get(player.guildId) ?? bot.config.bot.volume.default;
 
         try {
             // Connect to voice channel
@@ -60,7 +60,7 @@ export class JoinCommand extends BaseCommand {
                 await setIdleVoiceStatus(bot, client, player.voiceChannelId);
             }
         } catch (error) {
-            bot.logger.error( bot.shardId, 'Error joining channel: ' + error);
+            bot.logger.error(bot.shardId, 'Error joining channel: ' + error);
             await context.replyEphemeralError(bot, context.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
             await player.destroy();
             return;
@@ -71,8 +71,7 @@ export class JoinCommand extends BaseCommand {
             if (!player.dashboardMsg) {
                 if (context.isMessage()) {
                     await client.dashboard.initialize(context.getMessage(), player);
-                }
-                else {
+                } else {
                     await client.dashboard.initialize(context.getInteraction(), player);
                 }
             }
@@ -82,8 +81,7 @@ export class JoinCommand extends BaseCommand {
 
         if (context.isMessage()) {
             await context.react('👍');
-        }
-        else {
+        } else {
             await context.replySuccess(bot, context.t('commands:MESSAGE_JOIN_SUCCESS'));
         }
     }

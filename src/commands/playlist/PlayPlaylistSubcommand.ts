@@ -17,11 +17,7 @@ import { BasePlaylistSubcommand } from './BasePlaylistSubcommand.js';
 import type { GuildMember, VoiceBasedChannel } from 'discord.js';
 import type { LavaShark, Player } from 'lavashark';
 import type { Playlist, PlaylistTrack } from '../../lib/PlaylistManager.js';
-import type {
-    PlaylistSubcommandContext,
-    PlaylistSubcommandName,
-} from './BasePlaylistSubcommand.js';
-
+import type { PlaylistSubcommandContext, PlaylistSubcommandName } from './BasePlaylistSubcommand.js';
 
 interface PlaylistLoadResult {
     added: number;
@@ -56,10 +52,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
             return;
         }
 
-        const playlist = context.playlistManager.getPlaylist(
-            context.command.guild!.id,
-            name,
-        );
+        const playlist = context.playlistManager.getPlaylist(context.command.guild!.id, name);
         if (!playlist?.tracks?.length) {
             await context.command.replyEphemeralError(
                 context.bot,
@@ -82,10 +75,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
     /**
      * Coordinate player initialization, track loading, and queue persistence
      */
-    private async play(
-        context: PlaylistSubcommandContext,
-        playlist: Playlist,
-    ): Promise<void> {
+    private async play(context: PlaylistSubcommandContext, playlist: Playlist): Promise<void> {
         const voiceChannel = await this.getVoiceChannel(context);
         const member = context.command.member;
         if (!voiceChannel || !member) return;
@@ -103,53 +93,43 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
         const tracks = playlist.tracks ?? [];
         // Reuse one progress message for the final load result
         const progressMessage = await context.command.reply({
-            embeds: [embeds.playlistLoadProgress(
-                context.bot,
-                playlist.name,
-                tracks.length,
-                context.command.language,
-            )],
+            embeds: [embeds.playlistLoadProgress(context.bot, playlist.name, tracks.length, context.command.language)],
         });
         const result = await this.loadTracks(context, player, playlist, member);
 
         if (result.added > 0) {
             await this.startPlayback(context, player, isRadioPlaying);
-            if (context.bot.config.queuePersistence.enabled &&
-                context.client.queuePersistence) {
+            if (context.bot.config.queuePersistence.enabled && context.client.queuePersistence) {
                 await context.client.queuePersistence.saveQueue(player);
             }
         }
 
         await progressMessage.edit({
-            embeds: [embeds.playlistLoadResult(
-                context.bot,
-                playlist.name,
-                result.added,
-                result.skipped,
-                context.command.language,
-            )],
+            embeds: [
+                embeds.playlistLoadResult(
+                    context.bot,
+                    playlist.name,
+                    result.added,
+                    result.skipped,
+                    context.command.language,
+                ),
+            ],
         });
     }
 
     /**
      * Validate voice channel restrictions and blacklist membership
      */
-    private async getVoiceChannel(
-        context: PlaylistSubcommandContext,
-    ): Promise<VoiceBasedChannel | null> {
+    private async getVoiceChannel(context: PlaylistSubcommandContext): Promise<VoiceBasedChannel | null> {
         const { bot, client, command } = context;
         const voiceChannel = command.member?.voice.channel;
         if (!voiceChannel) {
-            await command.replyEphemeralError(
-                bot,
-                command.t('events:ERROR_NOT_IN_VOICE_CHANNEL'),
-            );
+            await command.replyEphemeralError(bot, command.t('events:ERROR_NOT_IN_VOICE_CHANNEL'));
             return null;
         }
 
         // Enforce the configured voice channel when one is specified
-        if (bot.config.bot.specifyVoiceChannel &&
-            voiceChannel.id !== bot.config.bot.specifyVoiceChannel) {
+        if (bot.config.bot.specifyVoiceChannel && voiceChannel.id !== bot.config.bot.specifyVoiceChannel) {
             await command.replyEphemeralError(
                 bot,
                 command.t('events:ERRPR_NOT_IN_SPECIFIC_VOICE_CHANNEL', {
@@ -163,18 +143,11 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
         const guild = await client.guilds.fetch(command.guild!.id);
         const botVoiceChannelId = guild.members.me?.voice.channelId;
         if (botVoiceChannelId && voiceChannel.id !== botVoiceChannelId) {
-            await command.replyEphemeralError(
-                bot,
-                command.t('events:ERROR_NOT_IN_SAME_VOICE_CHANNEL'),
-            );
+            await command.replyEphemeralError(bot, command.t('events:ERROR_NOT_IN_SAME_VOICE_CHANNEL'));
             return null;
         }
 
-        const blockedUsers = isUserInBlacklist(
-            voiceChannel,
-            bot.config.blacklist,
-            bot.blacklistManager,
-        );
+        const blockedUsers = isUserInBlacklist(voiceChannel, bot.config.blacklist, bot.blacklistManager);
         if (blockedUsers.length > 0) {
             await command.reply({
                 embeds: [embeds.blacklist(bot, blockedUsers, command.language)],
@@ -212,23 +185,15 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
         }
 
         // Store the source so dashboard updates can target the command channel
-        const metadata = command.isMessage()
-            ? command.getMessage()
-            : command.getInteraction();
+        const metadata = command.isMessage() ? command.getMessage() : command.getInteraction();
         try {
             if (!player.voiceChannelId || player.voiceChannelId !== voiceChannel.id) {
                 await player.connect();
             }
             player.metadata = metadata;
         } catch (error) {
-            bot.logger.error(
-                bot.shardId,
-                `[PlaylistCommand] Error joining channel: ${error}`,
-            );
-            await command.replyEphemeralError(
-                bot,
-                command.t('commands:ERROR_PLAY_JOIN_CHANNEL'),
-            );
+            bot.logger.error(bot.shardId, `[PlaylistCommand] Error joining channel: ${error}`);
+            await command.replyEphemeralError(bot, command.t('commands:ERROR_PLAY_JOIN_CHANNEL'));
             await player.destroy();
             return null;
         }
@@ -242,8 +207,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
         }
 
         // Assign the first eligible requester as the dynamic DJ
-        if (bot.config.bot.djMode === DJModeEnum.DYNAMIC &&
-            !DJManager.hasDJSet(player)) {
+        if (bot.config.bot.djMode === DJModeEnum.DYNAMIC && !DJManager.hasDJSet(player)) {
             const isAdmin = bot.config.bot.admin.includes(command.user.id);
             const hasDJRoleUser = DJManager.hasDJRoleInChannel(bot, voiceChannel);
             if (!isAdmin && !hasDJRoleUser) {
@@ -264,17 +228,13 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
         playlistTrack: PlaylistTrack,
     ): Promise<PlayableTrack[] | null> {
         if (playlistTrack.encoded) {
-            const track = await decodeTrackWithRetry(
-                context.client.lavashark,
-                playlistTrack.encoded,
-            );
+            const track = await decodeTrackWithRetry(context.client.lavashark, playlistTrack.encoded);
             if (track) return [track];
         }
 
-        const queries = [
-            playlistTrack.url,
-            `ytsearch:${playlistTrack.title}`,
-        ].filter((query): query is string => Boolean(query));
+        const queries = [playlistTrack.url, `ytsearch:${playlistTrack.title}`].filter((query): query is string =>
+            Boolean(query),
+        );
 
         for (const query of new Set(queries)) {
             const result = await searchWithRetry(context.client.lavashark, query);
@@ -297,10 +257,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
     /**
      * Restore the display metadata stored with a playlist entry.
      */
-    private applySavedMetadata(
-        track: PlayableTrack,
-        playlistTrack: PlaylistTrack,
-    ): void {
+    private applySavedMetadata(track: PlayableTrack, playlistTrack: PlaylistTrack): void {
         // LavaShark exposes metadata as readonly even though its runtime track
         // model uses writable fields. The saved values are trusted local data.
         const mutableTrack = track as unknown as MutableTrackMetadata;
@@ -338,9 +295,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
         const decodedByIndex = new Map<number, PlayableTrack[]>();
 
         // Bulk-decode entries that carry a saved encoded track string
-        const encodedEntries = entries.filter(({ track }) =>
-            track.encoded && track.encoded.trim() !== '',
-        );
+        const encodedEntries = entries.filter(({ track }) => track.encoded && track.encoded.trim() !== '');
         if (encodedEntries.length > 0) {
             const decoded = await decodeTracksWithRetry(
                 context.client.lavashark,
@@ -375,9 +330,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
                 continue;
             }
 
-            const acceptedTracks = remainingSlots === Infinity
-                ? result
-                : result.slice(0, remainingSlots);
+            const acceptedTracks = remainingSlots === Infinity ? result : result.slice(0, remainingSlots);
             resolvedTracks.push(...acceptedTracks);
             added += acceptedTracks.length;
             skipped += result.length - acceptedTracks.length;
@@ -393,9 +346,8 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
             member,
             0,
         ).availableSlots;
-        const finalTracks = finalAvailableSlots === Infinity
-            ? resolvedTracks
-            : resolvedTracks.slice(0, finalAvailableSlots);
+        const finalTracks =
+            finalAvailableSlots === Infinity ? resolvedTracks : resolvedTracks.slice(0, finalAvailableSlots);
         skipped += resolvedTracks.length - finalTracks.length;
         added = finalTracks.length;
 
@@ -410,13 +362,10 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
     /**
      * Start an idle player or refresh the dashboard for an active player
      */
-    private async startPlayback(
-        context: PlaylistSubcommandContext,
-        player: Player,
-        stopRadio = false,
-    ): Promise<void> {
+    private async startPlayback(context: PlaylistSubcommandContext, player: Player, stopRadio = false): Promise<void> {
         if (!player.playing) {
-            const volume = player.setting.volume ??
+            const volume =
+                player.setting.volume ??
                 context.bot.guildVolumeManager?.get(player.guildId) ??
                 context.bot.config.bot.volume.default;
             player.filters.setVolume(volume);
@@ -438,10 +387,7 @@ export class PlayPlaylistSubcommand extends BasePlaylistSubcommand {
                         await sleep(PLAY_RETRY_DELAY_MS);
                         continue;
                     }
-                    context.bot.logger.error(
-                        context.bot.shardId,
-                        `[PlaylistCommand] Error playing track: ${error}`,
-                    );
+                    context.bot.logger.error(context.bot.shardId, `[PlaylistCommand] Error playing track: ${error}`);
                     await player.destroy();
                 }
             }
