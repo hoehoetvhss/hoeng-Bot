@@ -103,7 +103,7 @@
                         <ProgressBar :value="botStore.runtime.load.percent" :label="botStore.runtime.load.detail" />
                     </div>
                     <div>
-                        <p class="text-[11px] font-semibold tracking-wide text-muted">{{ $t('common.ram') }}</p>
+                        <p class="text-[11px] font-semibold tracking-wide text-muted">{{ $t('index.ram') }}</p>
                         <ProgressBar :value="botStore.runtime.memory.percent" :label="botStore.runtime.memory.detail" />
                     </div>
                     <div>
