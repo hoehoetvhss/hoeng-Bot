@@ -25,10 +25,13 @@ export class TrackStartEvent extends BaseLavaSharkEvent<'trackStart'> {
 
         const track = player.current;
         if (!track) return;
+
+        // Re-sync volume after playback starts in case initial setVolume raced with node assignment or play()
         const targetVolume = getTargetVolume(bot, player);
         if (player.filters.active.volume !== targetVolume || player.setting?.volume !== targetVolume) {
             applyPlayerVolume(bot, player, targetVolume);
         }
+
         TrackPrefetcher.prefetchNext(bot, player);
         await client.dashboard.update(player, track);
 

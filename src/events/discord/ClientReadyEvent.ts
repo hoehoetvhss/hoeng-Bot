@@ -108,13 +108,12 @@ export class ClientReadyEvent extends BaseDiscordEvent<Events.ClientReady> {
             const queues = queuePersistence.loadQueues(client);
 
             // Set idle voice status before restore attempts as a safety net
-            for (const queueData of queues) {
-                await setIdleVoiceStatus(bot, client, queueData.voiceChannelId);
-            }
+            await Promise.allSettled(
+                queues.map((queueData) => setIdleVoiceStatus(bot, client, queueData.voiceChannelId)),
+            );
 
-            for (const queueData of queues) {
-                await queuePersistence.restoreQueue(client, queueData);
-            }
+            // Restore guilds in parallel so one slow guild does not block others
+            await Promise.allSettled(queues.map((queueData) => queuePersistence.restoreQueue(client, queueData)));
 
             if (queues.length > 0) {
                 bot.logger.log(bot.shardId, `Restored ${queues.length} persisted queue(s) on startup.`);

@@ -76,6 +76,7 @@ export class QueuePersistence {
 
     private bot: Bot;
     private periodicSaveTimers: Map<string, ReturnType<typeof setInterval>> = new Map();
+    private readonly restoringGuilds: Set<string> = new Set();
 
     constructor(bot: Bot) {
         this.bot = bot;
@@ -104,6 +105,11 @@ export class QueuePersistence {
      */
     public async saveQueue(player: Player): Promise<void> {
         if (!this.bot.config.queuePersistence.enabled || !this.bot.databaseManager?.getDatabase()) {
+            return;
+        }
+
+        // Skip overwriting persisted tracks while remaining queue items are still restoring in background
+        if (this.restoringGuilds.has(player.guildId)) {
             return;
         }
 
@@ -320,6 +326,38 @@ export class QueuePersistence {
                 return;
             }
 
+            if (queueData.tracks.length === 0) {
+                this.deleteQueue(queueData.guildId);
+                return;
+            }
+
+            // Resolve the first playable track before connecting so we never join idle on empty/dead queues
+            let firstTrack: any = null;
+            let firstTrackIndex = 0;
+
+            for (let i = 0; i < queueData.tracks.length; i++) {
+                const candidate = await this.restoreTrack(client, queueData.tracks[i]);
+                if (candidate) {
+                    firstTrack = candidate;
+                    firstTrackIndex = i;
+                    break;
+                }
+            }
+
+            if (!firstTrack) {
+                this.bot.logger.log(
+                    this.bot.shardId,
+                    `[QueuePersistence] No restorable tracks for guild ${queueData.guildId}, deleting persisted queue`,
+                );
+                this.deleteQueue(queueData.guildId);
+                return;
+            }
+
+            const remainingSerialized = queueData.tracks.slice(firstTrackIndex + 1);
+            if (remainingSerialized.length > 0) {
+                this.restoringGuilds.add(queueData.guildId);
+            }
+
             // Create or get player
             let player = client.lavashark.players.get(queueData.guildId);
             if (!player) {
@@ -356,11 +394,90 @@ export class QueuePersistence {
                 }
             }
 
-            // Restore tracks in batch chunks with bulk decode and retry
-            const TRACK_REQUEST_DELAY_MS = 250;
-            const serializedEntries = queueData.tracks.map((track, index) => ({ track, index }));
-            const encodedEntries = serializedEntries.filter(({ track }) => track.track && track.track.trim() !== '');
+            // Restore settings and start playback immediately with the first track
+            player.queue.add(firstTrack);
+            player.setRepeatMode(queueData.repeatMode);
+            applyPlayerVolume(this.bot, player, queueData.volume);
 
+            // Wait for Discord voice handshake so play() does not race ahead of Lavalink voiceState
+            await player.connect();
+            await this.waitForVoiceReady(player);
+
+            if (!player.playing && !player.paused && player.queue.tracks.length > 0) {
+                await player.play();
+            }
+
+            if (queueData.paused && player.playing) {
+                await player.pause();
+            }
+
+            // Re-apply volume after play() completes to avoid REST ordering races
+            applyPlayerVolume(this.bot, player, queueData.volume);
+
+            // Seek to saved position after playback starts
+            if (queueData.position > 0) {
+                await sleep(500);
+
+                try {
+                    if (player.playing || player.paused) {
+                        await player.seek(queueData.position);
+                        this.bot.logger.log(
+                            this.bot.shardId,
+                            `[QueuePersistence] Seeked to position ${queueData.position}ms for guild ${queueData.guildId}`,
+                        );
+                    }
+                } catch (error) {
+                    this.bot.logger.error(
+                        this.bot.shardId,
+                        `[QueuePersistence] Failed to seek to position for guild ${queueData.guildId}: ${error}`,
+                    );
+                }
+            }
+
+            // Restore remaining tracks in the background so playback is not blocked
+            if (remainingSerialized.length > 0) {
+                void this.restoreRemainingTracks(client, player, queueData.guildId, remainingSerialized);
+            }
+
+            this.bot.logger.log(
+                this.bot.shardId,
+                `[QueuePersistence] Restored queue for guild ${queueData.guildId} (${queueData.tracks.length} tracks)`,
+            );
+        } catch (error) {
+            this.restoringGuilds.delete(queueData.guildId);
+            this.bot.logger.error(
+                this.bot.shardId,
+                `[QueuePersistence] Failed to restore queue for guild ${queueData.guildId}: ${error}`,
+            );
+        }
+    }
+
+    /**
+     * Wait briefly for Discord voice state & server endpoint before starting playback
+     */
+    private async waitForVoiceReady(player: Player, timeoutMs = 5000): Promise<void> {
+        const deadline = Date.now() + timeoutMs;
+        while (Date.now() < deadline) {
+            if (player.voiceState?.sessionId && player.voiceState?.event?.endpoint) {
+                return;
+            }
+            await sleep(50);
+        }
+    }
+
+    /**
+     * Restore queued tracks in the background after the first track begins playing
+     */
+    private async restoreRemainingTracks(
+        client: Client,
+        player: Player,
+        guildId: string,
+        serializedTracks: SerializedTrack[],
+    ): Promise<void> {
+        try {
+            const TRACK_REQUEST_DELAY_MS = 100;
+            const serializedEntries = serializedTracks.map((track, index) => ({ track, index }));
+            const encodedEntries = serializedEntries.filter(({ track }) => track.track && track.track.trim() !== '');
             const restoredByIndex = new Map<number, any>();
 
             if (encodedEntries.length > 0) {
@@ -382,72 +499,30 @@ export class QueuePersistence {
                 }
             }
 
-            const allRestoredTracks: any[] = [];
             for (const { track, index } of serializedEntries) {
-                const restored = restoredByIndex.get(index);
+                if (!client.lavashark.players.has(guildId)) {
+                    return;
+                }
+
+                const restored = restoredByIndex.get(index) ?? (await this.restoreTrack(client, track));
                 if (restored) {
-                    allRestoredTracks.push(restored);
-                    continue;
+                    player.queue.add(restored);
                 }
 
-                const fallback = await this.restoreTrack(client, track);
-                if (fallback) {
-                    allRestoredTracks.push(fallback);
-                }
-                await sleep(TRACK_REQUEST_DELAY_MS);
-            }
-
-            for (const track of allRestoredTracks) {
-                player.queue.add(track);
-            }
-
-            // Restore settings
-            player.setRepeatMode(queueData.repeatMode);
-
-            applyPlayerVolume(this.bot, player, queueData.volume);
-
-            // Connect and play
-            await player.connect();
-            if (!player.playing && !player.paused && player.queue.tracks.length > 0) {
-                await player.play();
-            }
-
-            if (queueData.paused && player.playing) {
-                await player.pause();
-            }
-
-            applyPlayerVolume(this.bot, player, queueData.volume);
-
-            // Seek to saved position after playback starts
-            if (queueData.position > 0) {
-                // Wait briefly for the player to initialize playback before seeking
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-
-                try {
-                    if (player.playing || player.paused) {
-                        await player.seek(queueData.position);
-                        this.bot.logger.log(
-                            this.bot.shardId,
-                            `[QueuePersistence] Seeked to position ${queueData.position}ms for guild ${queueData.guildId}`,
-                        );
-                    }
-                } catch (error) {
-                    this.bot.logger.error(
-                        this.bot.shardId,
-                        `[QueuePersistence] Failed to seek to position for guild ${queueData.guildId}: ${error}`,
-                    );
+                if (!restoredByIndex.has(index)) {
+                    await sleep(TRACK_REQUEST_DELAY_MS);
                 }
             }
-
-            this.bot.logger.log(
-                this.bot.shardId,
-                `[QueuePersistence] Restored queue for guild ${queueData.guildId} (${queueData.tracks.length} tracks)`,
-            );
         } catch (error) {
             this.bot.logger.error(
                 this.bot.shardId,
-                `[QueuePersistence] Failed to restore queue for guild ${queueData.guildId}: ${error}`,
+                `[QueuePersistence] Failed to restore remaining tracks for guild ${guildId}: ${error}`,
             );
+        } finally {
+            this.restoringGuilds.delete(guildId);
+            if (client.lavashark.players.has(guildId)) {
+                await this.saveQueue(player);
+            }
         }
     }
 
