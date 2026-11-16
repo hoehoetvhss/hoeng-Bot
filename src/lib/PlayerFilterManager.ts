@@ -2,6 +2,7 @@ import { filtersConfig } from '../utils/constants.js';
 
 import type { Player } from 'lavashark';
 import type { FilterOptions } from 'lavashark/typings/src/@types/index.js';
+import type { Bot } from '../@types/index.js';
 
 export type PresetFilterName = keyof typeof filtersConfig;
 export type PluginFilterKey = 'normalization' | 'high-pass' | 'low-pass' | 'echo';
@@ -36,6 +37,7 @@ export type GuildFilterState = FilterOptions & {
 export class PlayerFilterManager {
     readonly #activeFilters = new Map<string, GuildFilterState>();
     readonly #nodeFiltersCache = new Map<string, { filters: string[]; expiresAt: number }>();
+    readonly #sessionInitialized = new Set<string>();
     static readonly #CACHE_TTL_MS = 60_000;
 
     public getActiveFilters(guildId: string): GuildFilterState {
@@ -97,10 +99,18 @@ export class PlayerFilterManager {
             }
         }
 
+        const current = this.getActiveFilters(player.guildId);
+        const preservedNormalization = current.pluginFilters?.normalization;
+        const nextPluginFilters = preset.pluginFilters ? structuredClone(preset.pluginFilters) : undefined;
+        const mergedPluginFilters =
+            preservedNormalization && !nextPluginFilters?.normalization
+                ? { ...nextPluginFilters, normalization: { ...preservedNormalization } }
+                : nextPluginFilters;
+
         const nextState: GuildFilterState = {
             ...preset,
             equalizer: preset.equalizer ? [...preset.equalizer] : undefined,
-            pluginFilters: preset.pluginFilters ? structuredClone(preset.pluginFilters) : undefined,
+            pluginFilters: mergedPluginFilters,
         };
 
         this.#activeFilters.set(player.guildId, nextState);
@@ -132,13 +142,72 @@ export class PlayerFilterManager {
         return true;
     }
 
-    public async clearFilters(player: Player): Promise<void> {
+    public async removePluginFilter(player: Player, filterKey: PluginFilterKey): Promise<void> {
+        const current = this.getActiveFilters(player.guildId);
+        if (!current.pluginFilters || !(filterKey in current.pluginFilters)) {
+            return;
+        }
+
+        const nextPluginFilters = { ...current.pluginFilters };
+        delete nextPluginFilters[filterKey];
+
+        const hasRemainingPlugin = Object.keys(nextPluginFilters).length > 0;
+        const nextState: GuildFilterState = {
+            ...current,
+            pluginFilters: hasRemainingPlugin ? nextPluginFilters : undefined,
+        };
+
+        const hasRemainingStandard = Object.keys(nextState).some((key) => key !== 'pluginFilters' && key !== 'volume');
+        if (!hasRemainingPlugin && !hasRemainingStandard) {
+            await this.clearFilters(player, false);
+            return;
+        }
+
+        this.#activeFilters.set(player.guildId, nextState);
+        await this.#sendFilters(player, nextState);
+    }
+
+    public async ensureDefaultNormalization(bot: Bot, player: Player): Promise<void> {
+        if (this.#sessionInitialized.has(player.guildId)) {
+            return;
+        }
+        this.#sessionInitialized.add(player.guildId);
+
+        const defaultConfig = bot.guildNormalizationManager?.get(player.guildId);
+        if (!defaultConfig) {
+            return;
+        }
+
+        const current = this.getActiveFilters(player.guildId);
+        if (current.pluginFilters?.normalization) {
+            return;
+        }
+
+        await this.setPluginFilter(player, 'normalization', defaultConfig);
+    }
+
+    public async clearFilters(player: Player, preserveNormalization = false): Promise<void> {
+        const current = this.getActiveFilters(player.guildId);
+        const preservedNormalization = preserveNormalization ? current.pluginFilters?.normalization : undefined;
+
+        if (preservedNormalization) {
+            const nextState: GuildFilterState = {
+                pluginFilters: {
+                    normalization: { ...preservedNormalization },
+                },
+            };
+            this.#activeFilters.set(player.guildId, nextState);
+            await this.#sendFilters(player, nextState);
+            return;
+        }
+
         this.#activeFilters.delete(player.guildId);
         await player.node?.rest.updatePlayer(player.guildId, { filters: { pluginFilters: {} } });
     }
 
     public clearState(guildId: string): void {
         this.#activeFilters.delete(guildId);
+        this.#sessionInitialized.delete(guildId);
     }
 
     async #sendFilters(player: Player, state: GuildFilterState): Promise<void> {

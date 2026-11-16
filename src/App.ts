@@ -12,6 +12,7 @@ import {
 import { Logger } from './lib/Logger.js';
 import { BlacklistManager } from './lib/BlacklistManager.js';
 import { GuildLanguageManager } from './lib/GuildLanguageManager.js';
+import { GuildNormalizationManager } from './lib/GuildNormalizationManager.js';
 import { GuildVolumeManager } from './lib/GuildVolumeManager.js';
 import { DashboardManager } from './lib/DashboardManager.js';
 import { DatabaseManager } from './lib/DatabaseManager.js';
@@ -109,6 +110,9 @@ class App {
         this.bot.guildVolumeManager = new GuildVolumeManager(this.bot);
         this.bot.guildVolumeManager.initialize();
 
+        this.bot.guildNormalizationManager = new GuildNormalizationManager(this.bot);
+        this.bot.guildNormalizationManager.initialize();
+
         // Initialize playlist manager
         this.bot.playlistManager = new PlaylistManager(this.bot);
     }
@@ -203,6 +207,11 @@ class App {
                 if (this.bot.guildVolumeManager) {
                     this.bot.logger.log(this.bot.shardId, 'Clearing guild volume manager...');
                     this.bot.guildVolumeManager.close();
+                }
+
+                if (this.bot.guildNormalizationManager) {
+                    this.bot.logger.log(this.bot.shardId, 'Clearing guild normalization manager...');
+                    this.bot.guildNormalizationManager.close();
                 }
 
                 if (this.bot.databaseManager) {

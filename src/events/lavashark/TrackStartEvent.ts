@@ -1,4 +1,5 @@
 import { BaseLavaSharkEvent } from './base/BaseLavaSharkEvent.js';
+import { playerFilterManager } from '../../lib/PlayerFilterManager.js';
 import { TrackPrefetcher } from '../../lib/TrackPrefetcher.js';
 import { setVoiceChannelStatus } from '../../utils/functions/setVoiceStatus.js';
 import { applyPlayerVolume, getTargetVolume } from '../../utils/functions/playerVolume.js';
@@ -31,6 +32,8 @@ export class TrackStartEvent extends BaseLavaSharkEvent<'trackStart'> {
         if (player.filters.active.volume !== targetVolume || player.setting?.volume !== targetVolume) {
             applyPlayerVolume(bot, player, targetVolume);
         }
+
+        await playerFilterManager.ensureDefaultNormalization(bot, player);
 
         TrackPrefetcher.prefetchNext(bot, player);
         await client.dashboard.update(player, track);

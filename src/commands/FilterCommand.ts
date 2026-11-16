@@ -11,6 +11,7 @@ import i18next from 'i18next';
 import { BaseCommand } from './base/BaseCommand.js';
 import { CommandCategory, SelectButtonId } from '../@types/index.js';
 import { embeds } from '../embeds/index.js';
+import { PermissionManager } from '../lib/PermissionManager.js';
 import { playerFilterManager } from '../lib/PlayerFilterManager.js';
 import { filtersConfig, PLUGIN_FILTER_LIMITS } from '../utils/constants.js';
 import { applyPlayerVolume } from '../utils/functions/playerVolume.js';
@@ -69,6 +70,18 @@ export class FilterCommand extends BaseCommand {
                         {
                             name: 'adaptive',
                             description: i18next.t('commands:CONFIG_FILTER_OPTION_ADAPTIVE', { lng }),
+                            type: ApplicationCommandOptionType.Boolean,
+                            required: false,
+                        },
+                        {
+                            name: 'enabled',
+                            description: i18next.t('commands:CONFIG_FILTER_OPTION_NORMALIZATION_ENABLED', { lng }),
+                            type: ApplicationCommandOptionType.Boolean,
+                            required: false,
+                        },
+                        {
+                            name: 'default',
+                            description: i18next.t('commands:CONFIG_FILTER_OPTION_NORMALIZATION_DEFAULT', { lng }),
                             type: ApplicationCommandOptionType.Boolean,
                             required: false,
                         },
@@ -159,35 +172,47 @@ export class FilterCommand extends BaseCommand {
 
     protected async run(bot: Bot, client: Client, context: CommandContext): Promise<void> {
         const player = client.lavashark.getPlayer(context.guild!.id);
+        const isDefaultNormalizationConfig =
+            context.isInteraction() &&
+            context.getSubcommand() === 'normalization' &&
+            context.getBooleanOption('default') !== null;
+
+        if ((!player || !player.playing) && !isDefaultNormalizationConfig) {
+            await context.replyEphemeralError(bot, context.t('commands:ERROR_NO_PLAYING'));
+            return;
+        }
+
+        if (context.isInteraction()) {
+            await this.#handleInteraction(bot, context, player ?? undefined);
+            return;
+        }
+
+        await this.#handleMessage(bot, context, player!);
+    }
+
+    async #handleInteraction(bot: Bot, context: CommandContext, player: Player | undefined): Promise<void> {
+        const subcommand = context.getSubcommand();
+
+        if (subcommand === 'normalization') {
+            const enabled = context.getBooleanOption('enabled') ?? true;
+            const isDefault = context.getBooleanOption('default');
+            const maxAmplitude =
+                context.getNumberOption('max_amplitude') ?? PLUGIN_FILTER_LIMITS.normalization.maxAmplitude.default;
+            const adaptive =
+                context.getBooleanOption('adaptive') ?? PLUGIN_FILTER_LIMITS.normalization.adaptive.default;
+            await this.#applyNormalization(bot, context, player, maxAmplitude, adaptive, enabled, isDefault);
+            return;
+        }
 
         if (!player || !player.playing) {
             await context.replyEphemeralError(bot, context.t('commands:ERROR_NO_PLAYING'));
             return;
         }
 
-        if (context.isInteraction()) {
-            await this.#handleInteraction(bot, context, player);
-            return;
-        }
-
-        await this.#handleMessage(bot, context, player);
-    }
-
-    async #handleInteraction(bot: Bot, context: CommandContext, player: Player): Promise<void> {
-        const subcommand = context.getSubcommand();
-
         switch (subcommand) {
             case 'preset': {
                 const name = context.getStringOption('name')?.toLowerCase() ?? '';
                 await this.#applyPresetOrClear(bot, context, player, name);
-                break;
-            }
-            case 'normalization': {
-                const maxAmplitude =
-                    context.getNumberOption('max_amplitude') ?? PLUGIN_FILTER_LIMITS.normalization.maxAmplitude.default;
-                const adaptive =
-                    context.getBooleanOption('adaptive') ?? PLUGIN_FILTER_LIMITS.normalization.adaptive.default;
-                await this.#applyNormalization(bot, context, player, maxAmplitude, adaptive);
                 break;
             }
             case 'highpass': {
@@ -243,6 +268,18 @@ export class FilterCommand extends BaseCommand {
                 break;
             }
             case 'normalization': {
+                if (secondArg === 'off' || secondArg === 'false' || secondArg === 'disable') {
+                    await this.#applyNormalization(
+                        bot,
+                        context,
+                        player,
+                        PLUGIN_FILTER_LIMITS.normalization.maxAmplitude.default,
+                        PLUGIN_FILTER_LIMITS.normalization.adaptive.default,
+                        false,
+                        null,
+                    );
+                    break;
+                }
                 const maxAmplitude = this.#parseOptionalNumber(
                     secondArg,
                     PLUGIN_FILTER_LIMITS.normalization.maxAmplitude.default,
@@ -260,7 +297,7 @@ export class FilterCommand extends BaseCommand {
                     );
                     return;
                 }
-                await this.#applyNormalization(bot, context, player, maxAmplitude, adaptive);
+                await this.#applyNormalization(bot, context, player, maxAmplitude, adaptive, true, null);
                 break;
             }
             case 'highpass': {
@@ -330,7 +367,8 @@ export class FilterCommand extends BaseCommand {
 
     async #applyPresetOrClear(bot: Bot, context: CommandContext, player: Player, effectName: string): Promise<void> {
         if (effectName === 'clear') {
-            await playerFilterManager.clearFilters(player);
+            const preserveNormalization = Boolean(bot.guildNormalizationManager?.get(player.guildId));
+            await playerFilterManager.clearFilters(player, preserveNormalization);
             applyPlayerVolume(bot, player);
             await this.#replyFilterApplied(bot, context, 'clear');
             return;
@@ -357,10 +395,37 @@ export class FilterCommand extends BaseCommand {
     async #applyNormalization(
         bot: Bot,
         context: CommandContext,
-        player: Player,
+        player: Player | undefined,
         maxAmplitude: number,
         adaptive: boolean,
+        enabled: boolean,
+        isDefault: boolean | null,
     ): Promise<void> {
+        if (
+            isDefault !== null &&
+            !PermissionManager.hasDJCommandPermission(bot, context.user.id, context.member, player)
+        ) {
+            await context.replyEphemeralError(bot, context.t('commands:MESSAGE_FILTER_DEFAULT_NO_PERMISSION'));
+            return;
+        }
+
+        const guildId = context.guild!.id;
+
+        if (!enabled) {
+            if (isDefault !== null) {
+                bot.guildNormalizationManager?.clear(guildId);
+            }
+
+            if (player && player.playing) {
+                await playerFilterManager.removePluginFilter(player, 'normalization');
+                applyPlayerVolume(bot, player);
+            }
+
+            const statusLabel = isDefault !== null ? 'normalization (off, default cleared)' : 'normalization (off)';
+            await this.#replyFilterApplied(bot, context, statusLabel);
+            return;
+        }
+
         const limits = PLUGIN_FILTER_LIMITS.normalization.maxAmplitude;
         if (!this.#isInRange(maxAmplitude, limits.min, limits.max)) {
             await context.replyEphemeralError(
@@ -372,20 +437,30 @@ export class FilterCommand extends BaseCommand {
             return;
         }
 
-        const applied = await playerFilterManager.setPluginFilter(player, 'normalization', {
-            maxAmplitude,
-            adaptive,
-        });
-        if (!applied) {
-            await this.#replyPluginUnsupported(bot, context, 'normalization');
-            return;
+        if (player && player.playing) {
+            const applied = await playerFilterManager.setPluginFilter(player, 'normalization', {
+                maxAmplitude,
+                adaptive,
+            });
+            if (!applied) {
+                await this.#replyPluginUnsupported(bot, context, 'normalization');
+                return;
+            }
+
+            applyPlayerVolume(bot, player);
         }
 
-        applyPlayerVolume(bot, player);
+        if (isDefault === true) {
+            bot.guildNormalizationManager?.set(guildId, { maxAmplitude, adaptive });
+        } else if (isDefault === false) {
+            bot.guildNormalizationManager?.clear(guildId);
+        }
+
+        const defaultSuffix = isDefault === true ? ', default saved' : isDefault === false ? ', default cleared' : '';
         await this.#replyFilterApplied(
             bot,
             context,
-            `normalization (maxAmplitude: ${maxAmplitude}, adaptive: ${adaptive})`,
+            `normalization (maxAmplitude: ${maxAmplitude}, adaptive: ${adaptive}${defaultSuffix})`,
         );
     }
 
@@ -475,7 +550,9 @@ export class FilterCommand extends BaseCommand {
     }
 
     async #showStatus(bot: Bot, context: CommandContext, player: Player): Promise<void> {
-        if (!playerFilterManager.hasActiveFilters(player.guildId)) {
+        const defaultNormalization = bot.guildNormalizationManager?.get(player.guildId);
+
+        if (!playerFilterManager.hasActiveFilters(player.guildId) && !defaultNormalization) {
             await context.replyText(bot, context.t('commands:MESSAGE_FILTER_STATUS_EMPTY'));
             return;
         }
@@ -496,6 +573,10 @@ export class FilterCommand extends BaseCommand {
             } else {
                 lines.push(`• **${key}**: \`${JSON.stringify(value)}\``);
             }
+        }
+
+        if (defaultNormalization) {
+            lines.push(`• **normalization (default)**: \`${JSON.stringify(defaultNormalization)}\``);
         }
 
         await context.replyText(bot, `${context.t('commands:MESSAGE_FILTER_STATUS_TITLE')}\n${lines.join('\n')}`);
@@ -531,7 +612,8 @@ export class FilterCommand extends BaseCommand {
             const effectName = i.values[0];
 
             if (effectName === 'clear') {
-                await playerFilterManager.clearFilters(player);
+                const preserveNormalization = Boolean(bot.guildNormalizationManager?.get(player.guildId));
+                await playerFilterManager.clearFilters(player, preserveNormalization);
                 applyPlayerVolume(bot, player);
             } else {
                 if (!Object.keys(filtersConfig).includes(effectName)) {

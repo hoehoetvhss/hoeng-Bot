@@ -108,6 +108,12 @@ export class DatabaseManager {
                 volume INTEGER NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS guild_normalization (
+                guild_id TEXT PRIMARY KEY,
+                max_amplitude REAL NOT NULL,
+                adaptive INTEGER NOT NULL
+            );
+
             CREATE TABLE IF NOT EXISTS guild_languages (
                 guild_id TEXT PRIMARY KEY,
                 language TEXT NOT NULL

@@ -7,6 +7,7 @@ import type { Language } from '../lib/i18n/Language.js';
 import type { Logger } from '../lib/Logger.js';
 import type { BlacklistManager } from '../lib/BlacklistManager.js';
 import type { GuildLanguageManager } from '../lib/GuildLanguageManager.js';
+import type { GuildNormalizationManager } from '../lib/GuildNormalizationManager.js';
 import type { GuildVolumeManager } from '../lib/GuildVolumeManager.js';
 import type { DashboardManager } from '../lib/DashboardManager.js';
 import type { DatabaseManager } from '../lib/DatabaseManager.js';
@@ -99,6 +100,7 @@ export type Bot = {
     databaseManager?: DatabaseManager;
     blacklistManager?: BlacklistManager;
     guildLanguageManager?: GuildLanguageManager;
+    guildNormalizationManager?: GuildNormalizationManager;
     guildVolumeManager?: GuildVolumeManager;
     playlistManager?: PlaylistManager;
 };

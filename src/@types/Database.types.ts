@@ -16,6 +16,12 @@ export interface GuildVolumeTableRow {
     volume: number;
 }
 
+export interface GuildNormalizationTableRow {
+    guild_id: string;
+    max_amplitude: number;
+    adaptive: number;
+}
+
 export interface GuildLanguageTableRow {
     guild_id: string;
     language: string;
