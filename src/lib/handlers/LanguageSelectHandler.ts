@@ -6,7 +6,7 @@ import type { Client, StringSelectMenuInteraction, GuildMember } from 'discord.j
 import type { Bot } from '../../@types/index.js';
 
 export class LanguageSelectHandler {
-    public static async handle(bot: Bot, _client: Client, interaction: StringSelectMenuInteraction): Promise<void> {
+    public static async handle(bot: Bot, client: Client, interaction: StringSelectMenuInteraction): Promise<void> {
         if (interaction.customId !== 'select_language') return;
 
         const lng = bot.guildLanguageManager?.get(interaction.guildId!);
@@ -42,6 +42,7 @@ export class LanguageSelectHandler {
 
         if (interaction.guildId) {
             bot.guildLanguageManager?.set(interaction.guildId, selectedLocale);
+            await client.dashboard.refreshForGuild(interaction.guildId);
         }
 
         await interaction.reply({

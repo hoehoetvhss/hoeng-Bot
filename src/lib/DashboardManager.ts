@@ -89,6 +89,28 @@ export class DashboardManager {
         return this.#enqueue(player, () => this.#performUpdate(player, track));
     }
 
+    public async refreshForGuild(guildId: string): Promise<void> {
+        const player = this.#client.lavashark.getPlayer(guildId);
+        if (!player) return;
+
+        if (player.current) {
+            await this.update(player, player.current);
+            return;
+        }
+
+        if (player.dashboardMsg) {
+            const lng = this.#bot.guildLanguageManager?.get(guildId);
+            await this.#enqueue(player, async () => {
+                await player.dashboardMsg
+                    ?.edit({
+                        embeds: [embeds.connected(this.#bot, lng)],
+                        components: [],
+                    })
+                    .catch(() => {});
+            });
+        }
+    }
+
     async #performUpdate(player: Player, track: Track): Promise<void> {
         const lng = this.#bot.guildLanguageManager?.get(player.guildId);
         let subtitle = await this.#buildSubtitle(player, track, lng);

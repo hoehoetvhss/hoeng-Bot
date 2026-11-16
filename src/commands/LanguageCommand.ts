@@ -87,6 +87,7 @@ export class LanguageCommand extends BaseCommand {
 
         if (context.guildId) {
             bot.guildLanguageManager?.set(context.guildId, locale);
+            await client.dashboard.refreshForGuild(context.guildId);
         }
 
         if (context.isMessage()) {
