@@ -1,4 +1,5 @@
 import { BaseLavaSharkEvent } from './base/BaseLavaSharkEvent.js';
+import { playerFilterManager } from '../../lib/PlayerFilterManager.js';
 import { setVoiceChannelStatus } from '../../utils/functions/setVoiceStatus.js';
 
 import type { Client } from 'discord.js';
@@ -26,6 +27,7 @@ export class PlayerDestroyEvent extends BaseLavaSharkEvent<'playerDestroy'> {
         }
 
         bot.logger.lavashark(bot.shardId, `[playerDestroy] Player destroyed in guild "${player.guildId}"`);
+        playerFilterManager.clearState(player.guildId);
 
         // Stop periodic queue persistence save
         if (bot.config.queuePersistence.enabled && client.queuePersistence) {

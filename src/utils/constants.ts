@@ -309,7 +309,7 @@ export const filtersConfig = {
     normalization: {
         pluginFilters: {
             normalization: {
-                maxAmplitude: 0.75,
+                maxAmplitude: 0.35,
                 adaptive: true,
             },
         },
@@ -325,9 +325,28 @@ export const filtersConfig = {
     highpass: {
         pluginFilters: {
             'high-pass': {
-                cutoffFrequency: 80,
+                cutoffFrequency: 300,
                 boostFactor: 1.0,
             },
         },
     },
 };
+
+export const PLUGIN_FILTER_LIMITS = {
+    normalization: {
+        maxAmplitude: { min: 0.01, max: 1.0, default: 0.35 },
+        adaptive: { default: true },
+    },
+    'high-pass': {
+        cutoffFrequency: { min: 1, max: 20000, default: 300 },
+        boostFactor: { min: 0.1, max: 5.0, default: 1.0 },
+    },
+    'low-pass': {
+        cutoffFrequency: { min: 1, max: 20000, default: 800 },
+        boostFactor: { min: 0.1, max: 5.0, default: 1.0 },
+    },
+    echo: {
+        echoLength: { min: 0.05, max: 5.0, default: 0.3 },
+        decay: { min: 0.0, max: 1.0, default: 0.5 },
+    },
+} as const;

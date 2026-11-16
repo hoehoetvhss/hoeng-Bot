@@ -253,4 +253,18 @@ export class CommandContext {
         }
         return null;
     }
+
+    public getNumberOption(name: string): number | null {
+        if (this.isInteraction()) {
+            return (this.#source as ChatInputCommandInteraction).options.getNumber(name);
+        }
+        return null;
+    }
+
+    public getSubcommand(): string | null {
+        if (this.isInteraction()) {
+            return (this.#source as ChatInputCommandInteraction).options.getSubcommand(false);
+        }
+        return null;
+    }
 }
