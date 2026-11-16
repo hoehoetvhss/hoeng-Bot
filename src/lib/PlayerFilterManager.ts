@@ -134,7 +134,7 @@ export class PlayerFilterManager {
 
     public async clearFilters(player: Player): Promise<void> {
         this.#activeFilters.delete(player.guildId);
-        await player.node?.rest.updatePlayer(player.guildId, { filters: {} });
+        await player.node?.rest.updatePlayer(player.guildId, { filters: { pluginFilters: {} } });
     }
 
     public clearState(guildId: string): void {
